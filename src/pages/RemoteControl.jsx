@@ -26,6 +26,11 @@ export default function RemoteControl() {
   };
 
   const handleTouchMove = (e) => {
+    // Si podemos, detenemos el comportamiento default para evitar recargas
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
     // Throttle básico para no saturar Supabase con 60fps
     const now = Date.now();
     if (now - lastEventRef.current < 40) return;
@@ -59,7 +64,8 @@ export default function RemoteControl() {
           justifyContent: 'center',
           border: '2px dashed rgba(0,240,255,0.4)',
           marginBottom: '20px',
-          position: 'relative'
+          position: 'relative',
+          touchAction: 'none'
         }}
       >
         <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center' }}>

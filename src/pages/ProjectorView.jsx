@@ -9,7 +9,7 @@ export default function ProjectorView() {
   
   const [presentation, setPresentation] = useState(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [laserPos, setLaserPos] = useState({ x: -100, y: -100 });
+  const [laserPos, setLaserPos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
 
   useEffect(() => {
     const loadPresentation = async () => {
