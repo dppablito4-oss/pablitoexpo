@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 
 export default function ProjectorView() {
   const { id } = useParams();
@@ -9,7 +9,12 @@ export default function ProjectorView() {
   
   const [presentation, setPresentation] = useState(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [laserPos, setLaserPos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+  
+  // Optimizacion nivel Dios: Evita re-renderizado de React, corre directo en GPU (60+ FPS)
+  const laserX = useMotionValue(window.innerWidth / 2);
+  const laserY = useMotionValue(window.innerHeight / 2);
+  const smoothX = useSpring(laserX, { stiffness: 200, damping: 20, mass: 0.5 });
+  const smoothY = useSpring(laserY, { stiffness: 200, damping: 20, mass: 0.5 });
 
   useEffect(() => {
     const loadPresentation = async () => {
@@ -30,10 +35,8 @@ export default function ProjectorView() {
         });
       })
       .on('broadcast', { event: 'laser' }, (payload) => {
-        setLaserPos({
-          x: payload.payload.x * window.innerWidth,
-          y: payload.payload.y * window.innerHeight
-        });
+        laserX.set(payload.payload.x * window.innerWidth);
+        laserY.set(payload.payload.y * window.innerHeight);
       })
       .subscribe();
 
@@ -73,9 +76,9 @@ export default function ProjectorView() {
 
       {/* Laser Virtual */}
       <motion.div 
-        animate={{ left: laserPos.x, top: laserPos.y }}
-        transition={{ type: 'tween', ease: 'linear', duration: 0.05 }}
         style={{
+          left: smoothX,
+          top: smoothY,
           position: 'absolute',
           width: '20px',
           height: '20px',
