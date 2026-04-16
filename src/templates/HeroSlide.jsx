@@ -19,7 +19,7 @@ const textVars = {
   }
 };
 
-export default function HeroSlide({ config, data }) {
+export default function HeroSlide({ config = {}, data = {} }) {
   const anim = generateAnimation(config?.family, config?.direction, config?.physics);
 
   return (

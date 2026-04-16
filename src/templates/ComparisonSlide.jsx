@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { generateAnimation } from '../lib/animations';
 
-export default function ComparisonSlide({ config, data }) {
+export default function ComparisonSlide({ config = {}, data = {} }) {
   const anim = generateAnimation(config?.family, config?.direction, config?.physics);
   const stats = data?.stats || [
     { label: "Ejemplo 1", valA: 80, valB: 30 }

@@ -30,7 +30,7 @@ const cardVars = {
   }
 };
 
-export default function FeatureGrid({ config, data }) {
+export default function FeatureGrid({ config = {}, data = {} }) {
   const anim = generateAnimation(config?.family, config?.direction, config?.physics);
   const features = data?.features || [
     { id: 1, title: "Característica Uno", desc: "Descripción detallada", icon: "zap" },
