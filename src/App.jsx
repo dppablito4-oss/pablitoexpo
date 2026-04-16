@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 // Import Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Editor from './pages/Editor';
 import ProjectorView from './pages/ProjectorView';
 import RemoteControl from './pages/RemoteControl';
 
@@ -31,6 +32,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/editor/:id" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
         <Route path="/projector/:id" element={<ProtectedRoute><ProjectorView /></ProtectedRoute>} />
         <Route path="/remote/:id" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
       </Routes>
