@@ -56,7 +56,8 @@ export default function Editor() {
           const { error } = await supabase.from('presentations').update({ slides_data: presentation.slides_data }).eq('id', id);
           if (error) throw error;
       } catch (e) {
-          alert("Error al guardar en la nube.");
+          console.error("Error al guardar:", e);
+          alert("Error de guardado: " + (e.message || "Hubo un problema de conexión con Supabase."));
       } finally {
           setSaving(false);
       }

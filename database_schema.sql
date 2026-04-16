@@ -29,7 +29,7 @@ create policy "Owners and editors can update presentations" on public.presentati
   for update using (
     auth.uid() = user_id 
     or 
-    (select email from auth.users where id = auth.uid()) in (select jsonb_array_elements_text(editors_emails))
+    (auth.jwt() ->> 'email') in (select jsonb_array_elements_text(editors_emails))
   );
 
 -- 2. Tabla Automática de Perfiles (Espejo Seguro de Emails)
