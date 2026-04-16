@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 
-// Plantillas Maestras
-import HeroSlide from '../templates/HeroSlide';
-import FeatureGrid from '../templates/FeatureGrid';
-import ComparisonSlide from '../templates/ComparisonSlide';
+// Importar UNICAMENTE la plantilla Magna
+import NasaWebTemplate from '../templates/NasaWebTemplate';
 
 export default function ProjectorView() {
   const { id } = useParams();
   const navigate = useNavigate();
   
   const [presentation, setPresentation] = useState(null);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   
   // Laser Nivel Dios (GPU directo)
@@ -39,29 +36,20 @@ export default function ProjectorView() {
     const channel = supabase.channel(`presentation-${id}`);
     channel
       .on('broadcast', { event: 'navigate' }, (payload) => {
-        setCurrentSlideIndex(prev => {
-          let newIdx = prev;
-          if (payload.payload.direction === 'next') {
-            newIdx = prev + 1;
-          } else if (payload.payload.direction === 'prev') {
-            newIdx = Math.max(0, prev - 1);
-          }
-          const slidesCount = presentation?.slides_data?.slides?.length || 0;
-          newIdx = Math.min(newIdx, slidesCount - 1);
-          
-          if (newIdx !== prev) {
-             const target = document.getElementById(`section-${newIdx}`);
-             if (target) target.scrollIntoView({ behavior: 'smooth' });
-          }
-          return newIdx;
-        });
+        // En la versión Web, los comandos next/prev hacen scroll directo
+        const amount = window.innerHeight * 0.8;
+        if (payload.payload.direction === 'next') {
+            window.scrollBy({ top: amount, behavior: 'smooth' });
+        } else if (payload.payload.direction === 'prev') {
+            window.scrollBy({ top: -amount, behavior: 'smooth' });
+        }
       })
       .on('broadcast', { event: 'laser' }, (payload) => {
         laserX.set(payload.payload.x * window.innerWidth);
         laserY.set(payload.payload.y * window.innerHeight);
       })
       .on('broadcast', { event: 'remote-scroll' }, (payload) => {
-        // Scroll continuo suave
+        // Scroll libre
         window.scrollBy({ top: payload.payload.deltaY, behavior: 'auto' });
       })
       .subscribe();
@@ -69,77 +57,28 @@ export default function ProjectorView() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, navigate, laserX, laserY, presentation]);
-
-  // Rastreo local del scroll para sincronizar texto (opcional)
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = document.querySelectorAll('.slide-section');
-      let current = 0;
-      sections.forEach((sec, index) => {
-        const rect = sec.getBoundingClientRect();
-        if (rect.top >= -window.innerHeight/2 && rect.top < window.innerHeight/2) {
-          current = index;
-        }
-      });
-      if (current !== currentSlideIndex) setCurrentSlideIndex(current);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentSlideIndex]);
+  }, [id, navigate, laserX, laserY]);
 
   if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
   if (!presentation) return null;
 
-  const slides = presentation.slides_data?.slides || [];
+  const nasaData = presentation.slides_data?.nasa || {};
 
   return (
-    <div className="h-screen w-full bg-black overflow-y-auto snap-y snap-mandatory relative cursor-none scroll-smooth">
+    <div className="w-full bg-black relative cursor-none scroll-smooth">
       
-      {slides.map((slide, index) => {
-          const TemplateConfig = slide.config || {};
-          const TemplateData = slide.data || {};
-          const bgImage = TemplateData.bgImage;
+      {/* 
+        EL PROYECTOR AHORA ES UNA PÁGINA WEB REAL,
+        SIN BARRERAS DE ALTURA NI OVERFLOW HIDDEN.
+      */}
+      <NasaWebTemplate data={nasaData} />
 
-          return (
-            <motion.div 
-              key={slide.id}
-              id={`section-${index}`}
-              className="slide-section w-full h-screen snap-start relative overflow-hidden flex items-center justify-center"
-            >
-                {/* Parallax Background */}
-                {bgImage && (
-                    <motion.div 
-                        initial={{ scale: 1.1 }}
-                        whileInView={{ scale: 1 }}
-                        transition={{ duration: 1.5 }}
-                        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${bgImage})` }}
-                    >
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
-                    </motion.div>
-                )}
-
-                <div className="relative z-10 w-full h-full">
-                  {slide.type === 'hero' && <HeroSlide config={TemplateConfig} data={TemplateData} />}
-                  {slide.type === 'feature_grid' && <FeatureGrid config={TemplateConfig} data={TemplateData} />}
-                  {slide.type === 'comparison' && <ComparisonSlide config={TemplateConfig} data={TemplateData} />}
-                  {!['hero', 'feature_grid', 'comparison'].includes(slide.type) && (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-white bg-neutral-900 border border-neutral-800">
-                          <h1 className="text-4xl">Bloque No Soportado</h1>
-                      </div>
-                  )}
-                </div>
-            </motion.div>
-          );
-      })}
-
-      {/* Laser Virtual */}
+      {/* Laser Virtual (Fixed a la ventana) */}
       <motion.div 
         style={{
           left: smoothX,
           top: smoothY,
-          position: 'absolute',
+          position: 'fixed', // Cambiado de absoluto a fixed para que flote sobre el scroll
           width: '20px',
           height: '20px',
           background: '#ff0055',
@@ -152,11 +91,8 @@ export default function ProjectorView() {
       />
       
       {/* UI Flotante Decorativa */}
-      <div className="absolute bottom-4 left-4 text-xs font-mono text-neutral-600 tracking-widest z-50 mix-blend-difference">
-        UPLINK: ACTIVO | PABLITO EXPO ENGINE
-      </div>
-      <div className="fixed bottom-4 right-4 text-white/30 font-mono z-50 mix-blend-difference">
-        {currentSlideIndex + 1} / {slides.length}
+      <div className="fixed bottom-4 left-4 text-xs font-mono text-neutral-600 tracking-widest z-50 mix-blend-difference pointer-events-none">
+        UPLINK: ACTIVO | PABLITO EXPO MEGA-WEB
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 
@@ -7,9 +7,11 @@ export default function RemoteControl() {
   const navigate = useNavigate();
   const channelRef = useRef(null);
   const lastEventRef = useRef(0);
+  const lastScrollYRef = useRef(null);
+  
+  const [mode, setMode] = useState('laser'); // 'laser' o 'scroll'
 
   useEffect(() => {
-    // Nos suscribimos al ID de esta presentación exacta
     const channel = supabase.channel(`presentation-${id}`);
     channel.subscribe();
     channelRef.current = channel;
@@ -21,38 +23,31 @@ export default function RemoteControl() {
 
   const sendNav = (direction) => {
     if (channelRef.current) {
-      channelRef.current.send({ type: 'broadcast', event: 'nav', payload: { direction } });
+      channelRef.current.send({ type: 'broadcast', event: 'navigate', payload: { direction } });
     }
   };
-
-  const lastPinchYRef = useRef(null);
 
   const handleTouchMove = (e) => {
     if (e.cancelable) e.preventDefault();
 
     const now = Date.now();
-    if (now - lastEventRef.current < 30) return;
+    if (now - lastEventRef.current < 25) return; // 40fps max para no saturar
     lastEventRef.current = now;
 
-    // SCROLL con 2 dedos
-    if (e.touches.length === 2) {
-      const avgY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      
-      if (lastPinchYRef.current !== null) {
-        const deltaY = lastPinchYRef.current - avgY;
-        // Broadcast de scroll suave (multiplicado para más sensibilidad)
+    if (e.touches.length !== 1) return; // Forzar a que solo se use 1 dedo SIEMPRE
+    const touch = e.touches[0];
+
+    if (mode === 'scroll') {
+      if (lastScrollYRef.current !== null) {
+        // En móviles, mover el dedo ARRIBA (scrollY negativo) es hacer scroll ABAJO en la pantalla
+        const deltaY = lastScrollYRef.current - touch.clientY; 
         if (channelRef.current) {
-          channelRef.current.send({ type: 'broadcast', event: 'remote-scroll', payload: { deltaY: deltaY * 2.5 } });
+          channelRef.current.send({ type: 'broadcast', event: 'remote-scroll', payload: { deltaY: deltaY * 2.0 } });
         }
       }
-      lastPinchYRef.current = avgY;
-      return;
-    }
-
-    // LASER con 1 dedo
-    if (e.touches.length === 1) {
-      lastPinchYRef.current = null; // reset pinch
-      const touch = e.touches[0];
+      lastScrollYRef.current = touch.clientY;
+    } else {
+      // Modo Laser
       const x = touch.clientX / window.innerWidth;
       const y = touch.clientY / window.innerHeight;
 
@@ -63,17 +58,43 @@ export default function RemoteControl() {
   };
 
   const handleTouchEnd = () => {
-      lastPinchYRef.current = null;
+      lastScrollYRef.current = null;
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-        <h2 style={{ color: 'var(--accent-primary)' }}>Láser Remoto 📱</h2>
-        <button onClick={() => navigate('/')} style={{ background: 'none', color: 'var(--text-secondary)', border: 'none' }}>Cerrar</button>
+      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'center' }}>
+        <h2 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '1.2rem' }}>Uplink Remoto</h2>
+        <button onClick={() => navigate('/')} style={{ background: 'none', color: 'var(--text-secondary)', border: 'none' }}>Desconectar</button>
       </header>
 
-      {/* Trackpad para el láser */}
+      {/* TOGGLE MODO */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button 
+              onClick={() => setMode('laser')}
+              style={{
+                  flex: 1, padding: '15px', fontSize: '16px', fontWeight: 'bold', border: 'none', borderRadius: '10px',
+                  backgroundColor: mode === 'laser' ? '#ff0055' : '#333',
+                  color: mode === 'laser' ? 'white' : '#888',
+                  transition: 'background 0.3s'
+              }}
+          >
+              🔴 MODO LÁSER
+          </button>
+          <button 
+              onClick={() => setMode('scroll')}
+              style={{
+                  flex: 1, padding: '15px', fontSize: '16px', fontWeight: 'bold', border: 'none', borderRadius: '10px',
+                  backgroundColor: mode === 'scroll' ? '#00f0ff' : '#333',
+                  color: mode === 'scroll' ? 'black' : '#888',
+                  transition: 'background 0.3s'
+              }}
+          >
+              ↕️ MODO NAVEGAR
+          </button>
+      </div>
+
+      {/* Trackpad Principal */}
       <div
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -84,25 +105,24 @@ export default function RemoteControl() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          border: '2px dashed rgba(0,240,255,0.4)',
+          border: mode === 'scroll' ? '2px dashed #00f0ff' : '2px dashed rgba(255,0,85,0.6)',
           marginBottom: '20px',
           position: 'relative',
           touchAction: 'none'
         }}
       >
-        <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center', marginBottom: '10px' }}>
-          ✨ 1 dedo: Mueve el láser<br/>
-          ⏬ 2 dedos: SCROLL LIBRE
+        <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center', fontSize: '1.1rem' }}>
+          {mode === 'laser' ? '👆 Desliza 1 dedo para mover LÁSER' : '👆 Desliza 1 dedo para hacer SCROLL'}
         </p>
       </div>
 
-      {/* Botones de navegación */}
-      <div style={{ display: 'flex', gap: '15px', height: '90px' }}>
-        <button onClick={() => sendNav('prev')} className="btn-cyber" style={{ flex: 1, fontSize: '1.2rem', border: '1px solid var(--border-color)' }}>
-          ⬅️ Atrás
+      {/* Botones de navegación de salto */}
+      <div style={{ display: 'flex', gap: '15px', height: '80px' }}>
+        <button onClick={() => sendNav('prev')} className="btn-cyber" style={{ flex: 1, fontSize: '1rem', border: '1px solid var(--border-color)' }}>
+          Bloque ⬆️
         </button>
-        <button onClick={() => sendNav('next')} className="btn-cyber" style={{ flex: 2, fontSize: '1.2rem', boxShadow: '0 0 20px rgba(0,240,255,0.2)' }}>
-          Siguiente ➡️
+        <button onClick={() => sendNav('next')} className="btn-cyber" style={{ flex: 1, fontSize: '1rem', border: '1px solid var(--border-color)' }}>
+          Bloque ⬇️
         </button>
       </div>
     </div>
