@@ -466,6 +466,13 @@ export default function Editor() {
                   value={nasa.heroBgImage || ''}
                   onChange={e => updateNasaData({ heroBgImage: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
+                <div className="flex items-center gap-3">
+                  <label className="text-[10px] text-neutral-500 whitespace-nowrap">Altura: {nasa.heroHeight || 100}vh</label>
+                  <input type="range" min="60" max="300" step="10"
+                    value={nasa.heroHeight || 100}
+                    onChange={e => updateNasaData({ heroHeight: Number(e.target.value) })}
+                    className="w-full accent-cyan-500" />
+                </div>
                 <input type="text" value={nasa.heroTitle || ''} onChange={e => updateNasaData({ heroTitle: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-sm font-bold" placeholder="Título Principal" />
                 <textarea rows={2} value={nasa.heroSubtitle || ''} onChange={e => updateNasaData({ heroSubtitle: e.target.value })}
@@ -479,6 +486,13 @@ export default function Editor() {
                   value={nasa.aboutBgImage || ''}
                   onChange={e => updateNasaData({ aboutBgImage: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
+                <div className="flex items-center gap-3">
+                  <label className="text-[10px] text-neutral-500 whitespace-nowrap">Altura: {nasa.aboutHeight || 100}vh</label>
+                  <input type="range" min="60" max="300" step="10"
+                    value={nasa.aboutHeight || 100}
+                    onChange={e => updateNasaData({ aboutHeight: Number(e.target.value) })}
+                    className="w-full accent-emerald-500" />
+                </div>
                 <input type="text" value={nasa.aboutHeading || ''} onChange={e => updateNasaData({ aboutHeading: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-sm font-bold" placeholder="Encabezado" />
                 <textarea rows={4} value={nasa.aboutText || ''} onChange={e => updateNasaData({ aboutText: e.target.value })}
@@ -492,6 +506,13 @@ export default function Editor() {
                   value={nasa.statsBgImage || ''}
                   onChange={e => updateNasaData({ statsBgImage: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
+                <div className="flex items-center gap-3">
+                  <label className="text-[10px] text-neutral-500 whitespace-nowrap">Altura: {nasa.statsHeight || 100}vh</label>
+                  <input type="range" min="60" max="300" step="10"
+                    value={nasa.statsHeight || 100}
+                    onChange={e => updateNasaData({ statsHeight: Number(e.target.value) })}
+                    className="w-full accent-orange-500" />
+                </div>
                 {(nasa.features || []).map((feat, idx) => (
                   <div key={idx} className="p-3 bg-black border border-neutral-800 rounded space-y-1">
                     <input placeholder="Valor grande (ej: 1500 km)" value={feat.val || ''}

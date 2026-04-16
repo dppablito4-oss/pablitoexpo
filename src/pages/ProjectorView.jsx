@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 // Importar UNICAMENTE la plantilla Magna
 import NasaWebTemplate from '../templates/NasaWebTemplate';
+import AiQuizWidget from '../components/AiQuizWidget';
 
 export default function ProjectorView() {
   const { id } = useParams();
@@ -72,6 +73,9 @@ export default function ProjectorView() {
         SIN BARRERAS DE ALTURA NI OVERFLOW HIDDEN.
       */}
       <NasaWebTemplate data={nasaData} />
+
+      {/* Widget IA Quiz — lee todo el JSON automáticamente */}
+      <AiQuizWidget nasaData={nasaData} />
 
       {/* Laser Virtual (Fixed a la ventana) */}
       <motion.div 

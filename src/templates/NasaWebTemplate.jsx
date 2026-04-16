@@ -87,6 +87,9 @@ export default function NasaWebTemplate({ data = {} }) {
       { id: 3, title: 'SISTEMA MOXIE',    val: 'Act',  desc: 'Generación de O² a partir de CO²' },
     ],
     freeElements: data.freeElements || [],
+    heroHeight:   data.heroHeight   || 100,   // vh
+    aboutHeight:  data.aboutHeight  || 100,
+    statsHeight:  data.statsHeight  || 100,
   };
 
   return (
@@ -97,7 +100,8 @@ export default function NasaWebTemplate({ data = {} }) {
           ╚══════════════════════════════╝ */}
       <section
         id="section-hero"
-        className="w-full min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6"
+        className="w-full flex flex-col items-center justify-center relative overflow-hidden px-6"
+        style={{ minHeight: `${c.heroHeight}vh` }}
       >
         <SectionBg image={c.heroBgImage} overlay="bg-black/50" />
         <FreeElementLayer elements={c.freeElements} sectionId="hero" />
@@ -150,7 +154,8 @@ export default function NasaWebTemplate({ data = {} }) {
           ╚══════════════════════════════╝ */}
       <section
         id="section-about"
-        className="w-full min-h-screen flex items-center justify-center relative overflow-hidden px-6 py-24"
+        className="w-full flex items-center justify-center relative overflow-hidden px-6 py-24"
+        style={{ minHeight: `${c.aboutHeight}vh` }}
       >
         <SectionBg image={c.aboutBgImage} overlay="bg-black/65" />
         <FreeElementLayer elements={c.freeElements} sectionId="about" />
@@ -188,7 +193,8 @@ export default function NasaWebTemplate({ data = {} }) {
           ╚══════════════════════════════╝ */}
       <section
         id="section-stats"
-        className="w-full min-h-screen flex items-center justify-center relative overflow-hidden px-6 py-24"
+        className="w-full flex items-center justify-center relative overflow-hidden px-6 py-24"
+        style={{ minHeight: `${c.statsHeight}vh` }}
       >
         <SectionBg image={c.statsBgImage} overlay="bg-black/70" />
         <FreeElementLayer elements={c.freeElements} sectionId="stats" />
