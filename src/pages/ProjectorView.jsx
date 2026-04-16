@@ -71,11 +71,6 @@ export default function ProjectorView() {
     };
   }, [id, navigate, laserX, laserY, presentation]);
 
-  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
-  if (!presentation) return null;
-
-  const slides = presentation.slides_data?.slides || [];
-
   // Rastreo local del scroll para sincronizar texto (opcional)
   useEffect(() => {
     const handleScroll = () => {
@@ -92,6 +87,11 @@ export default function ProjectorView() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [currentSlideIndex]);
+
+  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
+  if (!presentation) return null;
+
+  const slides = presentation.slides_data?.slides || [];
 
   return (
     <div className="h-screen w-full bg-black overflow-y-auto snap-y snap-mandatory relative cursor-none scroll-smooth">
