@@ -64,7 +64,12 @@ export default function Editor() {
 
   // ----- FUNCIONES DE DIAPOSITIVAS -----
   const addSlide = (type) => {
-    const newSlide = { id: crypto.randomUUID(), type, data: {} };
+    const newSlide = { 
+       id: crypto.randomUUID(), 
+       type, 
+       data: {}, 
+       config: { family: 'blur-slide', direction: 'up', physics: 'bouncy' } 
+    };
     if (type === 'hero') newSlide.data = { title: 'Nuevo Título', subtitle: 'Subtítulo increíble' };
     if (type === 'feature_grid') newSlide.data = { heading: 'Puntos Clave', features: [{id: 1, title: 'Item 1', desc: 'Descripción', icon: 'star'}] };
     if (type === 'comparison') newSlide.data = { conceptA: 'Opción A', conceptB: 'Opción B', stats: [{label: 'Atributo', valA: 50, valB: 50}] };
@@ -85,6 +90,16 @@ export default function Editor() {
       const newSlides = presentation.slides_data.slides.map(s => {
           if (s.id === selectedSlideId) {
               return { ...s, data: { ...s.data, ...newFieldData } };
+          }
+          return s;
+      });
+      setPresentation({ ...presentation, slides_data: { slides: newSlides } });
+  };
+
+  const updateSlideConfig = (newConfigData) => {
+      const newSlides = presentation.slides_data.slides.map(s => {
+          if (s.id === selectedSlideId) {
+              return { ...s, config: { ...(s.config || {family:'fade', direction:'up', physics:'smooth'}), ...newConfigData } };
           }
           return s;
       });
@@ -203,6 +218,53 @@ export default function Editor() {
     return <p className="text-neutral-500">Plantilla seleccionada no soportada.</p>;
   };
 
+  const renderConfigForm = () => {
+        const slide = presentation.slides_data.slides.find(s => s.id === selectedSlideId);
+        if (!slide) return null;
+        const conf = slide.config || {family:'blur-slide', direction:'up', physics:'bouncy'};
+        
+        return (
+            <div className="mt-8 border-t border-neutral-800 pt-6">
+                <h4 className="text-sm font-bold text-accent-primary mb-4 flex items-center gap-2">🎬 Físicas de Transición</h4>
+                
+                <div className="flex flex-col gap-3">
+                    <div>
+                        <label className="text-xs text-neutral-400">Familia Base</label>
+                        <select value={conf.family} onChange={(e)=>updateSlideConfig({family: e.target.value})} className="bg-black border border-neutral-700 rounded p-1.5 text-white w-full text-sm mt-1">
+                            <option value="fade">Fantasma Libre (Fade)</option>
+                            <option value="slide">Deslizamiento (Slide)</option>
+                            <option value="blur-slide">Material (Blur Slide)</option>
+                            <option value="scale-up">Empuje (Scale Up)</option>
+                            <option value="glitch">Cyberpunk (Glitch)</option>
+                        </select>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                        <div className="flex-1">
+                            <label className="text-xs text-neutral-400">Origen</label>
+                            <select value={conf.direction} onChange={(e)=>updateSlideConfig({direction: e.target.value})} className="bg-black border border-neutral-700 rounded p-1.5 text-white w-full text-sm mt-1">
+                                <option value="up">Desde Abajo</option>
+                                <option value="down">Desde Arriba</option>
+                                <option value="left">Desde Derecha</option>
+                                <option value="right">Desde Izquierda</option>
+                                <option value="none">Centro</option>
+                            </select>
+                        </div>
+                        <div className="flex-1">
+                            <label className="text-xs text-neutral-400">Rebote</label>
+                            <select value={conf.physics} onChange={(e)=>updateSlideConfig({physics: e.target.value})} className="bg-black border border-neutral-700 rounded p-1.5 text-white w-full text-sm mt-1">
+                                <option value="smooth">Smooth (Apple)</option>
+                                <option value="snappy">Snappy (Corto)</option>
+                                <option value="bouncy">Bouncy (Liga)</option>
+                                <option value="linear">Linear (Robot)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+  };
+
 
   // MAIN RENDER
   if (loading) return <div className="text-neutral-500 p-10 text-center">Iniciando Motor Tailwind...</div>;
@@ -274,12 +336,12 @@ export default function Editor() {
             
             <div className="w-full max-w-5xl aspect-video bg-black rounded-lg shadow-2xl border border-neutral-800 flex items-center justify-center overflow-hidden shrink-0 relative">
                 
-                {/* El renderizador inyecta el componente exacto con sus datos reales */}
+                {/* El renderizador inyecta el componente exacto con sus datos reales y físicas */}
                 {currentSlide && (
                     <div className="w-full h-full pointer-events-none scale-[0.6] origin-center">
-                        {currentSlide.type === 'hero' && <HeroSlide data={currentSlide.data} />}
-                        {currentSlide.type === 'feature_grid' && <FeatureGrid data={currentSlide.data} />}
-                        {currentSlide.type === 'comparison' && <ComparisonSlide data={currentSlide.data} />}
+                        {currentSlide.type === 'hero' && <HeroSlide config={currentSlide.config} data={currentSlide.data} />}
+                        {currentSlide.type === 'feature_grid' && <FeatureGrid config={currentSlide.config} data={currentSlide.data} />}
+                        {currentSlide.type === 'comparison' && <ComparisonSlide config={currentSlide.config} data={currentSlide.data} />}
                     </div>
                 )}
 
@@ -311,6 +373,7 @@ export default function Editor() {
                   ) : (
                       <>
                         {renderEditorForm()}
+                        {renderConfigForm()}
                         
                         {currentSlide && (
                             <div className="mt-10 border-t border-red-900/30 pt-6">

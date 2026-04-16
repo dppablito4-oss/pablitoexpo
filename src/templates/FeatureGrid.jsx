@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Shield, Cpu, Activity, Star, Rocket } from 'lucide-react';
+import { generateAnimation } from '../lib/animations';
 
 const iconMap = {
   zap: <Zap className="w-8 h-8 text-yellow-400" />,
@@ -29,14 +30,20 @@ const cardVars = {
   }
 };
 
-export default function FeatureGrid({ data }) {
+export default function FeatureGrid({ config, data }) {
+  const anim = generateAnimation(config?.family, config?.direction, config?.physics);
   const features = data?.features || [
     { id: 1, title: "Característica Uno", desc: "Descripción detallada", icon: "zap" },
     { id: 2, title: "Característica Dos", desc: "Otra descripción", icon: "shield" }
   ];
 
   return (
-    <div className="w-full h-full bg-neutral-950 flex flex-col justify-center items-center p-12 overflow-hidden">
+    <motion.div 
+      initial={anim.initial}
+      animate={anim.animate}
+      exit={anim.exit}
+      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center items-center p-12 overflow-hidden"
+    >
       <div className="max-w-6xl w-full">
         <motion.h2 
           initial={{ opacity: 0, x: -30 }}
@@ -71,7 +78,7 @@ export default function FeatureGrid({ data }) {
             </motion.div>
           ))}
         </motion.div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -76,9 +76,9 @@ export default function ProjectorView() {
           transition={{ duration: 0.5 }}
           className="w-full h-full absolute inset-0"
         >
-            {currentSlide?.type === 'hero' && <HeroSlide data={currentSlide.data} />}
-            {currentSlide?.type === 'feature_grid' && <FeatureGrid data={currentSlide.data} />}
-            {currentSlide?.type === 'comparison' && <ComparisonSlide data={currentSlide.data} />}
+            {currentSlide?.type === 'hero' && <HeroSlide config={currentSlide.config} data={currentSlide.data} />}
+            {currentSlide?.type === 'feature_grid' && <FeatureGrid config={currentSlide.config} data={currentSlide.data} />}
+            {currentSlide?.type === 'comparison' && <ComparisonSlide config={currentSlide.config} data={currentSlide.data} />}
             {(!currentSlide || !['hero', 'feature_grid', 'comparison'].includes(currentSlide.type)) && (
                 <div className="w-full h-full flex flex-col items-center justify-center text-white bg-neutral-900">
                     <h1 className="text-4xl">Diapositiva Vacía / No Soportada</h1>

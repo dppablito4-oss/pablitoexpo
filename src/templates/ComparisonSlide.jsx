@@ -1,13 +1,20 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { generateAnimation } from '../lib/animations';
 
-export default function ComparisonSlide({ data }) {
+export default function ComparisonSlide({ config, data }) {
+  const anim = generateAnimation(config?.family, config?.direction, config?.physics);
   const stats = data?.stats || [
     { label: "Ejemplo 1", valA: 80, valB: 30 }
   ];
 
   return (
-    <div className="w-full h-full bg-neutral-950 flex flex-col justify-center p-12 text-white overflow-hidden">
+    <motion.div 
+      initial={anim.initial}
+      animate={anim.animate}
+      exit={anim.exit}
+      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center p-12 text-white overflow-hidden"
+    >
       <div className="max-w-5xl w-full mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -54,6 +61,6 @@ export default function ComparisonSlide({ data }) {
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

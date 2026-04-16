@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { generateAnimation } from '../lib/animations';
 
 const containerVars = {
   hidden: { opacity: 0 },
@@ -18,9 +19,16 @@ const textVars = {
   }
 };
 
-export default function HeroSlide({ data }) {
+export default function HeroSlide({ config, data }) {
+  const anim = generateAnimation(config?.family, config?.direction, config?.physics);
+
   return (
-    <div className="relative w-full h-full bg-neutral-950 flex flex-col justify-center items-center overflow-hidden">
+    <motion.div 
+      initial={anim.initial}
+      animate={anim.animate}
+      exit={anim.exit}
+      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center items-center overflow-hidden"
+    >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-neutral-950 to-neutral-950"></div>
       
       <motion.div 
@@ -55,6 +63,6 @@ export default function HeroSlide({ data }) {
           </motion.div>
         )}
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
