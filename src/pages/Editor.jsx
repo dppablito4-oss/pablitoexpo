@@ -110,18 +110,20 @@ export default function Editor() {
   const renderEditorForm = () => {
     const slide = presentation.slides_data.slides.find(s => s.id === selectedSlideId);
     if (!slide) return <p className="text-neutral-500">Selecciona una diapositiva</p>;
+    
+    const slideData = slide.data || {};
 
     if (slide.type === 'hero') {
         return (
             <div className="flex flex-col gap-4">
                 <label className="text-xs text-neutral-400">Título Principal</label>
-                <input type="text" value={slide.data.title || ''} onChange={(e)=>updateSlideData({title: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                <input type="text" value={slideData.title || ''} onChange={(e)=>updateSlideData({title: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                 
                 <label className="text-xs text-neutral-400">Subtítulo</label>
-                <textarea rows={3} value={slide.data.subtitle || ''} onChange={(e)=>updateSlideData({subtitle: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                <textarea rows={3} value={slideData.subtitle || ''} onChange={(e)=>updateSlideData({subtitle: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                 
                 <label className="text-xs text-neutral-400">Texto del Botón (Opcional)</label>
-                <input type="text" value={slide.data.buttonText || ''} onChange={(e)=>updateSlideData({buttonText: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                <input type="text" value={slideData.buttonText || ''} onChange={(e)=>updateSlideData({buttonText: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
             </div>
         );
     }
@@ -130,20 +132,20 @@ export default function Editor() {
         return (
             <div className="flex flex-col gap-4">
                 <label className="text-xs text-neutral-400">Encabezado</label>
-                <input type="text" value={slide.data.heading || ''} onChange={(e)=>updateSlideData({heading: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                <input type="text" value={slideData.heading || ''} onChange={(e)=>updateSlideData({heading: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                 
                 <hr className="border-neutral-800 my-2" />
                 <h4 className="text-sm font-bold text-accent-primary">Tarjetas</h4>
-                {slide.data.features?.map((feat, idx) => (
+                {slideData.features?.map((feat, idx) => (
                     <div key={idx} className="p-3 bg-neutral-900 border border-neutral-800 rounded mb-2">
-                        <input placeholder="Título" value={feat.title} onChange={(e) => {
-                            const newFeats = [...slide.data.features]; newFeats[idx].title = e.target.value; updateSlideData({features: newFeats});
+                        <input placeholder="Título" value={feat.title || ''} onChange={(e) => {
+                            const newFeats = [...(slideData.features||[])]; newFeats[idx].title = e.target.value; updateSlideData({features: newFeats});
                         }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm mb-2" />
-                        <textarea placeholder="Descripción" value={feat.desc} onChange={(e) => {
-                            const newFeats = [...slide.data.features]; newFeats[idx].desc = e.target.value; updateSlideData({features: newFeats});
+                        <textarea placeholder="Descripción" value={feat.desc || ''} onChange={(e) => {
+                            const newFeats = [...(slideData.features||[])]; newFeats[idx].desc = e.target.value; updateSlideData({features: newFeats});
                         }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm mb-2" rows={2}/>
-                        <select value={feat.icon} onChange={(e) => {
-                            const newFeats = [...slide.data.features]; newFeats[idx].icon = e.target.value; updateSlideData({features: newFeats});
+                        <select value={feat.icon || 'zap'} onChange={(e) => {
+                            const newFeats = [...(slideData.features||[])]; newFeats[idx].icon = e.target.value; updateSlideData({features: newFeats});
                         }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm">
                             <option value="zap">Rayo</option>
                             <option value="shield">Escudo</option>
@@ -153,12 +155,12 @@ export default function Editor() {
                             <option value="rocket">Cohete</option>
                         </select>
                         <button onClick={()=>{
-                            const newFeats = slide.data.features.filter((_, i) => i !== idx); updateSlideData({features: newFeats});
+                            const newFeats = (slideData.features||[]).filter((_, i) => i !== idx); updateSlideData({features: newFeats});
                         }} className="mt-2 text-xs text-red-500 w-full text-right hover:text-red-400">Eliminar Tarjeta</button>
                     </div>
                 ))}
                 <button onClick={()=>{
-                    const newFeats = [...(slide.data.features||[]), {id: Date.now(), title: 'Nueva', desc: 'Desc', icon: 'star'}];
+                    const newFeats = [...(slideData.features||[]), {id: Date.now(), title: 'Nueva', desc: 'Desc', icon: 'star'}];
                     updateSlideData({features: newFeats});
                 }} className="text-xs text-center border border-neutral-700 py-2 rounded hover:bg-neutral-800">+ Añadir Tarjeta</button>
             </div>
@@ -171,44 +173,44 @@ export default function Editor() {
                 <div className="flex gap-2">
                     <div className="flex-1">
                         <label className="text-xs text-blue-400 font-bold">Concepto A</label>
-                        <input type="text" value={slide.data.conceptA || ''} onChange={(e)=>updateSlideData({conceptA: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                        <input type="text" value={slideData.conceptA || ''} onChange={(e)=>updateSlideData({conceptA: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                     </div>
                     <div className="flex-1">
                         <label className="text-xs text-purple-400 font-bold">Concepto B</label>
-                        <input type="text" value={slide.data.conceptB || ''} onChange={(e)=>updateSlideData({conceptB: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
+                        <input type="text" value={slideData.conceptB || ''} onChange={(e)=>updateSlideData({conceptB: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                     </div>
                 </div>
                 
                 <hr className="border-neutral-800 my-2" />
                 <h4 className="text-sm font-bold text-accent-primary">Estadísticas de Comparación</h4>
-                {slide.data.stats?.map((stat, idx) => (
+                {slideData.stats?.map((stat, idx) => (
                     <div key={idx} className="p-3 bg-neutral-900 border border-neutral-800 rounded mb-2">
                         <label className="text-xs text-neutral-400">Métrica</label>
-                        <input type="text" value={stat.label} onChange={(e) => {
-                            const newStats = [...slide.data.stats]; newStats[idx].label = e.target.value; updateSlideData({stats: newStats});
+                        <input type="text" value={stat.label || ''} onChange={(e) => {
+                            const newStats = [...(slideData.stats||[])]; newStats[idx].label = e.target.value; updateSlideData({stats: newStats});
                         }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm mb-2" />
                         
                         <div className="flex gap-2">
                             <div className="flex-1">
                                 <label className="text-xs text-blue-400">Valor A (%)</label>
-                                <input type="number" min="0" max="100" value={stat.valA} onChange={(e) => {
-                                    const newStats = [...slide.data.stats]; newStats[idx].valA = Number(e.target.value); updateSlideData({stats: newStats});
+                                <input type="number" min="0" max="100" value={stat.valA || 0} onChange={(e) => {
+                                    const newStats = [...(slideData.stats||[])]; newStats[idx].valA = Number(e.target.value); updateSlideData({stats: newStats});
                                 }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm" />
                             </div>
                             <div className="flex-1">
                                 <label className="text-xs text-purple-400">Valor B (%)</label>
-                                <input type="number" min="0" max="100" value={stat.valB} onChange={(e) => {
-                                    const newStats = [...slide.data.stats]; newStats[idx].valB = Number(e.target.value); updateSlideData({stats: newStats});
+                                <input type="number" min="0" max="100" value={stat.valB || 0} onChange={(e) => {
+                                    const newStats = [...(slideData.stats||[])]; newStats[idx].valB = Number(e.target.value); updateSlideData({stats: newStats});
                                 }} className="bg-black border border-neutral-700 rounded p-1 text-white w-full text-sm" />
                             </div>
                         </div>
                         <button onClick={()=>{
-                            const newStats = slide.data.stats.filter((_, i) => i !== idx); updateSlideData({stats: newStats});
+                            const newStats = (slideData.stats||[]).filter((_, i) => i !== idx); updateSlideData({stats: newStats});
                         }} className="mt-2 text-xs text-red-500 w-full text-right hover:text-red-400">Eliminar Métrica</button>
                     </div>
                 ))}
                 <button onClick={()=>{
-                    const newStats = [...(slide.data.stats||[]), {label: 'Nueva Métrica', valA: 50, valB: 50}];
+                    const newStats = [...(slideData.stats||[]), {label: 'Nueva Métrica', valA: 50, valB: 50}];
                     updateSlideData({stats: newStats});
                 }} className="text-xs text-center border border-neutral-700 py-2 rounded hover:bg-neutral-800">+ Añadir Métrica</button>
             </div>
@@ -316,7 +318,9 @@ export default function Editor() {
 
               {/* Thumbnails */}
               <div className="flex-1 p-4 space-y-3">
-                  {presentation.slides_data.slides.map((slide, i) => (
+                  {presentation.slides_data.slides.map((slide, i) => {
+                      const sdata = slide.data || {};
+                      return (
                       <div 
                           key={slide.id} 
                           onClick={() => setSelectedSlideId(slide.id)}
@@ -324,10 +328,11 @@ export default function Editor() {
                       >
                           <div className="text-xs text-neutral-400 mb-1 font-mono">D.{i+1} - {slide.type}</div>
                           <div className="text-sm text-white font-bold truncate">
-                            {slide.data.title || slide.data.heading || slide.data.conceptA || "Diapositiva"}
+                            {sdata.title || sdata.heading || sdata.conceptA || "Diapositiva"}
                           </div>
                       </div>
-                  ))}
+                      )
+                  })}
               </div>
           </div>
 
