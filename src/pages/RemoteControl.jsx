@@ -30,7 +30,7 @@ export default function RemoteControl() {
     if (e.cancelable) {
       e.preventDefault();
     }
-    
+
     // Throttle básico para no saturar Supabase con 60fps
     const now = Date.now();
     if (now - lastEventRef.current < 40) return;
@@ -54,13 +54,13 @@ export default function RemoteControl() {
       </header>
 
       {/* Trackpad para el láser */}
-      <div 
+      <div
         onTouchMove={handleTouchMove}
-        className="glass-panel" 
-        style={{ 
-          flex: 1, 
-          display: 'flex', 
-          alignItems: 'center', 
+        className="glass-panel"
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           border: '2px dashed rgba(0,240,255,0.4)',
           marginBottom: '20px',
@@ -69,7 +69,7 @@ export default function RemoteControl() {
         }}
       >
         <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center' }}>
-          Desliza tu dedo por aquí<br/>para mover el láser en la PC
+          Desliza tu dedo por aquí<br />para mover el láser en la PC
         </p>
       </div>
 
