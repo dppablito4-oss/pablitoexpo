@@ -78,7 +78,7 @@ export default function FeatureGrid({ config, data }) {
             </motion.div>
           ))}
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
