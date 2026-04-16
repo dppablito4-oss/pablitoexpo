@@ -5,19 +5,27 @@ import { supabase, makeChannel } from './auth.js';
 // Utilidades
 const safePreventDefault = (e)=>{ try{ if (e && e.cancelable) e.preventDefault(); }catch{} };
 
-function getRoomFromUrl(){
+function getRoomFromUrl(isControl){
   try{
     const params = new URLSearchParams(location.search);
     let room = params.get('room');
     if (!room){
-      room = 'room-' + Math.random().toString(36).slice(2,9).toUpperCase();
-      params.set('room', room);
-      const newUrl = location.pathname + '?' + params.toString();
-      history.replaceState(null, '', newUrl);
+      if (isControl) {
+        room = prompt("📱 Ingrese el código de 4 o 5 letras/números que aparece en la computadora (ej: room-X1Y2Z3):");
+        if (!room) {
+          alert("Sin el código no podrás controlar el proyector. Recarga para intentarlo.");
+          return 'sin-conexion';
+        }
+      } else {
+        room = 'room-' + Math.random().toString(36).slice(2,8).toUpperCase();
+        params.set('room', room);
+        const newUrl = location.pathname + '?' + params.toString();
+        history.replaceState(null, '', newUrl);
+      }
     }
     return room;
   }catch(e){
-    return 'room-' + Math.random().toString(36).slice(2,9).toUpperCase();
+    return 'room-' + Math.random().toString(36).slice(2,8).toUpperCase();
   }
 }
 
@@ -96,7 +104,22 @@ function initProjector(){
   if (window.gsap && typeof gsap.set === 'function') gsap.set(laser, { left: pos.x + 'px', top: pos.y + 'px' });
   else setLaserAnimated(pos.x, pos.y);
 
-  const room = getRoomFromUrl();
+  const room = getRoomFromUrl(false);
+
+  // Mostrar el código visualmente en la esquina para copiarlo en el celular
+  const alertDiv = document.createElement('div');
+  alertDiv.style.position = 'fixed';
+  alertDiv.style.bottom = '15px';
+  alertDiv.style.left = '15px';
+  alertDiv.style.color = '#00f0ff';
+  alertDiv.style.background = 'rgba(0,0,0,0.8)';
+  alertDiv.style.border = '1px solid currentColor';
+  alertDiv.style.padding = '8px 12px';
+  alertDiv.style.borderRadius = '8px';
+  alertDiv.style.zIndex = '9999';
+  alertDiv.style.fontFamily = 'monospace';
+  alertDiv.innerHTML = `📱 Abre el control y escribe el CÓDIGO: <strong style="font-size:1.2em;color:#fff">${room}</strong>`;
+  document.body.appendChild(alertDiv);
 
   const handlers = {
     moveLaser: (msg)=>{
@@ -124,7 +147,7 @@ function initControl(){
   const btnNext = document.getElementById('next');
   const btnPrev = document.getElementById('prev');
 
-  const room = getRoomFromUrl();
+  const room = getRoomFromUrl(true);
 
   // handlers de control (no necesitamos procesar entradas recibidas aquí, pero mantenemos stubs)
   const handlers = { moveLaser: ()=>{}, nav: ()=>{} };
