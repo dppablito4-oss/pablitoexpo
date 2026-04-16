@@ -421,7 +421,7 @@ export default function Editor() {
               sectionId={section.id}
               nasaData={nasa}
               isActive={activeSectionId === section.id}
-              bgImage={nasa.bgImage}
+              bgImage={nasa[`${section.id}BgImage`] || ''}  
               onElementDrag={handleElementDrag}
               onElementSelect={setSelectedElId}
               selectedElId={selectedElId}
@@ -460,15 +460,12 @@ export default function Editor() {
             /* ── TAB CONTENIDO ── */
             <div className="flex flex-col gap-5">
               <div className="space-y-2">
-                <h4 className="text-[10px] text-fuchsia-400 font-bold uppercase">🌌 Fondo Global</h4>
-                <input type="text" placeholder="URL de imagen de fondo..."
-                  value={nasa.bgImage || ''}
-                  onChange={e => updateNasaData({ bgImage: e.target.value })}
+                <h4 className="text-[10px] text-blue-400 font-bold uppercase">🚀 Portada (Sección 1)</h4>
+                <label className="text-[10px] text-neutral-500">Fondo — URL de imagen</label>
+                <input type="text" placeholder="https://imagen-espacial.jpg"
+                  value={nasa.heroBgImage || ''}
+                  onChange={e => updateNasaData({ heroBgImage: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-[10px] text-blue-400 font-bold uppercase">🚀 Portada</h4>
                 <input type="text" value={nasa.heroTitle || ''} onChange={e => updateNasaData({ heroTitle: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-sm font-bold" placeholder="Título Principal" />
                 <textarea rows={2} value={nasa.heroSubtitle || ''} onChange={e => updateNasaData({ heroSubtitle: e.target.value })}
@@ -476,7 +473,12 @@ export default function Editor() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="text-[10px] text-emerald-400 font-bold uppercase">📄 Misión</h4>
+                <h4 className="text-[10px] text-emerald-400 font-bold uppercase">📄 Misión (Sección 2)</h4>
+                <label className="text-[10px] text-neutral-500">Fondo — URL de imagen</label>
+                <input type="text" placeholder="https://imagen-oceano.jpg"
+                  value={nasa.aboutBgImage || ''}
+                  onChange={e => updateNasaData({ aboutBgImage: e.target.value })}
+                  className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
                 <input type="text" value={nasa.aboutHeading || ''} onChange={e => updateNasaData({ aboutHeading: e.target.value })}
                   className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-sm font-bold" placeholder="Encabezado" />
                 <textarea rows={4} value={nasa.aboutText || ''} onChange={e => updateNasaData({ aboutText: e.target.value })}
@@ -484,16 +486,21 @@ export default function Editor() {
               </div>
 
               <div className="space-y-2">
-                <h4 className="text-[10px] text-orange-400 font-bold uppercase">📊 Métricas (Stats)</h4>
+                <h4 className="text-[10px] text-orange-400 font-bold uppercase">📊 Stats (Sección 3)</h4>
+                <label className="text-[10px] text-neutral-500">Fondo — URL de imagen</label>
+                <input type="text" placeholder="https://imagen-fauna.jpg"
+                  value={nasa.statsBgImage || ''}
+                  onChange={e => updateNasaData({ statsBgImage: e.target.value })}
+                  className="bg-black border border-neutral-700 rounded p-2 text-white w-full text-xs" />
                 {(nasa.features || []).map((feat, idx) => (
                   <div key={idx} className="p-3 bg-black border border-neutral-800 rounded space-y-1">
                     <input placeholder="Valor grande (ej: 1500 km)" value={feat.val || ''}
                       onChange={e => updateFeature(idx, 'val', e.target.value)}
                       className="bg-neutral-900 border border-neutral-700 rounded p-1 text-white w-full text-xs font-black" />
-                    <input placeholder="Título (ej: METRICA 1)" value={feat.title || ''}
+                    <input placeholder="Título" value={feat.title || ''}
                       onChange={e => updateFeature(idx, 'title', e.target.value)}
                       className="bg-transparent text-cyan-400 w-full text-xs font-bold outline-none" />
-                    <input placeholder="Descripción corta..." value={feat.desc || ''}
+                    <input placeholder="Descripción..." value={feat.desc || ''}
                       onChange={e => updateFeature(idx, 'desc', e.target.value)}
                       className="bg-transparent text-neutral-500 w-full text-[10px] font-mono outline-none" />
                   </div>
