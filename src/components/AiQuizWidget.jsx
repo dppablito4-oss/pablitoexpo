@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY;
+const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY || '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';
 
 // Construye un contexto rico leyendo todo el JSON de la presentación
 function buildSystemPrompt(nasaData) {
