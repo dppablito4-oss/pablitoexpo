@@ -3,14 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 
+// Plantillas Maestras
+import HeroSlide from '../templates/HeroSlide';
+import FeatureGrid from '../templates/FeatureGrid';
+import ComparisonSlide from '../templates/ComparisonSlide';
+
 export default function ProjectorView() {
   const { id } = useParams();
   const navigate = useNavigate();
   
   const [presentation, setPresentation] = useState(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   
-  // Optimizacion nivel Dios: Evita re-renderizado de React, corre directo en GPU (60+ FPS)
+  // Laser Nivel Dios (GPU directo)
   const laserX = useMotionValue(window.innerWidth / 2);
   const laserY = useMotionValue(window.innerHeight / 2);
   const smoothX = useSpring(laserX, { stiffness: 200, damping: 20, mass: 0.5 });
@@ -18,21 +24,26 @@ export default function ProjectorView() {
 
   useEffect(() => {
     const loadPresentation = async () => {
-      const { data } = await supabase.from('presentations').select('*').eq('id', id).single();
-      if (data) setPresentation(data);
+      const { data, error } = await supabase.from('presentations').select('*').eq('id', id).single();
+      if (error) {
+        alert("Transmisión perdida o presentación no encontrada.");
+        navigate('/');
+        return;
+      }
+      setPresentation(data);
+      setLoading(false);
     };
+
     loadPresentation();
 
     const channel = supabase.channel(`presentation-${id}`);
-
     channel
-      .on('broadcast', { event: 'nav' }, (payload) => {
-        const dir = payload.payload.direction;
-        setCurrentSlideIndex(prev => {
-           if (dir === 'next') return prev + 1;
-           if (dir === 'prev') return Math.max(0, prev - 1);
-           return prev;
-        });
+      .on('broadcast', { event: 'navigate' }, (payload) => {
+        if (payload.payload.direction === 'next') {
+          setCurrentSlideIndex(prev => prev + 1);
+        } else if (payload.payload.direction === 'prev') {
+          setCurrentSlideIndex(prev => Math.max(0, prev - 1));
+        }
       })
       .on('broadcast', { event: 'laser' }, (payload) => {
         laserX.set(payload.payload.x * window.innerWidth);
@@ -41,38 +52,40 @@ export default function ProjectorView() {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [id, navigate, laserX, laserY]);
 
-  if (!presentation) return <div style={{ color: 'white', padding: '20px' }}>Cargando proyector...</div>;
+  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
+  if (!presentation) return null;
+
+  const slides = presentation.slides_data?.slides || [];
+  // Asegurarnos de no pasarnos del límite del arreglo
+  const safeIndex = Math.min(currentSlideIndex, slides.length - 1);
+  const currentSlide = slides[safeIndex];
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#050510', position: 'relative' }}>
-      <button onClick={() => navigate('/')} style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, padding: '10px 20px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-        X Salir del Proyector
-      </button>
+    <div className="h-screen w-full bg-black overflow-hidden relative cursor-none">
       
-      {/* Slide Content */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-         <AnimatePresence mode="wait">
-           <motion.div 
-             key={currentSlideIndex}
-             initial={{ opacity: 0, scale: 0.9, y: 50 }}
-             animate={{ opacity: 1, scale: 1, y: 0 }}
-             exit={{ opacity: 0, scale: 1.1, y: -50 }}
-             transition={{ duration: 0.5, type: 'spring' }}
-             className="glass-panel"
-             style={{ padding: '80px', textAlign: 'center', maxWidth: '80%', border: '1px solid rgba(0,240,255,0.2)' }}
-           >
-             <h1 style={{ fontSize: '5rem', color: 'var(--accent-primary)', marginBottom: '20px', textShadow: '0 0 30px rgba(0,240,255,0.4)' }}>
-               {presentation.title}
-             </h1>
-             <p style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>Diapositiva #{currentSlideIndex + 1}</p>
-             <p style={{ marginTop: '40px', fontSize: '1.2rem', color: '#fff' }}>Prueba usar tu celular como control remoto 📱✨</p>
-           </motion.div>
-         </AnimatePresence>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentSlide?.id || 'empty'}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.5 }}
+          className="w-full h-full absolute inset-0"
+        >
+            {currentSlide?.type === 'hero' && <HeroSlide data={currentSlide.data} />}
+            {currentSlide?.type === 'feature_grid' && <FeatureGrid data={currentSlide.data} />}
+            {currentSlide?.type === 'comparison' && <ComparisonSlide data={currentSlide.data} />}
+            {(!currentSlide || !['hero', 'feature_grid', 'comparison'].includes(currentSlide.type)) && (
+                <div className="w-full h-full flex flex-col items-center justify-center text-white bg-neutral-900">
+                    <h1 className="text-4xl">Diapositiva Vacía / No Soportada</h1>
+                </div>
+            )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Laser Virtual */}
       <motion.div 
@@ -90,6 +103,14 @@ export default function ProjectorView() {
           zIndex: 9999
         }}
       />
+      
+      {/* UI Flotante Decorativa */}
+      <div className="absolute bottom-4 left-4 text-xs font-mono text-neutral-600 tracking-widest z-50 mix-blend-difference">
+        UPLINK: ACTIVO | PABLITO EXPO ENGINE
+      </div>
+      <div className="absolute bottom-4 right-4 text-white/30 font-mono z-50">
+        {safeIndex + 1} / {slides.length}
+      </div>
     </div>
   );
 }
