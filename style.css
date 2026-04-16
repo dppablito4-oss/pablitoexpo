@@ -1,0 +1,74 @@
+/* Dark glassmorphism + neon accents */
+:root{
+  --bg-1: #05060a;
+  --bg-2: #071020;
+  --glass: rgba(255,255,255,0.03);
+  --accent: #00f0ff; /* azul eléctrico */
+  --neon: #39ff14; /* verde neón */
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(135deg,var(--bg-1),var(--bg-2));
+  color:#e6f3ff;
+}
+
+.reveal .slides section{
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:14px;
+  padding:28px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+/* Laser pointer */
+.laser{
+  position:absolute;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 30%, #ff8b8b, #ff0000);
+  box-shadow: 0 0 12px rgba(255,80,80,0.9), 0 0 30px rgba(255,40,40,0.6), 0 0 70px rgba(255,20,20,0.15);
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* Control page */
+.control-root{max-width:900px;margin:18px auto;padding:12px}
+.trackpad{
+  width:calc(100% - 40px);
+  height:60vh;
+  margin:20px auto;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);
+  font-size:1.2rem;
+  touch-action:none; /* importante para manejar touchmove */
+}
+.buttons{display:flex;gap:16px;justify-content:center;margin-top:8px}
+.btn{
+  background:linear-gradient(135deg,#091022, #021018);
+  border:1px solid rgba(255,255,255,0.06);
+  color:var(--neon);
+  padding:12px 18px;border-radius:10px;font-weight:600;font-size:1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 12px rgba(0,255,150,0.03) inset;
+}
+
+header h2{margin:0;color:var(--accent)}
+footer{opacity:0.7;text-align:center;margin-top:12px}
+
+/* Reveal overrides for dark look */
+.reveal{
+  background: transparent;
+}
+.reveal .controls, .reveal .progress{ filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6)); }
+
+/* Small screens */
+@media (max-width:720px){
+  .trackpad{height:54vh}
+  .btn{padding:10px 14px}
+}
