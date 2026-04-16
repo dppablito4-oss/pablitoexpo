@@ -19,6 +19,7 @@ export default function NasaWebTemplate({ data = {} }) {
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const heroParallaxY = useTransform(scrollYProgress, [0, 0.5], [0, -150]);
 
   return (
     <div className="w-full text-white font-sans selection:bg-fuchsia-500/30">
@@ -36,8 +37,8 @@ export default function NasaWebTemplate({ data = {} }) {
             {/* --- SECCIÓN 1: HERO EPIC --- */}
             <section id="section-hero" className="w-full min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6">
                 <motion.div 
-                    style={{ y: useTransform(scrollYProgress, [0, 0.5], [0, -150]), opacity: heroOpacity }}
-                    className="flex flex-col items-center text-center max-w-6xl mx-auto mt="-20
+                    style={{ y: heroParallaxY, opacity: heroOpacity }}
+                    className="flex flex-col items-center text-center max-w-6xl mx-auto -mt-20"
                 >
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.8, filter: "blur(20px)" }}
