@@ -4,12 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleAuth = async (e) => {
@@ -17,19 +16,13 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const { error: authError } = isLogin 
-        ? await signIn({ email, password })
-        : await signUp({ email, password });
+      const { error: authError } = await signIn({ email, password });
       
       if (authError) throw authError;
       
-      if (!isLogin) {
-        alert('Check your email for the confirmation link');
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     } catch (err) {
-      setError(err.message || 'An error occurred during authentication');
+      setError('Acceso denegado: Credenciales incorrectas');
     } finally {
       setLoading(false);
     }
@@ -78,19 +71,10 @@ export default function Login() {
           </div>
           
           <button type="submit" className="btn-cyber" disabled={loading} style={{ marginTop: '10px' }}>
-            {loading ? 'Processing...' : (isLogin ? 'Initialize Uplink' : 'Create Account')}
+            {loading ? 'Verificando Uplink...' : 'Conectar Servidor (Uplink)'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <button 
-            type="button" 
-            onClick={() => setIsLogin(!isLogin)} 
-            style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}
-          >
-            {isLogin ? 'Need an account? Register here' : 'Already have access? Login'}
-          </button>
-        </div>
       </motion.div>
     </div>
   );
