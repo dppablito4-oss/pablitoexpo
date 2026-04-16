@@ -12,7 +12,7 @@ export default function Editor() {
           Volver al Dashboard
         </button>
       </header>
-      
+
       <div className="glass-panel" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: 'var(--text-secondary)' }}>ID en edición: {id}</p>
         <p style={{ color: 'var(--accent-primary)', marginLeft: '10px' }}>(Fase de plantillas en construcción...)</p>
