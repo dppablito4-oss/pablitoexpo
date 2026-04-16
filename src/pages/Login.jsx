@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export default function Login() {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleAuth = async (e) => {
@@ -16,13 +17,19 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const { error: authError } = await signIn({ email, password });
+      const { error: authError } = isLogin 
+        ? await signIn({ email, password })
+        : await signUp({ email, password });
       
       if (authError) throw authError;
       
-      navigate('/');
+      if (!isLogin) {
+        alert('Check your email for the confirmation link o ya puedes loguearte.');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
-      setError('Acceso denegado: Credenciales incorrectas');
+      setError(err.message || 'Error de acceso / registro');
     } finally {
       setLoading(false);
     }
@@ -71,10 +78,19 @@ export default function Login() {
           </div>
           
           <button type="submit" className="btn-cyber" disabled={loading} style={{ marginTop: '10px' }}>
-            {loading ? 'Verificando Uplink...' : 'Conectar Servidor (Uplink)'}
+            {loading ? 'Procesando...' : (isLogin ? 'Ingresar al Workspace' : 'Matricularse como Estudiante')}
           </button>
         </form>
 
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <button 
+            type="button" 
+            onClick={() => setIsLogin(!isLogin)} 
+            style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}
+          >
+            {isLogin ? '¿Estudiante nuevo? Pide acceso aquí' : '¿Ya eres miembro? Inicia sesión'}
+          </button>
+        </div>
       </motion.div>
     </div>
   );
