@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Importación de Plantillas Maestras
 import HeroSlide from '../templates/HeroSlide';
@@ -336,14 +336,19 @@ export default function Editor() {
             
             <div className="w-full max-w-5xl aspect-video bg-black rounded-lg shadow-2xl border border-neutral-800 flex items-center justify-center overflow-hidden shrink-0 relative">
                 
-                {/* El renderizador inyecta el componente exacto con sus datos reales y físicas */}
-                {currentSlide && (
-                    <div className="w-full h-full pointer-events-none scale-[0.6] origin-center">
-                        {currentSlide.type === 'hero' && <HeroSlide config={currentSlide.config} data={currentSlide.data} />}
-                        {currentSlide.type === 'feature_grid' && <FeatureGrid config={currentSlide.config} data={currentSlide.data} />}
-                        {currentSlide.type === 'comparison' && <ComparisonSlide config={currentSlide.config} data={currentSlide.data} />}
-                    </div>
-                )}
+                {/* El renderizador inyecta el componente con AnimatePresence para previsualizar físicas */}
+                <AnimatePresence mode="wait">
+                    {currentSlide && (
+                        <motion.div 
+                            key={currentSlide.id + JSON.stringify(currentSlide.config)}
+                            className="w-full h-full pointer-events-none scale-[0.6] origin-center absolute inset-0"
+                        >
+                            {currentSlide.type === 'hero' && <HeroSlide config={currentSlide.config} data={currentSlide.data} />}
+                            {currentSlide.type === 'feature_grid' && <FeatureGrid config={currentSlide.config} data={currentSlide.data} />}
+                            {currentSlide.type === 'comparison' && <ComparisonSlide config={currentSlide.config} data={currentSlide.data} />}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Cover div para que clicks accidentales en la preview no activen botones de la plantilla */}
                 <div className="absolute inset-0 z-50"></div>
