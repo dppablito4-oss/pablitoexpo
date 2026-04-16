@@ -39,10 +39,8 @@ export default function FeatureGrid({ config = {}, data = {} }) {
 
   return (
     <motion.div 
-      initial={anim.initial}
-      animate={anim.animate}
-      exit={anim.exit}
-      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center items-center p-12 overflow-hidden"
+      {...anim}
+      className="absolute inset-0 w-full h-full bg-transparent flex flex-col justify-center items-center p-12 overflow-hidden"
     >
       <div className="max-w-6xl w-full">
         <motion.h2 

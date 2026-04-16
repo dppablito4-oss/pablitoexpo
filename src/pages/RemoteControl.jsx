@@ -25,25 +25,45 @@ export default function RemoteControl() {
     }
   };
 
-  const handleTouchMove = (e) => {
-    // Si podemos, detenemos el comportamiento default para evitar recargas
-    if (e.cancelable) {
-      e.preventDefault();
-    }
+  const lastPinchYRef = useRef(null);
 
-    // Throttle básico para no saturar Supabase con 60fps
+  const handleTouchMove = (e) => {
+    if (e.cancelable) e.preventDefault();
+
     const now = Date.now();
-    if (now - lastEventRef.current < 40) return;
+    if (now - lastEventRef.current < 30) return;
     lastEventRef.current = now;
 
-    // Calculamos X y Y normalizados (0.0 a 1.0)
-    const touch = e.touches[0];
-    const x = touch.clientX / window.innerWidth;
-    const y = touch.clientY / window.innerHeight;
-
-    if (channelRef.current) {
-      channelRef.current.send({ type: 'broadcast', event: 'laser', payload: { x, y } });
+    // SCROLL con 2 dedos
+    if (e.touches.length === 2) {
+      const avgY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      
+      if (lastPinchYRef.current !== null) {
+        const deltaY = lastPinchYRef.current - avgY;
+        // Broadcast de scroll suave (multiplicado para más sensibilidad)
+        if (channelRef.current) {
+          channelRef.current.send({ type: 'broadcast', event: 'remote-scroll', payload: { deltaY: deltaY * 2.5 } });
+        }
+      }
+      lastPinchYRef.current = avgY;
+      return;
     }
+
+    // LASER con 1 dedo
+    if (e.touches.length === 1) {
+      lastPinchYRef.current = null; // reset pinch
+      const touch = e.touches[0];
+      const x = touch.clientX / window.innerWidth;
+      const y = touch.clientY / window.innerHeight;
+
+      if (channelRef.current) {
+        channelRef.current.send({ type: 'broadcast', event: 'laser', payload: { x, y } });
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+      lastPinchYRef.current = null;
   };
 
   return (
@@ -56,10 +76,12 @@ export default function RemoteControl() {
       {/* Trackpad para el láser */}
       <div
         onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="glass-panel"
         style={{
           flex: 1,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           border: '2px dashed rgba(0,240,255,0.4)',
@@ -68,8 +90,9 @@ export default function RemoteControl() {
           touchAction: 'none'
         }}
       >
-        <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center' }}>
-          Desliza tu dedo por aquí<br />para mover el láser en la PC
+        <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center', marginBottom: '10px' }}>
+          ✨ 1 dedo: Mueve el láser<br/>
+          ⏬ 2 dedos: SCROLL LIBRE
         </p>
       </div>
 

@@ -24,12 +24,10 @@ export default function HeroSlide({ config = {}, data = {} }) {
 
   return (
     <motion.div 
-      initial={anim.initial}
-      animate={anim.animate}
-      exit={anim.exit}
-      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center items-center overflow-hidden"
+      {...anim}
+      className="absolute inset-0 w-full h-full bg-transparent flex flex-col justify-center items-center overflow-hidden"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-neutral-950 to-neutral-950"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
       
       <motion.div 
         variants={containerVars}

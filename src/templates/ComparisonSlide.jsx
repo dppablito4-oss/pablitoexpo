@@ -10,10 +10,8 @@ export default function ComparisonSlide({ config = {}, data = {} }) {
 
   return (
     <motion.div 
-      initial={anim.initial}
-      animate={anim.animate}
-      exit={anim.exit}
-      className="absolute inset-0 w-full h-full bg-neutral-950 flex flex-col justify-center p-12 text-white overflow-hidden"
+      {...anim}
+      className="absolute inset-0 w-full h-full bg-transparent flex flex-col justify-center p-12 text-white overflow-hidden"
     >
       <div className="max-w-5xl w-full mx-auto">
         <motion.div 

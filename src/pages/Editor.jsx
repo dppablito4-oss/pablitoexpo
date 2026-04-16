@@ -114,9 +114,25 @@ export default function Editor() {
     
     const slideData = slide.data || {};
 
+    // Input extra para Full Background
+    const renderBgControl = () => (
+        <div className="mb-4 pb-4 border-b border-neutral-800">
+            <label className="text-xs text-fuchsia-400 font-bold mb-2 block">🌌 Fondo de Sección (Scroll)</label>
+            <input 
+                type="text" 
+                placeholder="https://ejemplo.com/imagen.jpg" 
+                value={slideData.bgImage || ''} 
+                onChange={(e)=>updateSlideData({bgImage: e.target.value})} 
+                className="bg-black border border-fuchsia-900/50 rounded p-2 text-white w-full text-sm" 
+            />
+            <p className="text-[10px] text-neutral-500 mt-1">Soporta URLs de imágenes, GIFs. Da un efecto Parallax.</p>
+        </div>
+    );
+
     if (slide.type === 'hero') {
         return (
             <div className="flex flex-col gap-4">
+                {renderBgControl()}
                 <label className="text-xs text-neutral-400">Título Principal</label>
                 <input type="text" value={slideData.title || ''} onChange={(e)=>updateSlideData({title: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                 
@@ -132,6 +148,7 @@ export default function Editor() {
     if (slide.type === 'feature_grid') {
         return (
             <div className="flex flex-col gap-4">
+                {renderBgControl()}
                 <label className="text-xs text-neutral-400">Encabezado</label>
                 <input type="text" value={slideData.heading || ''} onChange={(e)=>updateSlideData({heading: e.target.value})} className="bg-neutral-900 border border-neutral-700 rounded p-2 text-white w-full" />
                 
@@ -171,6 +188,7 @@ export default function Editor() {
     if (slide.type === 'comparison') {
         return (
             <div className="flex flex-col gap-4">
+                {renderBgControl()}
                 <div className="flex gap-2">
                     <div className="flex-1">
                         <label className="text-xs text-blue-400 font-bold">Concepto A</label>
@@ -324,7 +342,11 @@ export default function Editor() {
                       return (
                       <div 
                           key={slide.id} 
-                          onClick={() => setSelectedSlideId(slide.id)}
+                          onClick={() => {
+                              setSelectedSlideId(slide.id);
+                              const target = document.getElementById(`preview-section-${slide.id}`);
+                              if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }}
                           className={`p-3 rounded-lg border-2 cursor-pointer transition-all relative ${selectedSlideId === slide.id ? 'border-accent-primary bg-accent-primary/10' : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600'}`}
                       >
                           <div className="text-xs text-neutral-400 mb-1 font-mono">D.{i+1} - {slide.type}</div>
@@ -338,36 +360,56 @@ export default function Editor() {
           </div>
 
           {/* CENTER PANEL: PREVIEW CANVAS */}
-          <div className="flex-1 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-neutral-950 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+          <div className="flex-1 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-800 to-neutral-950 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
             
-            <div className="w-full max-w-5xl aspect-video bg-black rounded-lg shadow-2xl border border-neutral-800 flex items-center justify-center overflow-hidden shrink-0 relative">
+            <div className="w-full max-w-5xl h-[85%] bg-black rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-neutral-800 flex flex-col overflow-y-auto overflow-x-hidden snap-y snap-mandatory relative scroll-smooth scale-90 border-t-4 border-t-accent-primary">
                 
-                {/* El renderizador inyecta el componente con AnimatePresence para previsualizar físicas */}
-                <AnimatePresence mode="wait">
-                    {currentSlide && (
-                        <motion.div 
-                            key={currentSlide.id + JSON.stringify(currentSlide.config)}
-                            className="w-full h-full pointer-events-none scale-[0.6] origin-center absolute inset-0"
-                        >
-                            {currentSlide.type === 'hero' && <HeroSlide config={currentSlide.config} data={currentSlide.data} />}
-                            {currentSlide.type === 'feature_grid' && <FeatureGrid config={currentSlide.config} data={currentSlide.data} />}
-                            {currentSlide.type === 'comparison' && <ComparisonSlide config={currentSlide.config} data={currentSlide.data} />}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {presentation.slides_data.slides.map((s, index) => {
+                    const TemplateConfig = s.config || {};
+                    const TemplateData = s.data || {};
+                    const bgImage = TemplateData.bgImage;
+                    const isSelected = selectedSlideId === s.id;
 
-                {/* Cover div para que clicks accidentales en la preview no activen botones de la plantilla */}
-                <div className="absolute inset-0 z-50"></div>
-                
+                    return (
+                        <div 
+                            key={s.id}
+                            id={`preview-section-${s.id}`}
+                            onClick={() => setSelectedSlideId(s.id)}
+                            className={`w-full shrink-0 h-full snap-start relative overflow-hidden transition-all duration-300 border-b-2 cursor-pointer
+                                ${isSelected ? 'border-accent-primary opacity-100 ring-2 ring-inset ring-accent-primary/20' : 'border-neutral-900 opacity-60 hover:opacity-100'}`}
+                        >
+                            {bgImage && (
+                                <motion.div 
+                                    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-50"
+                                    style={{ backgroundImage: `url(${bgImage})` }}
+                                >
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                                </motion.div>
+                            )}
+
+                            <div className="relative z-10 w-full h-full pointer-events-none origin-center p-4">
+                                {s.type === 'hero' && <HeroSlide config={TemplateConfig} data={TemplateData} />}
+                                {s.type === 'feature_grid' && <FeatureGrid config={TemplateConfig} data={TemplateData} />}
+                                {s.type === 'comparison' && <ComparisonSlide config={TemplateConfig} data={TemplateData} />}
+                            </div>
+                            
+                            {/* Overlay identifier */}
+                            <div className="absolute top-4 left-4 bg-black/50 text-white/50 px-3 py-1 rounded text-xs font-mono border border-white/10 z-50">
+                                Sección {index + 1}
+                            </div>
+                        </div>
+                    );
+                })}
+
                 {/* Capa de aviso flotante si visor */}
                 {!canEdit && (
-                    <div className="absolute top-4 right-4 bg-red-500/20 text-red-500 text-xs px-3 py-1 rounded-full border border-red-500/50 backdrop-blur-md">
-                        MIRA PERO NO TOQUES
+                    <div className="fixed top-4 right-4 bg-red-500 text-white text-xs px-4 py-2 rounded-full font-bold shadow-[0_0_15px_rgba(239,68,68,0.5)] z-50">
+                        MODO SOLO LECTURA
                     </div>
                 )}
             </div>
             
-            <p className="mt-6 text-neutral-600 font-mono text-sm tracking-widest uppercase">Canvas Preview</p>
+            <p className="mt-4 text-neutral-500 font-mono text-sm tracking-widest uppercase">Editor Scrolly-telling</p>
           </div>
 
           {/* RIGHT PANEL: SLIDE FORM MODIFIER */}
