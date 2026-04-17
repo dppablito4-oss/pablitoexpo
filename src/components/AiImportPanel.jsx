@@ -3,13 +3,22 @@ import { useState } from 'react';
 const uid = () => Math.random().toString(36).slice(2, 8);
 
 // The prompt the user copies to ChatGPT / Gemini
-const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACTAMENTE este formato JSON (sin texto extra, solo el JSON válido):
+const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACTAMENTE este formato JSON.
+
+REGLAS CRÍTICAS:
+- Devuelve SOLO el JSON, sin texto antes ni después, sin bloques de código markdown.
+- Las URLs de imágenes deben ser texto puro, NUNCA en formato Markdown [texto](url). Solo la URL directa.
+- Los colores deben ser hex estándar: "#ffffff", NUNCA "\\#ffffff".
+- El número de secciones NO está limitado a 3. Crea TODAS las secciones que el tema requiera para una presentación completa (mínimo 4-6 secciones).
+- Las URLs de bgImage deben ser de Unsplash en formato: https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070 (URL directa, sin corchetes).
+
+Formato JSON (respeta esta estructura exactamente):
 
 {
   "sections": [
     {
       "id": "sec-001",
-      "bgImage": "",
+      "bgImage": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2070",
       "height": 100,
       "elements": [
         {
@@ -24,26 +33,26 @@ const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACT
           "type": "text",
           "content": "Una frase poderosa como subtítulo.",
           "x": 15, "y": 56, "w": 70, "h": 12,
-          "style": { "fontSize": 22, "fontWeight": "300", "color": "#bbbbbb", "textAlign": "left" }
+          "style": { "fontSize": 22, "fontWeight": "300", "color": "#bbbbbb", "textAlign": "center" }
         }
       ]
     },
     {
       "id": "sec-002",
-      "bgImage": "",
+      "bgImage": "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?q=80&w=2070",
       "height": 100,
       "elements": [
         {
           "id": "el-003",
           "type": "text",
-          "content": "Encabezado de descripción",
+          "content": "Encabezado de sección",
           "x": 5, "y": 20, "w": 44, "h": 20,
           "style": { "fontSize": 48, "fontWeight": "700", "color": "#ffffff" }
         },
         {
           "id": "el-004",
           "type": "text",
-          "content": "2-3 oraciones descriptivas sobre el tema.",
+          "content": "2-3 oraciones descriptivas.",
           "x": 52, "y": 22, "w": 43, "h": 55,
           "style": { "fontSize": 18, "fontWeight": "300", "color": "#cccccc" }
         }
@@ -51,7 +60,7 @@ const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACT
     },
     {
       "id": "sec-003",
-      "bgImage": "",
+      "bgImage": "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?q=80&w=2070",
       "height": 100,
       "elements": [
         { "id": "el-005", "type": "metric", "val": "VALOR 1", "title": "MÉTRICA 1", "desc": "Descripción corta", "x": 3, "y": 20, "w": 30, "h": 55, "style": { "fontSize": 72 } },
@@ -59,11 +68,17 @@ const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACT
         { "id": "el-007", "type": "metric", "val": "VALOR 3", "title": "MÉTRICA 3", "desc": "Descripción corta", "x": 67, "y": 20, "w": 30, "h": 55, "style": { "fontSize": 72 } }
       ]
     }
+    // AGREGA MÁS SECCIONES AQUÍ — no hay límite, usa tantas como necesites
   ]
 }
 
 El tema de la presentación es: [ESCRIBE TU TEMA AQUÍ]
-Rellena el contenido con datos reales y relevantes para ese tema. Los IDs deben ser únicos (usa letras/números cortos). Puedes agregar más secciones si el tema lo requiere.`;
+
+Instrucciones adicionales:
+- Crea al menos 4-6 secciones para una presentación completa.
+- Alterna entre secciones de texto (2 columnas) y secciones de métricas.
+- Busca imágenes de Unsplash relevantes para el tema (URL directa, sin formato Markdown).
+- Los IDs deben ser únicos (sec-001, sec-002... / el-001, el-002...).`;
 
 export default function AiImportPanel({ onApply }) {
   const [open, setOpen] = useState(false);
