@@ -71,7 +71,7 @@ export default function Login() {
         if (authError) throw authError;
         navigate('/');
       } else {
-        // Guardamos el username en user_metadata de Supabase Auth
+        // Sign up
         const { error: authError } = await signUp({
           email,
           password,
@@ -80,8 +80,16 @@ export default function Login() {
           }
         });
         if (authError) throw authError;
-        setSuccess('¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.');
-        setUsername(''); setEmail(''); setPassword(''); setConfirmPassword('');
+
+        // Auto-login right after (works when email confirmation is OFF in Supabase)
+        const { error: loginError } = await signIn({ email, password });
+        if (loginError) {
+          // If email confirmation is still ON in Supabase, show this friendly message
+          setSuccess('¡Cuenta creada! Inicia sesión con tus datos.');
+          setIsLogin(true);
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       setError(err.message || 'Error de autenticación');
