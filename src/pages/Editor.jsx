@@ -10,6 +10,126 @@ const SECTIONS = [
   { id: 'stats', label: '3. Datos Técnicos' },
 ];
 
+// Prompt que el usuario le da a ChatGPT/Gemini
+const AI_PROMPT_TEMPLATE = `Eres un asistente de presentaciones. Dame contenido en EXACTAMENTE este formato JSON (sin texto extra, solo el JSON):
+
+{
+  "heroTitle": "TÍTULO EN MAYÚSCULAS (máx 3 palabras)",
+  "heroSubtitle": "Una frase poderosa que describe el tema (máx 15 palabras)",
+  "aboutHeading": "Título de la sección de descripción",
+  "aboutText": "2-3 oraciones descriptivas sobre el tema principal",
+  "features": [
+    { "title": "MÉTRICA 1", "val": "VALOR", "desc": "Descripción corta" },
+    { "title": "MÉTRICA 2", "val": "VALOR", "desc": "Descripción corta" },
+    { "title": "MÉTRICA 3", "val": "VALOR", "desc": "Descripción corta" }
+  ]
+}
+
+El tema de la presentación es: [ESCRIBE TU TEMA AQUÍ]`;
+
+// ── Panel de importación desde IA ───────────────────────────────────────────
+function AiImportPanel({ onApply }) {
+  const [open, setOpen] = useState(false);
+  const [json, setJson] = useState('');
+  const [status, setStatus] = useState(''); // 'ok' | 'error' | ''
+  const [copied, setCopied] = useState(false);
+
+  const handleApply = () => {
+    try {
+      const parsed = JSON.parse(json.trim());
+      // Filtrar solo los campos conocidos para no romper nada
+      const { heroTitle, heroSubtitle, aboutHeading, aboutText, features } = parsed;
+      const update = {};
+      if (heroTitle)    update.heroTitle    = heroTitle;
+      if (heroSubtitle) update.heroSubtitle = heroSubtitle;
+      if (aboutHeading) update.aboutHeading = aboutHeading;
+      if (aboutText)    update.aboutText    = aboutText;
+      if (features && Array.isArray(features)) update.features = features;
+      onApply(update);
+      setStatus('ok');
+      setJson('');
+      setTimeout(() => setStatus(''), 3000);
+    } catch {
+      setStatus('error');
+    }
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(AI_PROMPT_TEMPLATE);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="border border-cyan-500/20 rounded-xl overflow-hidden bg-cyan-950/10">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left"
+      >
+        <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
+          🤖 Importar contenido desde IA
+        </span>
+        <span className="text-neutral-500 text-xs">{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 flex flex-col gap-3">
+          {/* Paso 1: copiar prompt */}
+          <div className="space-y-1">
+            <p className="text-[10px] text-neutral-400">
+              <span className="text-cyan-400 font-bold">Paso 1:</span> Copia este prompt y pégalo en ChatGPT o Gemini
+            </p>
+            <button
+              onClick={handleCopyPrompt}
+              className={`w-full py-2 rounded-lg text-xs font-bold transition-colors
+                ${copied
+                  ? 'bg-green-600 text-white'
+                  : 'bg-neutral-800 hover:bg-neutral-700 text-cyan-300 border border-neutral-700'}`}
+            >
+              {copied ? '✅ Copiado!' : '📋 Copiar Prompt para ChatGPT/Gemini'}
+            </button>
+          </div>
+
+          {/* Paso 2: pegar JSON */}
+          <div className="space-y-1">
+            <p className="text-[10px] text-neutral-400">
+              <span className="text-cyan-400 font-bold">Paso 2:</span> Pega aquí el JSON que te dio la IA
+            </p>
+            <textarea
+              rows={6}
+              value={json}
+              onChange={e => { setJson(e.target.value); setStatus(''); }}
+              placeholder={'{\n  "heroTitle": "MI TEMA",\n  "heroSubtitle": "...",\n  ...\n}'}
+              className="w-full bg-black border border-neutral-700 rounded-lg p-3
+                         text-white text-xs font-mono resize-none
+                         focus:border-cyan-500/50 focus:outline-none"
+            />
+          </div>
+
+          {/* Paso 3: aplicar */}
+          <button
+            onClick={handleApply}
+            disabled={!json.trim()}
+            className="w-full py-2 rounded-lg text-sm font-bold
+                       bg-cyan-500 hover:bg-cyan-400 text-black
+                       disabled:opacity-30 disabled:cursor-not-allowed
+                       transition-colors"
+          >
+            ⚡ Aplicar a la Presentación
+          </button>
+
+          {status === 'ok' && (
+            <p className="text-green-400 text-xs text-center">✅ ¡Contenido aplicado correctamente!</p>
+          )}
+          {status === 'error' && (
+            <p className="text-red-400 text-xs text-center">❌ JSON inválido. Revisa que el formato sea correcto.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Elemento arrastrable dentro del canvas ──────────────────────────────────
 function DraggableEl({ el, isSelected, onSelect, onDragEnd, containerRef }) {
   const startRef = useRef(null);
@@ -459,6 +579,10 @@ export default function Editor() {
           ) : rightTab === 'content' ? (
             /* ── TAB CONTENIDO ── */
             <div className="flex flex-col gap-5">
+
+              {/* ══ IMPORTAR DESDE IA ══ */}
+              <AiImportPanel onApply={updateNasaData} />
+
               <div className="space-y-2">
                 <h4 className="text-[10px] text-blue-400 font-bold uppercase">🚀 Portada (Sección 1)</h4>
                 <label className="text-[10px] text-neutral-500">Fondo — URL de imagen</label>
