@@ -152,50 +152,88 @@ export default function ProjectorView() {
 }
 
 // ── Paywall Component ──────────────────────────────────────────────────────────
-function GuestPaywall({ guestViewsCount, onRegister }) {
-  const isAggressive = guestViewsCount > 3;
-
+function GuestPaywall({ onRegister }) {
   return (
     <div 
       className="relative w-full flex flex-col items-center justify-center p-8 text-center overflow-hidden" 
       style={{
-        minHeight: '60vh',
-        background: 'linear-gradient(to bottom, rgba(10,10,15,0) 0%, rgba(10,10,15,0.9) 20%, #000 100%)',
-        marginTop: '-20vh', // Solapa con la diapositiva anterior
+        minHeight: '70vh',
+        background: 'linear-gradient(to bottom, rgba(10,10,15,0) 0%, rgba(10,10,15,0.95) 18%, #000 100%)',
+        marginTop: '-22vh',
         zIndex: 50
       }}
     >
-      <div className="absolute inset-0 backdrop-blur-md" style={{ zIndex: -1 }} />
+      <div className="absolute inset-0 backdrop-blur-sm" style={{ zIndex: -1 }} />
       
       <motion.div 
-        initial={{ opacity: 0, y: 50 }} 
+        initial={{ opacity: 0, y: 60 }} 
         whileInView={{ opacity: 1, y: 0 }} 
         viewport={{ once: true }}
-        transition={{ duration: 0.8 }}
-        style={{ maxWidth: '600px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '40px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+        style={{ 
+          maxWidth: '640px', 
+          background: 'rgba(0,240,255,0.03)', 
+          border: '1px solid rgba(0,240,255,0.15)', 
+          borderRadius: '28px', 
+          padding: '48px 40px', 
+          boxShadow: '0 0 60px rgba(0,240,255,0.08), 0 30px 60px rgba(0,0,0,0.7)' 
+        }}
       >
-        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>{isAggressive ? '🚨' : '🚀'}</div>
-        <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#fff', marginBottom: '16px', letterSpacing: '-0.02em' }}>
-          {isAggressive ? '¡GAAA! ¡Ya viste muchas a la mala!' : 'Te quedaste a la mitad de la magia'}
+        {/* Logo / Icon */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <div style={{
+            width: '80px', height: '80px', 
+            borderRadius: '50%', 
+            background: 'rgba(0,240,255,0.08)',
+            border: '2px solid rgba(0,240,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 30px rgba(0,240,255,0.25)',
+            padding: '14px'
+          }}>
+            <img 
+              src="/favicon.svg" 
+              alt="Pablito Expo" 
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+            />
+          </div>
+        </div>
+
+        {/* Lock Icon overlay badge */}
+        <div style={{ fontSize: '1.5rem', marginBottom: '16px', letterSpacing: '0.1em', color: 'var(--accent-primary)', fontWeight: 'bold', fontFamily: 'monospace' }}>
+          🔒 CONTENIDO PROTEGIDO
+        </div>
+
+        <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', marginBottom: '20px', lineHeight: '1.2' }}>
+          Has llegado al límite del acceso como invitado
         </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '32px', lineHeight: '1.6' }}>
-          {isAggressive 
-            ? 'El radar detecta que te encantan nuestros proyectos, pero los servidores no se pagan solos. Crea tu cuenta gratis para desbloquear el modo láser y ver las diapositivas secretas.' 
-            : 'Solo los agentes registrados tienen acceso a la presentación completa. Entra ahora para descubrir el resto del contenido y activar el Modo Proyector con Láser.'}
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.05rem', marginBottom: '36px', lineHeight: '1.75' }}>
+          Únete a nuestra página para desbloquear el contenido restante y crear las tuyas, así como también activar el modo <strong style={{ color: 'var(--accent-primary)' }}>PRESENTACIÓN</strong> y tomar el control de un <strong style={{ color: 'var(--accent-primary)' }}>puntero láser desde tu teléfono</strong> para realizar una exposición nivel corporativo y guardar tus propios proyectos.
         </p>
         
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
             onClick={onRegister}
             className="btn-cyber" 
-            style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'var(--accent-primary)', color: 'black', fontWeight: 'bold', boxShadow: '0 0 20px rgba(0,240,255,0.4)', borderRadius: '12px' }}
+            style={{ 
+              padding: '16px 36px', fontSize: '1.05rem', 
+              background: 'var(--accent-primary)', color: '#000', 
+              fontWeight: '800', letterSpacing: '0.05em',
+              boxShadow: '0 0 25px rgba(0,240,255,0.5)', 
+              borderRadius: '14px', border: 'none'
+            }}
           >
-            CREAR CUENTA GRATIS
+            UNIRSE GRATIS
           </button>
           <button 
             onClick={onRegister}
-            className="btn-cyber" 
-            style={{ padding: '16px 32px', fontSize: '1.1rem', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px' }}
+            style={{ 
+              padding: '16px 36px', fontSize: '1.05rem', 
+              background: 'transparent', color: 'rgba(255,255,255,0.7)', 
+              fontWeight: '600',
+              border: '1px solid rgba(255,255,255,0.15)', 
+              borderRadius: '14px', cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
           >
             YA TENGO ACCESO
           </button>
