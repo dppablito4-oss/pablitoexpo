@@ -36,6 +36,7 @@ create policy "Owners and editors can update presentations" on public.presentati
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
   email text not null,
+  username text unique,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -50,8 +51,8 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email);
+  insert into public.profiles (id, email, username)
+  values (new.id, new.email, new.raw_user_meta_data->>'username');
   return new;
 end;
 $$;
