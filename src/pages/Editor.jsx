@@ -4,6 +4,7 @@ import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
 import CanvasElement from '../components/CanvasElement';
 import AiImportPanel from '../components/AiImportPanel';
+import AiCopilotPanel from '../components/AiCopilotPanel';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 8);
@@ -572,20 +573,31 @@ export default function Editor() {
           <div className="flex border-b border-neutral-800 shrink-0">
             <button
               onClick={() => { setRightTab('section'); setSelectedElId(null); }}
-              className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors
-                ${rightTab === 'section' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-neutral-500 hover:text-neutral-300'}`}>
+              className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors
+                ${rightTab === 'section' ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-950/20' : 'text-neutral-500 hover:text-neutral-300'}`}>
               Sección
             </button>
             <button
               onClick={() => setRightTab('element')}
-              className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors
-                ${rightTab === 'element' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-neutral-500 hover:text-neutral-300'}`}>
+              className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors
+                ${rightTab === 'element' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-neutral-500 hover:text-neutral-300'}`}>
               Elemento
+            </button>
+            <button
+              onClick={() => { setRightTab('copilot'); setSelectedElId(null); }}
+              className={`flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors
+                ${rightTab === 'copilot' ? 'text-fuchsia-400 border-b-2 border-fuchsia-400 bg-fuchsia-950/20' : 'text-neutral-500 hover:text-neutral-300'}`}>
+              🤖 Copiloto
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto hide-scrollbar">
-            {rightTab === 'element' ? (
+          <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col">
+            {rightTab === 'copilot' ? (
+              <AiCopilotPanel 
+                currentSections={sections} 
+                onApplyChanges={handleAiApply} 
+              />
+            ) : rightTab === 'element' ? (
               <ElementInspector
                 el={selectedEl}
                 onUpdate={(changes) => selectedEl && updateElement(selectedEl.id, changes)}
@@ -594,7 +606,7 @@ export default function Editor() {
             ) : (
               <div className="flex flex-col">
                 <SectionInspector section={activeSection} onUpdate={updateSection} />
-                <div className="border-t border-neutral-800 p-4">
+                <div className="border-t border-neutral-800 p-4 mt-auto">
                   <AiImportPanel onApply={handleAiApply} />
                 </div>
               </div>
