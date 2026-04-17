@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { generateSlug } from '../lib/slugify';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [presentations, setPresentations] = useState([]);
+  const [trashedPresentations, setTrashedPresentations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showTrash, setShowTrash] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,6 +22,7 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('presentations')
         .select('*')
+        .is('deleted_at', null)           // ← solo las NO eliminadas
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -29,6 +32,15 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTrashed = async () => {
+    const { data } = await supabase
+      .from('presentations')
+      .select('*')
+      .not('deleted_at', 'is', null)     // ← solo las EN papelera
+      .order('deleted_at', { ascending: false });
+    setTrashedPresentations(data || []);
   };
 
   const createPresentation = async () => {
@@ -57,18 +69,41 @@ export default function Dashboard() {
     }
   };
 
+  // SOFT DELETE — mueve a papelera por 7 días
   const deletePresentation = async (id, title) => {
-    if (!window.confirm(`¿Seguro que quieres eliminar "${title}" del servidor? Nadie más podrá verla.`)) return;
+    if (!window.confirm(`¿Mover "${title}" a la papelera? Podrás recuperarla en los próximos 7 días.`)) return;
     
-    const { error } = await supabase.from('presentations').delete().eq('id', id);
+    const { error } = await supabase
+      .from('presentations')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
     
     if (error) {
-      alert(`Error al eliminar: ${error.message}`);
+      alert(`Error: ${error.message}`);
       return;
     }
-
-    // Refresh from DB to confirm deletion
     fetchPresentations();
+  };
+
+  // RESTAURAR desde papelera
+  const restorePresentation = async (id) => {
+    const { error } = await supabase
+      .from('presentations')
+      .update({ deleted_at: null })
+      .eq('id', id);
+    
+    if (!error) {
+      fetchPresentations();
+      fetchTrashed();
+    }
+  };
+
+  // ELIMINAR PERMANENTE — solo desde papelera
+  const permanentDelete = async (id, title) => {
+    if (!window.confirm(`¿Eliminar "${title}" para siempre? Esto NO se puede deshacer.`)) return;
+    
+    const { error } = await supabase.from('presentations').delete().eq('id', id);
+    if (!error) fetchTrashed();
   };
 
   const addVipEditor = async (id, currentEditors) => {
@@ -97,6 +132,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleToggleTrash = () => {
+    if (!showTrash) fetchTrashed();
+    setShowTrash(v => !v);
+  };
+
+  // Helper: ¿Cuántos días quedan antes de expirar?
+  const daysLeft = (deletedAt) => {
+    const diff = 7 - Math.floor((Date.now() - new Date(deletedAt).getTime()) / 86400000);
+    return Math.max(0, diff);
+  };
+
   return (
     <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
@@ -113,11 +159,80 @@ export default function Dashboard() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 500 }}>Bóveda de Proyectos</h2>
-        <button onClick={createPresentation} className="btn-cyber" style={{ width: 'auto' }}>
-          + Fundar Proyecto
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={handleToggleTrash}
+            style={{
+              padding: '8px 16px', fontSize: '0.85rem', borderRadius: '10px',
+              background: showTrash ? 'rgba(255,100,100,0.15)' : 'rgba(255,255,255,0.05)',
+              color: showTrash ? '#ff8888' : 'rgba(255,255,255,0.4)',
+              border: `1px solid ${showTrash ? 'rgba(255,100,100,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            🗑️ Papelera
+          </button>
+          <button onClick={createPresentation} className="btn-cyber" style={{ width: 'auto' }}>
+            + Fundar Proyecto
+          </button>
+        </div>
       </div>
 
+      {/* ── PAPELERA ──────────────────────────── */}
+      <AnimatePresence>
+        {showTrash && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden', marginBottom: '32px' }}
+          >
+            <div style={{
+              background: 'rgba(255,80,80,0.04)', border: '1px solid rgba(255,80,80,0.15)',
+              borderRadius: '16px', padding: '20px'
+            }}>
+              <h3 style={{ color: '#ff8888', fontSize: '1rem', marginBottom: '16px', fontWeight: 600 }}>
+                🗑️ Papelera — se eliminan automáticamente en 7 días
+              </h3>
+              {trashedPresentations.length === 0 ? (
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>La papelera está vacía.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {trashedPresentations.map(pres => (
+                    <div key={pres.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px 16px'
+                    }}>
+                      <div>
+                        <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{pres.title}</span>
+                        <span style={{ marginLeft: '12px', fontSize: '0.75rem', color: '#ff8888' }}>
+                          ⏳ {daysLeft(pres.deleted_at)}d restantes
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => restorePresentation(pres.id)}
+                          style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '8px', background: 'rgba(0,240,255,0.1)', color: 'var(--accent-primary)', border: '1px solid rgba(0,240,255,0.3)', cursor: 'pointer' }}
+                        >
+                          ↩️ Restaurar
+                        </button>
+                        <button
+                          onClick={() => permanentDelete(pres.id, pres.title)}
+                          style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '8px', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', border: '1px solid rgba(255,0,0,0.3)', cursor: 'pointer' }}
+                        >
+                          🔥 Eliminar ya
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PROYECTOS ACTIVOS ─────────────────── */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Sincronizando nodos...</div>
       ) : (
@@ -181,7 +296,7 @@ export default function Dashboard() {
                           <button onClick={() => addVipEditor(pres.id, pres.editors_emails)} style={{ flex: 1, padding: '8px', background: 'rgba(0,240,255,0.1)', color: 'var(--accent-primary)', borderRadius: '8px', border: '1px solid rgba(0,240,255,0.3)', fontSize: '0.8rem' }} title="Conceder rango VIP a compañero">
                             ➕👤
                           </button>
-                          <button onClick={() => deletePresentation(pres.id, pres.title)} style={{ flex: 1, padding: '8px', background: 'rgba(255,0,0,0.1)', color: '#ff6b6b', borderRadius: '8px', border: '1px solid rgba(255,0,0,0.3)' }} title="Eliminar proyecto de la bóveda">
+                          <button onClick={() => deletePresentation(pres.id, pres.title)} style={{ flex: 1, padding: '8px', background: 'rgba(255,150,0,0.08)', color: 'rgba(255,180,60,0.7)', borderRadius: '8px', border: '1px solid rgba(255,150,0,0.2)' }} title="Mover a papelera (recuperable 7 días)">
                             🗑️
                           </button>
                         </>
