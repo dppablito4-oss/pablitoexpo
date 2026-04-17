@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const EDGE_FN_URL = 'https://wraogfketbdpfwfb.supabase.co/functions/v1/bright-responder';
+const EDGE_FN_URL = 'https://wraogfketbdpfmrpfwfb.supabase.co/functions/v1/bright-responder';
 const SUPABASE_ANON_KEY = 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
 
 export default function AiQuizWidget({ nasaData = {}, user = null }) {
