@@ -20,10 +20,34 @@ serve(async (req) => {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    const { prompt, currentSections } = await req.json();
+    const { prompt, currentSections, mode } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
+    }
+
+    // Build the user message based on mode
+    let userMessage;
+    if (mode === 'append') {
+      // APPEND MODE: Only generate 1 new section, don't touch existing ones
+      userMessage = `El estado actual de la presentación tiene ${currentSections?.length || 0} secciones.
+NO toques las secciones existentes. Solo añade UNA sección nueva al final del array.
+La respuesta debe incluir TODAS las secciones existentes MÁS la nueva.
+
+SECCIONES ACTUALES (inclúyelas tal cual en tu respuesta):
+${JSON.stringify({ sections: currentSections })}
+
+INSTRUCCIÓN DEL USUARIO: "${prompt}"
+
+Devuelve: { "sections": [...todasLasActuales, nuevaSeccion] }`;
+    } else {
+      // MODIFY MODE: Full context, modify as requested but keep all sections
+      userMessage = `ESTADO ACTUAL (${currentSections?.length || 0} secciones — INCLUYE TODAS EN TU RESPUESTA):
+${JSON.stringify({ sections: currentSections })}
+
+INSTRUCCIÓN DEL USUARIO: "${prompt}"
+
+Devuelve el JSON modificado con TODAS las secciones: { "sections": [...] }`;
     }
 
     // Configuración del modelo y comportamiento de la IA
@@ -64,7 +88,7 @@ Estructura de cada sección:
         response_format: { type: "json_object" }, 
         messages: [
           { role: 'system', content: systemInstruction },
-          { role: 'user', content: `ESTADO ACTUAL DEL JSON:\n${JSON.stringify({ sections: currentSections })}\n\nINSTRUCCIÓN DEL USUARIO:\n"${prompt}"\n\nDevuelve el array modificado en el formato { "sections": [...] }` }
+          { role: 'user', content: userMessage }
         ],
         temperature: 0.2, // Baja temperatura para que sea predecible y no rompa la estructura
       }),

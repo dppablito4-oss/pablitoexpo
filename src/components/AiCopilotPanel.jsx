@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
-export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
+// Words that signal "add new section" mode vs "modify existing" mode
+const APPEND_KEYWORDS = /añad|agrega|crea una nueva|nueva seccion|nueva sección|append|add a|agreg/i;
+
+export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo, canUndo }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asistente de presentaciones creado especialmente para Pablito_dp 🚀 Puedo cambiar colores, textos, añadir secciones completas o ajustar cualquier cosa del lienzo. ¿Qué necesitas hoy?' }
+    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asistente de presentaciones creado especialmente para Pablito_dp 🚀\n\nPuedo:\n• Añadir secciones nuevas al final\n• Cambiar colores, textos, tamaños\n• Modificar cualquier elemento del lienzo\n\nSi algo sale mal, el botón ↩ DESHACER lo restaura todo. ¿Qué necesitas hoy?' }
   ]);
   
   const endOfMessagesRef = useRef(null);
 
-  // Auto-scroll al final del chat
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isGenerating]);
@@ -24,12 +26,15 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
     setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
 
+    // Detect mode: append (add section) vs modify (change existing)
+    const isAppendMode = APPEND_KEYWORDS.test(userText);
+
     try {
-      // Llamar a la edge function de Supabase
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
-          currentSections: currentSections // Pasamos el canvas entero para contexto
+          currentSections: currentSections,
+          mode: isAppendMode ? 'append' : 'modify',
         }
       });
 
@@ -37,84 +42,112 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
 
       if (data && data.sections) {
         // ── PROTECCIÓN ANTI-BORRADO ────────────────────────────────────────
-        // Si la IA devuelve MENOS secciones que las actuales, fusionamos:
-        // conservamos todas las originales y añadimos solo las nuevas.
+        // If AI returned fewer sections than we have, merge: keep originals + add new ones
         let finalSections = data.sections;
         if (data.sections.length < currentSections.length) {
-          // Detectar qué IDs son nuevos (no estaban en el original)
           const originalIds = new Set(currentSections.map(s => s.id));
           const newSections = data.sections.filter(s => !originalIds.has(s.id));
-          // Mezclar: originales actualizados (si la IA los incluyó) + nuevos
           const updatedOriginals = currentSections.map(orig => {
             const aiVersion = data.sections.find(s => s.id === orig.id);
-            return aiVersion || orig; // Si la IA lo modificó, usar versión IA; si no, conservar original
+            return aiVersion || orig;
           });
           finalSections = [...updatedOriginals, ...newSections];
         }
 
-        onApplyChanges(finalSections);
+        onApplyChanges({ sections: finalSections });
+
         const successMsgs = [
-          '¡Hecho! He aplicado los cambios en tu lienzo. ✨',
-          '¡Listo, Pablito! Los cambios ya están en tu canvas. 🔥',
+          '¡Hecho! He aplicado los cambios en tu lienzo. ✨\n\nUsa ↩ DESHACER si algo no te gusta.',
+          '¡Listo, Pablito! Los cambios ya están en tu canvas. 🔥\n\n↩ DESHACER disponible.',
           '¡Ejecutado! ¿Qué más le damos? 🚀',
           '¡Pa\'lante! Cambios aplicados. 💪',
         ];
         setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
           { role: 'assistant', text: successMsgs[Math.floor(Math.random() * successMsgs.length)] }
         ));
+
       } else if (data && data.error) {
         throw new Error(data.error);
       } else {
-        throw new Error("Respuesta inválida de la IA");
+        throw new Error('Respuesta inválida de la IA');
       }
 
     } catch (err) {
       console.error(err);
       setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}. Inténtalo de nuevo.` }
+        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}.\n\nInténtalo de nuevo o usa ↩ DESHACER.` }
       ));
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const handleUndo = () => {
+    if (!onUndo) return;
+    const success = onUndo();
+    if (success) {
+      setChatHistory(prev => [...prev,
+        { role: 'assistant', text: '↩ Deshecho. Tu presentación volvió al estado anterior. ✅' }
+      ]);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-neutral-900 border-l border-neutral-800">
       
-      {/* Header Copiloto */}
+      {/* Header */}
       <div className="p-4 border-b border-neutral-800 shrink-0"
            style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
-                 style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
-              P
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
+                   style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
+                P
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
             </div>
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-black tracking-wider"
-                  style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                P.A.B.L.O.
-              </h3>
-              <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
-                IA
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-black tracking-wider"
+                    style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  P.A.B.L.O.
+                </h3>
+                <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
+                  IA
+                </span>
+              </div>
+              <p className="text-[9px] text-neutral-600 mt-0.5 italic">Protocolo de Asistencia y Bits para Lienzos Optimizados</p>
             </div>
-            <p className="text-[9px] text-neutral-600 mt-0.5 italic">Protocolo de Asistencia y Bits para Lienzos Optimizados</p>
           </div>
+
+          {/* Undo button */}
+          <button
+            onClick={handleUndo}
+            disabled={!canUndo || isGenerating}
+            title="Deshacer último cambio de la IA"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all
+                       disabled:opacity-20 disabled:cursor-not-allowed"
+            style={{
+              background: canUndo ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${canUndo ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}`,
+              color: canUndo ? '#fbbf24' : '#444',
+            }}
+          >
+            ↩ <span>Deshacer</span>
+          </button>
         </div>
       </div>
 
-      {/* Historial de Chat */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar flex flex-col">
+      {/* Chat history */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar flex flex-col">
         {chatHistory.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-lg p-3 text-xs leading-relaxed
-              ${msg.role === 'user' 
-                ? 'bg-cyan-600 text-white rounded-tr-sm' 
-                : 'bg-neutral-800 text-neutral-300 border border-neutral-700 rounded-tl-sm'}`}
+            <div className={`max-w-[88%] rounded-xl p-3 text-xs leading-relaxed whitespace-pre-line
+              ${msg.role === 'user'
+                ? 'text-white rounded-tr-sm'
+                : 'bg-neutral-800/80 text-neutral-300 border border-neutral-700/40 rounded-tl-sm'}`}
+              style={msg.role === 'user' ? { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' } : {}}
             >
               {msg.text}
             </div>
@@ -122,16 +155,21 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
         ))}
         {isGenerating && (
           <div className="flex justify-start">
-            <div className="bg-neutral-800 text-neutral-400 border border-neutral-700 rounded-lg p-3 rounded-tl-sm w-fit flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping"></div>
-              <span className="text-[10px] uppercase tracking-widest">Calculando magia...</span>
+            <div className="border rounded-xl p-3 rounded-tl-sm w-fit flex items-center gap-2"
+                 style={{ background: '#0f0a1e', borderColor: 'rgba(168,85,247,0.3)' }}>
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+              <span className="text-[10px] text-fuchsia-400 uppercase tracking-widest">P.A.B.L.O. pensando...</span>
             </div>
           </div>
         )}
         <div ref={endOfMessagesRef} />
       </div>
 
-      {/* Input de Prompt */}
+      {/* Input */}
       <div className="p-4 bg-neutral-950 border-t border-neutral-800 shrink-0">
         <form onSubmit={handleSubmit} className="relative">
           <textarea
@@ -143,28 +181,28 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
                 handleSubmit(e);
               }
             }}
-            placeholder="Ej: Cambia el color del título a rojo brillante..."
+            placeholder="Ej: Añade una sección sobre el cosmos al final..."
             disabled={isGenerating}
             rows={3}
             className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
                        text-white text-xs resize-none
-                       focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50
+                       focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30
                        disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           />
           <button
             type="submit"
             disabled={!prompt.trim() || isGenerating}
             className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider
-                       bg-cyan-500 text-black hover:bg-cyan-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                       text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
           >
             Enviar
           </button>
         </form>
-        <p className="mt-2 text-[9px] text-neutral-600 text-center">
-          Pro-tip: Presiona <kbd className="bg-neutral-800 px-1 py-0.5 rounded">Enter</kbd> para enviar.
+        <p className="mt-2 text-[9px] text-neutral-700 text-center">
+          <kbd className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-500">Enter</kbd> para enviar · <kbd className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-500">Shift+Enter</kbd> para nueva línea
         </p>
       </div>
-
     </div>
   );
 }

@@ -240,10 +240,13 @@ export default function Editor() {
 
   const [activeSectionId, setActiveSectionId] = useState(null);
   const [selectedElId, setSelectedElId]       = useState(null);
-  const [rightTab, setRightTab]               = useState('section'); // 'section' | 'element'
+  const [rightTab, setRightTab]               = useState('section'); // 'section' | 'element' | 'copilot'
 
   const [isDirty, setIsDirty]       = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved'|'saving'|'dirty'
+
+  // ── Undo stack (for AI changes) ────────────────────────────────────────
+  const undoStack = useRef([]); // up to 10 snapshots
 
   const canvasRef  = useRef(null);
   const saveTimer  = useRef(null);
@@ -365,10 +368,23 @@ export default function Editor() {
     } else {
       newSections = migrateToSections({ nasa: data });
     }
+    // Save snapshot for undo BEFORE applying
+    undoStack.current = [{ sections: sections.map(s => ({...s})), activeSectionId }, ...undoStack.current].slice(0, 10);
     setSections(newSections);
     setActiveSectionId(newSections[0]?.id || null);
     setSelectedElId(null);
     markDirty();
+  }, [sections, activeSectionId]);
+
+  // ── Undo last AI change ───────────────────────────────────────────────────────
+  const undoAiChange = useCallback(() => {
+    if (!undoStack.current.length) return false;
+    const last = undoStack.current.shift();
+    setSections(last.sections);
+    setActiveSectionId(last.activeSectionId);
+    setSelectedElId(null);
+    markDirty();
+    return true;
   }, []);
 
   // ── Auto-switch right tab when element selected ──────────────────────────────
@@ -597,6 +613,8 @@ export default function Editor() {
               <AiCopilotPanel
                 currentSections={sections}
                 onApplyChanges={handleAiApply}
+                onUndo={undoAiChange}
+                canUndo={undoStack.current.length > 0}
               />
             </div>
             <div style={{ display: rightTab === 'element' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
