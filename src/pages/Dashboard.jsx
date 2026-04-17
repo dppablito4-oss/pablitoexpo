@@ -59,13 +59,16 @@ export default function Dashboard() {
 
   const deletePresentation = async (id, title) => {
     if (!window.confirm(`¿Seguro que quieres eliminar "${title}" del servidor? Nadie más podrá verla.`)) return;
-    try {
-      const { error } = await supabase.from('presentations').delete().eq('id', id);
-      if (error) throw error;
-      setPresentations(presentations.filter(p => p.id !== id));
-    } catch (error) {
-      alert('¡Violación de Seguridad! No puedes borrar esto por que no tienes rango de Administrador en este grupo.');
+    
+    const { error } = await supabase.from('presentations').delete().eq('id', id);
+    
+    if (error) {
+      alert(`Error al eliminar: ${error.message}`);
+      return;
     }
+
+    // Refresh from DB to confirm deletion
+    fetchPresentations();
   };
 
   const addVipEditor = async (id, currentEditors) => {
