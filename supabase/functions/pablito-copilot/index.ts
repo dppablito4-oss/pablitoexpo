@@ -31,25 +31,24 @@ serve(async (req) => {
 Eres el Copiloto de IA de un editor de presentaciones web llamado "Pablito Expo".
 Tu trabajo es recibir el estado actual del lienzo (un array JSON de 'sections') y las instrucciones del usuario, y devolver una VERSIÓN MODIFICADA O EXPANDIDA de ese mismo array JSON que cumpla con los cambios pedidos.
 
-REGLAS DE RESPUESTA CRÍTICAS:
-- Tu respuesta TIENE que garantizar el formato JSON y contener un único objeto con la llave "sections".
-- No respondas con texto libre.
-- Devuelve SIEMPRE todos los elementos y secciones, incluso los que no modificaste (a menos que el usuario pida borrarlos explícitamente), para no perder el resto de la presentación.
-- Mantén la misma estructura de datos:
-  {
-    "sections": [
-      {
-        "id": "sec-NNN",
-        "bgImage": "https://...",
-        "height": 100,
-        "elements": [
-          { "id": "el-NNN", "type": "text", "content": "Hola", "x": 10, "y": 10, "w": 50, "h": 20, "style": { "fontSize": 32, "color": "#ffffff" } },
-          { "id": "el-NNN", "type": "metric", "title": "AÑOS", "val": "100", "desc": "Desc", "x": 20, "y": 50, "w": 20, "h": 20, "style": { "fontSize": 64 } },
-          { "id": "el-NNN", "type": "image", "src": "https://...", "x": 50, "y": 10, "w": 40, "h": 80, "style": { "borderRadius": 5, "opacity": 1 } }
-        ]
-      }
-    ]
-  }
+REGLAS ABSOLUTAS (no las violes jamás):
+1. NUNCA reduzcas el número de secciones. Si el usuario tiene 6 secciones y pide añadir una, debes devolver 7.
+2. Incluye SIEMPRE TODAS las secciones del estado original en tu respuesta, aunque no hayas modificado ningún elemento de ellas.
+3. Solo modifica o elimina secciones si el usuario lo pide EXPLÍCITAMENTE (ej: "borra la sección 3").
+4. Cuando añadas una sección nueva, asígnale un ID único que NO exista en el estado original.
+5. Tu respuesta debe ser JSON puro, con la estructura: { "sections": [...] }
+
+Estructura de cada sección:
+{
+  "id": "sec-NNN",
+  "bgImage": "https://images.unsplash.com/photo-XXXX?q=80&w=2070",
+  "height": 100,
+  "elements": [
+    { "id": "el-NNN", "type": "text", "content": "Texto", "x": 10, "y": 10, "w": 50, "h": 20, "style": { "fontSize": 32, "color": "#ffffff", "fontWeight": "700" } },
+    { "id": "el-NNN", "type": "metric", "title": "AÑOS", "val": "100", "desc": "Descripción", "x": 20, "y": 50, "w": 20, "h": 20, "style": { "fontSize": 64 } },
+    { "id": "el-NNN", "type": "image", "src": "https://...", "x": 50, "y": 10, "w": 40, "h": 80, "style": { "borderRadius": 5, "opacity": 1 } }
+  ]
+}
 `;
 
     // Hacer la llamada a OpenAI (gpt-4o-mini es rápido y barato, perfecto para tareas rutinarias).

@@ -36,8 +36,23 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
       if (error) throw new Error(error.message);
 
       if (data && data.sections) {
-        // Éxito: aplicamos la nueva data al Editor
-        onApplyChanges(data.sections);
+        // ── PROTECCIÓN ANTI-BORRADO ────────────────────────────────────────
+        // Si la IA devuelve MENOS secciones que las actuales, fusionamos:
+        // conservamos todas las originales y añadimos solo las nuevas.
+        let finalSections = data.sections;
+        if (data.sections.length < currentSections.length) {
+          // Detectar qué IDs son nuevos (no estaban en el original)
+          const originalIds = new Set(currentSections.map(s => s.id));
+          const newSections = data.sections.filter(s => !originalIds.has(s.id));
+          // Mezclar: originales actualizados (si la IA los incluyó) + nuevos
+          const updatedOriginals = currentSections.map(orig => {
+            const aiVersion = data.sections.find(s => s.id === orig.id);
+            return aiVersion || orig; // Si la IA lo modificó, usar versión IA; si no, conservar original
+          });
+          finalSections = [...updatedOriginals, ...newSections];
+        }
+
+        onApplyChanges(finalSections);
         const successMsgs = [
           '¡Hecho! He aplicado los cambios en tu lienzo. ✨',
           '¡Listo, Pablito! Los cambios ya están en tu canvas. 🔥',

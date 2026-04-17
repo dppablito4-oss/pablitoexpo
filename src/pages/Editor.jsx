@@ -592,25 +592,26 @@ export default function Editor() {
           </div>
 
           <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col">
-            {rightTab === 'copilot' ? (
-              <AiCopilotPanel 
-                currentSections={sections} 
-                onApplyChanges={handleAiApply} 
+            {/* Always render all tabs but hide inactive ones with CSS - preserves state */}
+            <div style={{ display: rightTab === 'copilot' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
+              <AiCopilotPanel
+                currentSections={sections}
+                onApplyChanges={handleAiApply}
               />
-            ) : rightTab === 'element' ? (
+            </div>
+            <div style={{ display: rightTab === 'element' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
               <ElementInspector
                 el={selectedEl}
                 onUpdate={(changes) => selectedEl && updateElement(selectedEl.id, changes)}
                 onDuplicate={duplicateElement}
               />
-            ) : (
-              <div className="flex flex-col">
-                <SectionInspector section={activeSection} onUpdate={updateSection} />
-                <div className="border-t border-neutral-800 p-4 mt-auto">
-                  <AiImportPanel onApply={handleAiApply} />
-                </div>
+            </div>
+            <div style={{ display: rightTab === 'section' ? 'flex' : 'none', flexDirection: 'column' }}>
+              <SectionInspector section={activeSection} onUpdate={updateSection} />
+              <div className="border-t border-neutral-800 p-4 mt-auto">
+                <AiImportPanel onApply={handleAiApply} />
               </div>
-            )}
+            </div>
           </div>
         </div>
 
