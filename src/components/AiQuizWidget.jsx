@@ -57,11 +57,11 @@ export default function AiQuizWidget({ nasaData = {} }) {
         whileTap={{ scale: 0.95 }}
         className="fixed bottom-6 right-6 z-[9998]
                    w-14 h-14 rounded-full
-                   bg-gradient-to-br from-fuchsia-600 to-purple-700
-                   shadow-[0_0_25px_rgba(168,85,247,0.5)]
+                   bg-gradient-to-br from-cyan-500 to-blue-700
+                   shadow-[0_0_25px_rgba(6,182,212,0.5)]
                    flex items-center justify-center
-                   text-2xl border border-fuchsia-400/30
-                   hover:shadow-[0_0_40px_rgba(168,85,247,0.7)]
+                   text-2xl border border-cyan-400/30
+                   hover:shadow-[0_0_40px_rgba(6,182,212,0.8)]
                    transition-shadow duration-300"
         title="Lanzar pregunta IA"
       >
@@ -78,15 +78,15 @@ export default function AiQuizWidget({ nasaData = {} }) {
             transition={{ type: 'spring', damping: 20, stiffness: 200 }}
             className="fixed bottom-24 right-6 z-[9997] w-[380px] max-w-[90vw]"
           >
-            <div className="bg-black/80 backdrop-blur-2xl border border-fuchsia-500/30
-                            rounded-2xl shadow-[0_0_60px_rgba(168,85,247,0.3)] overflow-hidden">
+            <div className="bg-black/85 backdrop-blur-2xl border border-cyan-500/30
+                            rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] overflow-hidden">
 
               <div className="flex items-center justify-between px-5 py-3
                               border-b border-white/10
-                              bg-gradient-to-r from-fuchsia-900/40 to-purple-900/40">
+                              bg-gradient-to-r from-cyan-900/40 to-blue-900/40">
                 <div className="flex items-center gap-2">
-                  <span className="text-fuchsia-400 text-sm">🧠</span>
-                  <span className="text-xs font-bold text-fuchsia-300 uppercase tracking-widest">
+                  <span className="text-cyan-400 text-sm">🧠</span>
+                  <span className="text-xs font-bold text-cyan-300 uppercase tracking-widest">
                     Pregunta IA #{questionCount}
                   </span>
                 </div>
@@ -103,9 +103,9 @@ export default function AiQuizWidget({ nasaData = {} }) {
                   <motion.div
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
-                    className="text-fuchsia-400 text-sm font-mono"
+                    className="text-cyan-400 text-sm font-mono tracking-widest"
                   >
-                    Generando pregunta...
+                    GENERANDO...
                   </motion.div>
                 )}
                 {error && !loading && (
@@ -118,7 +118,7 @@ export default function AiQuizWidget({ nasaData = {} }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     className="text-white text-xl font-bold text-center leading-snug
-                               drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                               drop-shadow-[0_0_20px_rgba(6,182,212,0.5)]"
                   >
                     {question}
                   </motion.p>
@@ -130,9 +130,9 @@ export default function AiQuizWidget({ nasaData = {} }) {
                   onClick={generateQuestion}
                   disabled={loading}
                   className="flex-1 py-2 rounded-xl text-sm font-bold
-                             bg-fuchsia-600 hover:bg-fuchsia-500
+                             bg-cyan-500 hover:bg-cyan-400
                              disabled:opacity-40 disabled:cursor-not-allowed
-                             text-white transition-colors duration-200"
+                             text-black transition-colors duration-200"
                 >
                   {loading ? '...' : '⚡ Nueva Pregunta'}
                 </button>
