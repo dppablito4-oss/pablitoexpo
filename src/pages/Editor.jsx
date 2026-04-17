@@ -59,6 +59,22 @@ function migrateToSections(slidesData) {
 }
 
 // ── Element Inspector ─────────────────────────────────────────────────────────
+const TYPE_LABELS = {
+  text: '📝 Texto', image: '🖼️ Imagen', metric: '📊 Métrica',
+  timeline: '📅 Timeline', comparison: '⚖️ Comparación', formula: '🧮 Fórmula',
+  code: '💻 Código', bento: '🧩 Bento', counter: '🔢 Contador', blockquote: '💬 Cita',
+};
+
+function InspectorInput({ label, value, onChange, type = 'text', ...rest }) {
+  return (
+    <div>
+      <label className="text-[10px] text-neutral-500">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(type === 'number' ? +e.target.value : e.target.value)}
+        className="w-full bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none focus:border-cyan-700" {...rest} />
+    </div>
+  );
+}
+
 function ElementInspector({ el, onUpdate, onDuplicate }) {
   if (!el) return (
     <div className="p-4 text-center text-neutral-600 text-xs py-10">
@@ -69,12 +85,21 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
   const s = el.style || {};
   const upd = (changes) => onUpdate({ style: { ...s, ...changes } });
 
+  // Helper for updating items in arrays (timeline, bento, comparison)
+  const updateItem = (arrKey, index, changes) => {
+    const arr = [...(el[arrKey] || [])];
+    arr[index] = { ...arr[index], ...changes };
+    onUpdate({ [arrKey]: arr });
+  };
+  const addItem = (arrKey, template) => onUpdate({ [arrKey]: [...(el[arrKey] || []), template] });
+  const removeItem = (arrKey, index) => onUpdate({ [arrKey]: (el[arrKey] || []).filter((_, i) => i !== index) });
+
   return (
     <div className="flex flex-col gap-3 p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400">
-          {el.type === 'text' ? '📝 Texto' : el.type === 'image' ? '🖼️ Imagen' : '📊 Métrica'}
+          {TYPE_LABELS[el.type] || el.type}
         </span>
         <button onClick={onDuplicate}
           className="text-[10px] px-2 py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white">
@@ -90,12 +115,7 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
             onChange={e => onUpdate({ content: e.target.value })}
             className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs resize-none focus:outline-none focus:border-cyan-700" />
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] text-neutral-500">Tamaño (px)</label>
-              <input type="number" min="8" max="220" value={s.fontSize || 28}
-                onChange={e => upd({ fontSize: +e.target.value })}
-                className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-sm focus:outline-none" />
-            </div>
+            <InspectorInput label="Tamaño (px)" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="8" max="220" />
             <div>
               <label className="text-[10px] text-neutral-500">Color</label>
               <input type="color" value={s.color || '#ffffff'}
@@ -150,10 +170,7 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
       {/* IMAGE controls */}
       {el.type === 'image' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <label className="text-[10px] text-neutral-500">URL de imagen</label>
-          <input type="text" value={el.src || ''} placeholder="https://..."
-            onChange={e => onUpdate({ src: e.target.value })}
-            className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs focus:outline-none focus:border-cyan-700" />
+          <InspectorInput label="URL de imagen" value={el.src || ''} onChange={v => onUpdate({ src: v })} placeholder="https://..." />
           <label className="text-[10px] text-neutral-500">Borde redondeado: {s.borderRadius || 0}px</label>
           <input type="range" min="0" max="50" value={s.borderRadius || 0}
             onChange={e => upd({ borderRadius: +e.target.value })}
@@ -172,22 +189,164 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
       {/* METRIC controls */}
       {el.type === 'metric' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <label className="text-[10px] text-neutral-500">Valor grande</label>
-          <input type="text" value={el.val || ''}
-            onChange={e => onUpdate({ val: e.target.value })}
-            className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xl font-black focus:outline-none" />
-          <label className="text-[10px] text-neutral-500">Título cyan</label>
-          <input type="text" value={el.title || ''}
-            onChange={e => onUpdate({ title: e.target.value })}
-            className="w-full bg-black border border-neutral-700 rounded p-2 text-cyan-400 text-xs font-bold focus:outline-none" />
-          <label className="text-[10px] text-neutral-500">Descripción</label>
-          <input type="text" value={el.desc || ''}
-            onChange={e => onUpdate({ desc: e.target.value })}
-            className="w-full bg-black border border-neutral-700 rounded p-2 text-neutral-500 text-xs font-mono focus:outline-none" />
-          <label className="text-[10px] text-neutral-500">Tamaño número (px)</label>
-          <input type="number" min="24" max="180" value={s.fontSize || 64}
-            onChange={e => upd({ fontSize: +e.target.value })}
-            className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-sm focus:outline-none" />
+          <InspectorInput label="Valor grande" value={el.val || ''} onChange={v => onUpdate({ val: v })} />
+          <InspectorInput label="Título cyan" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
+          <InspectorInput label="Descripción" value={el.desc || ''} onChange={v => onUpdate({ desc: v })} />
+          <InspectorInput label="Tamaño número (px)" value={s.fontSize || 64} onChange={v => upd({ fontSize: v })} type="number" min="24" max="180" />
+        </div>
+      )}
+
+      {/* TIMELINE controls */}
+      {el.type === 'timeline' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <InspectorInput label="Título general" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
+          <div>
+            <label className="text-[10px] text-neutral-500">Color acento</label>
+            <input type="color" value={s.color || '#22d3ee'}
+              onChange={e => upd({ color: e.target.value })}
+              className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+          </div>
+          <label className="text-[10px] text-neutral-500 mt-1">Eventos ({(el.items||[]).length})</label>
+          {(el.items || []).map((item, i) => (
+            <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+              <div className="flex gap-1">
+                <input value={item.year||''} placeholder="Año" onChange={e => updateItem('items', i, { year: e.target.value })}
+                  className="w-16 bg-black border border-neutral-700 rounded p-1 text-cyan-400 text-[10px] font-bold focus:outline-none" />
+                <input value={item.title||''} placeholder="Título" onChange={e => updateItem('items', i, { title: e.target.value })}
+                  className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
+                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1">×</button>
+              </div>
+              <input value={item.desc||''} placeholder="Descripción" onChange={e => updateItem('items', i, { desc: e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-neutral-400 text-[10px] focus:outline-none" />
+            </div>
+          ))}
+          <button onClick={() => addItem('items', { year: '', title: 'Nuevo evento', desc: '' })}
+            className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar evento</button>
+        </div>
+      )}
+
+      {/* COMPARISON controls */}
+      {el.type === 'comparison' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[10px] text-neutral-500">Columnas ({(el.columns||[]).length})</label>
+          {(el.columns || []).map((col, ci) => (
+            <div key={ci} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+              <div className="flex gap-1 items-center">
+                <input type="color" value={col.color || '#22d3ee'}
+                  onChange={e => updateItem('columns', ci, { color: e.target.value })}
+                  className="w-6 h-6 rounded border border-neutral-700 bg-black cursor-pointer" />
+                <input value={col.title||''} placeholder="Título" onChange={e => updateItem('columns', ci, { title: e.target.value })}
+                  className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
+                <button onClick={() => removeItem('columns', ci)} className="text-red-400 text-xs px-1">×</button>
+              </div>
+              {(col.items || []).map((item, ii) => (
+                <div key={ii} className="flex gap-1">
+                  <input value={item} onChange={e => {
+                    const newItems = [...col.items]; newItems[ii] = e.target.value;
+                    updateItem('columns', ci, { items: newItems });
+                  }} className="flex-1 bg-black border border-neutral-700 rounded p-1 text-neutral-300 text-[10px] focus:outline-none" />
+                  <button onClick={() => {
+                    const newItems = col.items.filter((_, j) => j !== ii);
+                    updateItem('columns', ci, { items: newItems });
+                  }} className="text-red-400 text-[10px]">×</button>
+                </div>
+              ))}
+              <button onClick={() => updateItem('columns', ci, { items: [...(col.items||[]), 'Nuevo item'] })}
+                className="text-[10px] text-cyan-400">+ Item</button>
+            </div>
+          ))}
+          <button onClick={() => addItem('columns', { title: 'Nueva columna', items: ['Item 1'], color: '#22d3ee' })}
+            className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar columna</button>
+        </div>
+      )}
+
+      {/* FORMULA controls */}
+      {el.type === 'formula' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[10px] text-neutral-500">Fórmula LaTeX</label>
+          <textarea rows={2} value={el.content || ''}
+            onChange={e => onUpdate({ content: e.target.value })}
+            placeholder="E = mc^2"
+            className="w-full bg-black border border-neutral-700 rounded p-2 text-green-300 text-xs font-mono resize-none focus:outline-none" />
+          <InspectorInput label="Etiqueta" value={el.label || ''} onChange={v => onUpdate({ label: v })} />
+          <InspectorInput label="Tamaño (px)" value={s.fontSize || 32} onChange={v => upd({ fontSize: v })} type="number" min="16" max="120" />
+        </div>
+      )}
+
+      {/* CODE controls */}
+      {el.type === 'code' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <div>
+            <label className="text-[10px] text-neutral-500">Lenguaje</label>
+            <select value={el.language || 'python'}
+              onChange={e => onUpdate({ language: e.target.value })}
+              className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
+              {['python','javascript','sql','html','css','java','c','bash','json','text'].map(l =>
+                <option key={l} value={l}>{l}</option>
+              )}
+            </select>
+          </div>
+          <label className="text-[10px] text-neutral-500">Código</label>
+          <textarea rows={6} value={el.content || ''}
+            onChange={e => onUpdate({ content: e.target.value })}
+            className="w-full bg-black border border-neutral-700 rounded p-2 text-green-300 text-xs font-mono resize-none focus:outline-none" />
+          <InspectorInput label="Tamaño fuente" value={s.fontSize || 14} onChange={v => upd({ fontSize: v })} type="number" min="10" max="24" />
+        </div>
+      )}
+
+      {/* BENTO controls */}
+      {el.type === 'bento' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[10px] text-neutral-500">Items ({(el.items||[]).length})</label>
+          {(el.items || []).map((item, i) => (
+            <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+              <div className="flex gap-1">
+                <input value={item.icon||''} placeholder="🚀" onChange={e => updateItem('items', i, { icon: e.target.value })}
+                  className="w-10 bg-black border border-neutral-700 rounded p-1 text-center text-sm focus:outline-none" />
+                <input value={item.title||''} placeholder="Título" onChange={e => updateItem('items', i, { title: e.target.value })}
+                  className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
+                <select value={item.size||'small'} onChange={e => updateItem('items', i, { size: e.target.value })}
+                  className="w-14 bg-black border border-neutral-700 rounded p-1 text-[9px] text-neutral-400 focus:outline-none">
+                  <option value="small">S</option>
+                  <option value="large">L</option>
+                </select>
+                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1">×</button>
+              </div>
+              <input value={item.desc||''} placeholder="Descripción" onChange={e => updateItem('items', i, { desc: e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-neutral-400 text-[10px] focus:outline-none" />
+            </div>
+          ))}
+          <button onClick={() => addItem('items', { title: 'Nuevo', desc: '', icon: '⚡', size: 'small' })}
+            className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar item</button>
+        </div>
+      )}
+
+      {/* COUNTER controls */}
+      {el.type === 'counter' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <InspectorInput label="Valor numérico" value={el.val || '0'} onChange={v => onUpdate({ val: v })} />
+          <InspectorInput label="Sufijo (+, %, K, etc)" value={el.suffix || ''} onChange={v => onUpdate({ suffix: v })} />
+          <InspectorInput label="Título" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
+          <InspectorInput label="Descripción" value={el.desc || ''} onChange={v => onUpdate({ desc: v })} />
+          <InspectorInput label="Tamaño número" value={s.fontSize || 96} onChange={v => upd({ fontSize: v })} type="number" min="32" max="200" />
+        </div>
+      )}
+
+      {/* BLOCKQUOTE controls */}
+      {el.type === 'blockquote' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[10px] text-neutral-500">Cita</label>
+          <textarea rows={3} value={el.content || ''}
+            onChange={e => onUpdate({ content: e.target.value })}
+            className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs resize-none focus:outline-none italic" />
+          <InspectorInput label="Autor" value={el.author || ''} onChange={v => onUpdate({ author: v })} />
+          <InspectorInput label="Tamaño texto" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="16" max="72" />
+          <div>
+            <label className="text-[10px] text-neutral-500">Color</label>
+            <input type="color" value={s.color || '#ffffff'}
+              onChange={e => upd({ color: e.target.value })}
+              className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+          </div>
         </div>
       )}
 
@@ -348,9 +507,28 @@ export default function Editor() {
 
   const addElement = useCallback((type) => {
     const defaults = {
-      text:   { content: 'Nuevo texto', x: 10, y: 10, w: 55, h: 15, style: { fontSize: 36, color: '#ffffff', fontWeight: '700' } },
-      image:  { src: '', x: 20, y: 15, w: 40, h: 35, style: { opacity: 1, borderRadius: 0 } },
-      metric: { val: '100', title: 'TÍTULO', desc: 'Descripción', x: 10, y: 15, w: 28, h: 55, style: { fontSize: 64 } },
+      text:       { content: 'Nuevo texto', x: 10, y: 10, w: 55, h: 15, style: { fontSize: 36, color: '#ffffff', fontWeight: '700' } },
+      image:      { src: '', x: 20, y: 15, w: 40, h: 35, style: { opacity: 1, borderRadius: 0 } },
+      metric:     { val: '100', title: 'TÍTULO', desc: 'Descripción', x: 10, y: 15, w: 28, h: 55, style: { fontSize: 64 } },
+      timeline:   { title: 'Línea del Tiempo', items: [
+                    { year: '2020', title: 'Evento 1', desc: 'Descripción del evento' },
+                    { year: '2022', title: 'Evento 2', desc: 'Descripción del evento' },
+                    { year: '2024', title: 'Evento 3', desc: 'Descripción del evento' },
+                  ], x: 5, y: 8, w: 40, h: 80, style: { color: '#22d3ee' } },
+      comparison: { columns: [
+                    { title: 'Opción A', items: ['Ventaja 1', 'Ventaja 2', 'Ventaja 3'], color: '#22d3ee' },
+                    { title: 'Opción B', items: ['Ventaja 1', 'Ventaja 2', 'Ventaja 3'], color: '#a78bfa' },
+                  ], x: 5, y: 10, w: 55, h: 75, style: {} },
+      formula:    { content: 'E = mc^2', label: 'Ecuación de Einstein', x: 10, y: 30, w: 50, h: 30, style: { fontSize: 36, color: '#ffffff' } },
+      code:       { content: '# Tu código aquí\nprint("Hola mundo")', language: 'python', x: 8, y: 10, w: 50, h: 50, style: { fontSize: 14 } },
+      bento:      { items: [
+                    { title: 'Feature 1', desc: 'Descripción', icon: '🚀', size: 'large' },
+                    { title: 'Feature 2', desc: 'Descripción', icon: '⚡', size: 'small' },
+                    { title: 'Feature 3', desc: 'Descripción', icon: '🔒', size: 'small' },
+                    { title: 'Feature 4', desc: 'Descripción', icon: '📊', size: 'small' },
+                  ], x: 3, y: 5, w: 60, h: 85, style: {} },
+      counter:    { val: '300', suffix: '+', title: 'USUARIOS', desc: 'registrados este año', x: 15, y: 20, w: 30, h: 55, style: { fontSize: 96 } },
+      blockquote: { content: 'La única forma de hacer un gran trabajo es amar lo que haces.', author: 'Steve Jobs', x: 10, y: 20, w: 60, h: 50, style: { fontSize: 28, color: '#ffffff' } },
     };
     const newEl = { id: uid(), type, ...defaults[type] };
     setSections(prev => prev.map(sec =>
@@ -511,12 +689,19 @@ export default function Editor() {
             <div className="h-10 border-b border-neutral-800 flex items-center gap-1.5 px-4 shrink-0 bg-neutral-950/60">
               <span className="text-[9px] text-neutral-600 font-mono uppercase mr-1">Agregar:</span>
               {[
-                { type: 'text',   label: '📝 Texto' },
-                { type: 'image',  label: '🖼️ Imagen' },
-                { type: 'metric', label: '📊 Métrica' },
+                { type: 'text',       label: '📝' },
+                { type: 'image',      label: '🖼️' },
+                { type: 'metric',     label: '📊' },
+                { type: 'timeline',   label: '📅' },
+                { type: 'comparison', label: '⚖️' },
+                { type: 'formula',    label: '🧮' },
+                { type: 'code',       label: '💻' },
+                { type: 'bento',      label: '🧩' },
+                { type: 'counter',    label: '🔢' },
+                { type: 'blockquote', label: '💬' },
               ].map(({ type, label }) => (
-                <button key={type} onClick={() => addElement(type)}
-                  className="px-2.5 py-1 rounded text-[11px] bg-neutral-800 hover:bg-neutral-700
+                <button key={type} onClick={() => addElement(type)} title={type}
+                  className="px-2 py-1 rounded text-[13px] bg-neutral-800 hover:bg-neutral-700
                              text-neutral-300 hover:text-white border border-neutral-700/60 transition-colors">
                   {label}
                 </button>
