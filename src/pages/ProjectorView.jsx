@@ -115,7 +115,8 @@ export default function ProjectorView() {
         EL PROYECTOR AHORA ES UNA PÁGINA WEB REAL,
         SIN BARRERAS DE ALTURA NI OVERFLOW HIDDEN.
       */}
-      <NasaWebTemplate data={slidesData} />
+      {/* NasaWebTemplate recibe SOLO las secciones permitidas (recortadas para invitados) */}
+      <NasaWebTemplate data={{ ...slidesData, sections }} />
 
       {/* Widget IA Quiz — pasa contexto de todas las secciones */}
       <AiQuizWidget nasaData={{ sections, ...nasaData }} />
