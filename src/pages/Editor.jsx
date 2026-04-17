@@ -621,12 +621,7 @@ export default function Editor() {
           <div className="flex-1 overflow-y-auto hide-scrollbar flex flex-col">
             {/* Always render all tabs but hide inactive ones with CSS - preserves state */}
             <div style={{ display: rightTab === 'copilot' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
-              <AiCopilotPanel
-                currentSections={sections}
-                onApplyChanges={handleAiApply}
-                onUndo={undoAiChange}
-                canUndo={undoStack.current.length > 0}
-              />
+              <AiCopilotPanel currentSections={sections} />
             </div>
             <div style={{ display: rightTab === 'element' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
               <ElementInspector

@@ -1,19 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
-// Detect if the user is asking a question vs giving a command
-const QUESTION_KEYWORDS = /^(qu[eé]|c[oó]mo|cu[aá]l|qui[eé]n|por qu[eé]|cu[aá]ndo|puedes|sabes|eres|hola|hey|ayuda|explica|dime|cuentame|que eres|help)/i;
-const QUESTION_MARK = /\?/;
-const isQuestion = (text) => QUESTION_MARK.test(text) || QUESTION_KEYWORDS.test(text.trim());
-
-// Words that signal a new section should be appended
-const APPEND_KEYWORDS = /a[ñn]ad|agrega|crea una nueva|nueva secci[oó]n|append|add a/i;
-
-export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo, canUndo }) {
+export default function AiCopilotPanel({ currentSections }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
+  
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asistente de presentaciones creado especialmente para Pablito_dp 🚀\n\nPuedo:\n• Añadir secciones nuevas al final\n• Cambiar colores, textos, tamaños\n• Modificar cualquier elemento del lienzo\n\nSi algo sale mal, el botón ↩ DESHACER lo restaura todo. ¿Qué necesitas hoy?' }
+    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asesor creativo de presentaciones 🚀\n\nHe leído tu lienzo y estoy aquí para darte ideas, sugerirte colores, revisar tus textos o decirte qué te falta. ¡Pregúntame lo que quieras!' }
   ]);
   
   const endOfMessagesRef = useRef(null);
@@ -31,58 +25,21 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
     setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
 
-    // Detect intent: question or command
-    const isQ = isQuestion(userText);
-    const isAppendMode = !isQ && APPEND_KEYWORDS.test(userText);
-    const mode = isQ ? 'chat' : isAppendMode ? 'append' : 'modify';
-
     try {
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
           currentSections: currentSections,
-          mode,
+          verbosity, // "short", "medium", or "long"
         }
       });
 
       if (error) throw new Error(error.message);
 
-      // ── CHAT MODE response (question answered) ─────────────────────────
       if (data && data.message) {
         setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
           { role: 'assistant', text: data.message }
         ));
-        return;
-      }
-
-      if (error) throw new Error(error.message);
-
-      if (data && data.sections) {
-        // ── PROTECCIÓN ANTI-BORRADO ────────────────────────────────────────
-        // If AI returned fewer sections than we have, merge: keep originals + add new ones
-        let finalSections = data.sections;
-        if (data.sections.length < currentSections.length) {
-          const originalIds = new Set(currentSections.map(s => s.id));
-          const newSections = data.sections.filter(s => !originalIds.has(s.id));
-          const updatedOriginals = currentSections.map(orig => {
-            const aiVersion = data.sections.find(s => s.id === orig.id);
-            return aiVersion || orig;
-          });
-          finalSections = [...updatedOriginals, ...newSections];
-        }
-
-        onApplyChanges({ sections: finalSections });
-
-        const successMsgs = [
-          '¡Hecho! He aplicado los cambios en tu lienzo. ✨\n\nUsa ↩ DESHACER si algo no te gusta.',
-          '¡Listo, Pablito! Los cambios ya están en tu canvas. 🔥\n\n↩ DESHACER disponible.',
-          '¡Ejecutado! ¿Qué más le damos? 🚀',
-          '¡Pa\'lante! Cambios aplicados. 💪',
-        ];
-        setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-          { role: 'assistant', text: successMsgs[Math.floor(Math.random() * successMsgs.length)] }
-        ));
-
       } else if (data && data.error) {
         throw new Error(data.error);
       } else {
@@ -92,20 +49,10 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
     } catch (err) {
       console.error(err);
       setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}.\n\nInténtalo de nuevo o usa ↩ DESHACER.` }
+        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}.\n\nInténtalo de nuevo.` }
       ));
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleUndo = () => {
-    if (!onUndo) return;
-    const success = onUndo();
-    if (success) {
-      setChatHistory(prev => [...prev,
-        { role: 'assistant', text: '↩ Deshecho. Tu presentación volvió al estado anterior. ✅' }
-      ]);
     }
   };
 
@@ -131,28 +78,12 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
                   P.A.B.L.O.
                 </h3>
                 <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
-                  IA
+                  ASESOR
                 </span>
               </div>
-              <p className="text-[9px] text-neutral-600 mt-0.5 italic">Protocolo de Asistencia y Bits para Lienzos Optimizados</p>
+              <p className="text-[9px] text-neutral-600 mt-0.5 italic">Tu copiloto creativo de contenido</p>
             </div>
           </div>
-
-          {/* Undo button */}
-          <button
-            onClick={handleUndo}
-            disabled={!canUndo || isGenerating}
-            title="Deshacer último cambio de la IA"
-            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all
-                       disabled:opacity-20 disabled:cursor-not-allowed"
-            style={{
-              background: canUndo ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${canUndo ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.06)'}`,
-              color: canUndo ? '#fbbf24' : '#444',
-            }}
-          >
-            ↩ <span>Deshacer</span>
-          </button>
         </div>
       </div>
 
@@ -186,8 +117,36 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
         <div ref={endOfMessagesRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 bg-neutral-950 border-t border-neutral-800 shrink-0">
+      {/* Input Area */}
+      <div className="p-4 bg-neutral-950 border-t border-neutral-800 shrink-0 flex flex-col gap-3">
+        {/* Verbosity Selector */}
+        <div className="flex items-center justify-between bg-black border border-neutral-800 rounded-lg p-1.5">
+          <span className="text-[9px] text-neutral-500 font-bold ml-2 uppercase tracking-widest">Largo de Respuestas:</span>
+          <div className="flex gap-1 bg-neutral-900 rounded-md p-1 border border-neutral-800">
+            <button 
+              type="button"
+              onClick={() => setVerbosity('short')}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'short' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+              Corta
+            </button>
+            <button 
+              type="button"
+              onClick={() => setVerbosity('medium')}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'medium' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+              Media
+            </button>
+            <button 
+              type="button"
+              onClick={() => setVerbosity('long')}
+              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'long' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+            >
+              Larga
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="relative">
           <textarea
             value={prompt}
@@ -198,7 +157,7 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
                 handleSubmit(e);
               }
             }}
-            placeholder="Ej: Añade una sección sobre el cosmos al final..."
+            placeholder="Ej: ¿Qué secciones me faltan añadir para hablar sobre Galaxias?..."
             disabled={isGenerating}
             rows={3}
             className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
@@ -213,12 +172,9 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
                        text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
           >
-            Enviar
+            Preguntar
           </button>
         </form>
-        <p className="mt-2 text-[9px] text-neutral-700 text-center">
-          <kbd className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-500">Enter</kbd> para enviar · <kbd className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-500">Shift+Enter</kbd> para nueva línea
-        </p>
       </div>
     </div>
   );

@@ -20,75 +20,43 @@ serve(async (req) => {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    const { prompt, currentSections, mode } = await req.json();
+    const { prompt, currentSections, verbosity } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
     }
 
-    // Build the user message based on mode
-    let userMessage;
-    if (mode === 'chat') {
-      userMessage = `El usuario te está haciendo una pregunta conversacional en vez de pedirte cambiar el código.
-Responde de forma amigable, breve, un poco sarcástica (como un experto peruano) y como el asistente P.A.B.L.O.
-
-ESTE ES EL CONTEXTO DE LA PRESENTACIÓN ACTUAL (Úsalo para responder si te preguntan de qué trata):
-${JSON.stringify({ sections: currentSections })}
-
-INSTRUCCIÓN DEL USUARIO: "${prompt}"
-
-Devuelve un JSON con un único campo "message": { "message": "Tu respuesta amistosa aquí..." }`;
-    } else if (mode === 'append') {
-      // APPEND MODE: Only generate 1 new section, don't touch existing ones
-      userMessage = `El estado actual de la presentación tiene ${currentSections?.length || 0} secciones.
-NO toques las secciones existentes. Solo añade UNA sección nueva al final del array.
-La respuesta debe incluir TODAS las secciones existentes MÁS la nueva.
-
-SECCIONES ACTUALES (inclúyelas tal cual en tu respuesta):
-${JSON.stringify({ sections: currentSections })}
-
-INSTRUCCIÓN DEL USUARIO: "${prompt}"
-
-Devuelve: { "sections": [...todasLasActuales, nuevaSeccion] }`;
-    } else {
-      // MODIFY MODE: Full context, modify as requested but keep all sections
-      userMessage = `ESTADO ACTUAL (${currentSections?.length || 0} secciones — INCLUYE TODAS EN TU RESPUESTA):
-${JSON.stringify({ sections: currentSections })}
-
-INSTRUCCIÓN DEL USUARIO: "${prompt}"
-
-Devuelve el JSON modificado con TODAS las secciones: { "sections": [...] }`;
+    let lengthInstruction = "";
+    switch (verbosity) {
+      case 'short':
+         lengthInstruction = "RESPUESTA MUY CORTA: Responde en 1 o 2 líneas máximo. Ve muy directo al grano.";
+         break;
+      case 'medium':
+         lengthInstruction = "RESPUESTA MEDIA: Da una explicación de tamaño moderado, quizás con viñetas o un par de párrafos.";
+         break;
+      case 'long':
+         lengthInstruction = "RESPUESTA LARGA: Da una explicación muy profunda, exhaustiva, con muchísimos detalles, superando las 200 palabras si es necesario.";
+         break;
+      default:
+         lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
     }
 
-    // Configuración del modelo y comportamiento de la IA
-    const systemInstruction = mode === 'chat' 
-      ? `Eres P.A.B.L.O. (Protocolo de Asistencia y Bits para Lienzos Optimizados), el asistente de Pablito Expo.
-Responde de forma breve, carismática y útil. Recuerda que no vas a modificar el lienzo esta vez, solo vas a conversar.
-Tu respuesta DEBE ser un JSON puro: { "message": "Tu respuesta aquí" }`
-      : `Eres el Copiloto de IA de un editor de presentaciones web llamado "Pablito Expo".
-Tu trabajo es recibir el estado actual del lienzo (un array JSON de 'sections') y las instrucciones del usuario, y devolver una VERSIÓN MODIFICADA O EXPANDIDA de ese mismo array JSON que cumpla con los cambios pedidos.
+    const systemInstruction = `Eres P.A.B.L.O. (Protocolo de Asistencia y Bits para Lienzos Optimizados), el orgulloso asistente asesor creativo de "Pablito Expo".
+Tu actitud es amigable, tienes mucha chispa, usas jergas peruanas sutiles ("causa", "chibolo", "bacán") pero mantienes el profesionalismo técnico.
 
-REGLAS ABSOLUTAS (no las violes jamás):
-1. NUNCA reduzcas el número de secciones. Si el usuario tiene 6 secciones y pide añadir una, debes devolver 7.
-2. Incluye SIEMPRE TODAS las secciones del estado original en tu respuesta, aunque no hayas modificado ningún elemento de ellas.
-3. Solo modifica o elimina secciones si el usuario lo pide EXPLÍCITAMENTE (ej: "borra la sección 3").
-4. Cuando añadas una sección nueva, asígnale un ID único que NO exista en el estado original.
-5. Tu respuesta debe ser JSON puro, con la estructura: { "sections": [...] }
+Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, qué temas le faltan al usuario, ideas de colores, o responder sus preguntas.
 
-Estructura de cada sección:
-{
-  "id": "sec-NNN",
-  "bgImage": "https://images.unsplash.com/photo-XXXX?q=80&w=2070",
-  "height": 100,
-  "elements": [
-    { "id": "el-NNN", "type": "text", "content": "Texto", "x": 10, "y": 10, "w": 50, "h": 20, "style": { "fontSize": 32, "color": "#ffffff", "fontWeight": "700" } },
-    { "id": "el-NNN", "type": "metric", "title": "AÑOS", "val": "100", "desc": "Descripción", "x": 20, "y": 50, "w": 20, "h": 20, "style": { "fontSize": 64 } },
-    { "id": "el-NNN", "type": "image", "src": "https://...", "x": 50, "y": 10, "w": 40, "h": 80, "style": { "borderRadius": 5, "opacity": 1 } }
-  ]
-}
-`;
+${lengthInstruction}
 
-    // Hacer la llamada a OpenAI (gpt-4o-mini es rápido y barato, perfecto para tareas rutinarias).
+ESTE ES EL CONTEXTO DE LA PRESENTACIÓN ACTUAL DEL USUARIO:
+${JSON.stringify({ sections: currentSections })}
+
+REGLAS STRICTAS:
+1. Siempre ayuda al usuario basándote en el contexto de su presentación.
+2. Tu respuesta DEBE ser obligatoriamente un JSON puro con un único campo "message".
+Ejemplo: { "message": "¡Bacán! Te sugiero que..." }`;
+
+    // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -97,15 +65,16 @@ Estructura de cada sección:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        // Instruirle a devolver explícitamente un objeto JSON
         response_format: { type: "json_object" }, 
         messages: [
           { role: 'system', content: systemInstruction },
-          { role: 'user', content: userMessage }
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.2, // Baja temperatura para que sea predecible y no rompa la estructura
+        max_tokens: 1500,
+        temperature: 0.6, // Un poco más alto para creatividad
       }),
     });
+
 
     const data = await aiResponse.json();
 
