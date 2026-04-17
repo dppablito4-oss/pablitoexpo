@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Editor from './pages/Editor';
 import ProjectorView from './pages/ProjectorView';
 import RemoteControl from './pages/RemoteControl';
+import TermsPage from './pages/TermsPage';
 
 // Componente para proteger las rutas
 const ProtectedRoute = ({ children }) => {
@@ -39,6 +40,7 @@ function AppLayout() {
         <Route path="/editor/:slug" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
         <Route path="/projector/:slug" element={<ProjectorView />} />
         <Route path="/remote/:slug" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
+        <Route path="/terms" element={<TermsPage />} />
       </Routes>
       {!hideFooter && <SiteFooter />}
     </>

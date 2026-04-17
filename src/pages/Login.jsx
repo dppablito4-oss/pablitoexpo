@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const C = {
@@ -26,6 +26,7 @@ export default function Login() {
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -60,6 +61,10 @@ export default function Login() {
       }
       if (password !== confirmPassword) {
         setError('Las contraseñas no coinciden. Vuelve a revisar.');
+        return;
+      }
+      if (!acceptedTerms) {
+        setError('Debes aceptar los Términos y Condiciones para continuar.');
         return;
       }
     }
@@ -261,6 +266,37 @@ export default function Login() {
                 </span>
               )}
             </Field>
+          )}
+
+          {/* Terms checkbox — solo en registro */}
+          {!isLogin && (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <input
+                type="checkbox"
+                id="accept-terms"
+                checked={acceptedTerms}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                style={{ marginTop: '2px', accentColor: '#00f0ff', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+              />
+              <label htmlFor="accept-terms" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, cursor: 'pointer' }}>
+                He leído y acepto los{' '}
+                <Link to="/terms" target="_blank"
+                  style={{ color: '#00f0ff', textDecoration: 'none', fontWeight: '600' }}
+                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                >
+                  Términos y Condiciones
+                </Link>
+                {' '}y la{' '}
+                <Link to="/terms" target="_blank"
+                  style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: '600' }}
+                  onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                >
+                  Política de Privacidad
+                </Link>
+              </label>
+            </div>
           )}
 
           {/* Submit */}
