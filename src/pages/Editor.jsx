@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import CanvasElement from '../components/CanvasElement';
 import AiImportPanel from '../components/AiImportPanel';
 import AiCopilotPanel from '../components/AiCopilotPanel';
+import ImageSearchModal from '../components/ImageSearchModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 8);
@@ -75,7 +76,7 @@ function InspectorInput({ label, value, onChange, type = 'text', ...rest }) {
   );
 }
 
-function ElementInspector({ el, onUpdate, onDuplicate }) {
+function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch }) {
   if (!el) return (
     <div className="p-4 text-center text-neutral-600 text-xs py-10">
       Selecciona un elemento en<br />el canvas para editar
@@ -170,7 +171,15 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
       {/* IMAGE controls */}
       {el.type === 'image' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <InspectorInput label="URL de imagen" value={el.src || ''} onChange={v => onUpdate({ src: v })} placeholder="https://..." />
+          <div className="flex gap-1">
+            <input type="text" value={el.src || ''} placeholder="https://..."
+              onChange={e => onUpdate({ src: e.target.value })}
+              className="flex-1 bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none focus:border-cyan-700" />
+            <button onClick={onOpenImageSearch}
+              className="px-2 py-1 rounded bg-cyan-900/40 text-cyan-400 text-xs font-bold hover:bg-cyan-800/40 border border-cyan-700/30">
+              🖼️
+            </button>
+          </div>
           <label className="text-[10px] text-neutral-500">Borde redondeado: {s.borderRadius || 0}px</label>
           <input type="range" min="0" max="50" value={s.borderRadius || 0}
             onChange={e => upd({ borderRadius: +e.target.value })}
@@ -369,18 +378,29 @@ function ElementInspector({ el, onUpdate, onDuplicate }) {
 }
 
 // ── Section Inspector ─────────────────────────────────────────────────────────
-function SectionInspector({ section, onUpdate }) {
+function SectionInspector({ section, onUpdate, onOpenImageSearch }) {
   if (!section) return null;
+  const overlayOpacity = section.overlayOpacity ?? 0.4;
   return (
     <div className="flex flex-col gap-3 p-4">
       <h4 className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">⚙️ Sección</h4>
       <label className="text-[10px] text-neutral-500">Fondo (URL de imagen)</label>
-      <input type="text" value={section.bgImage || ''} placeholder="https://..."
-        onChange={e => onUpdate({ bgImage: e.target.value })}
-        className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs focus:outline-none focus:border-emerald-700" />
+      <div className="flex gap-1">
+        <input type="text" value={section.bgImage || ''} placeholder="https://..."
+          onChange={e => onUpdate({ bgImage: e.target.value })}
+          className="flex-1 bg-black border border-neutral-700 rounded p-2 text-white text-xs focus:outline-none focus:border-emerald-700" />
+        <button onClick={onOpenImageSearch}
+          className="px-2.5 py-1 rounded bg-emerald-900/50 text-emerald-400 text-xs font-bold hover:bg-emerald-800/50 border border-emerald-700/30">
+          🖼️
+        </button>
+      </div>
       <label className="text-[10px] text-neutral-500">Altura: {section.height || 100}vh</label>
       <input type="range" min="60" max="300" step="10" value={section.height || 100}
         onChange={e => onUpdate({ height: +e.target.value })}
+        className="w-full accent-emerald-500" />
+      <label className="text-[10px] text-neutral-500">Oscuridad del overlay: {(overlayOpacity * 100).toFixed(0)}%</label>
+      <input type="range" min="0" max="0.9" step="0.05" value={overlayOpacity}
+        onChange={e => onUpdate({ overlayOpacity: +e.target.value })}
         className="w-full accent-emerald-500" />
     </div>
   );
@@ -403,6 +423,8 @@ export default function Editor() {
 
   const [isDirty, setIsDirty]       = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved'|'saving'|'dirty'
+  const [imageSearchOpen, setImageSearchOpen] = useState(false);
+  const [imageSearchTarget, setImageSearchTarget] = useState(null); // 'bg' | elementId
 
   // ── Undo stack (for AI changes) ────────────────────────────────────────
   const undoStack = useRef([]); // up to 10 snapshots
@@ -755,7 +777,7 @@ export default function Editor() {
                   }}
                 >
                   {/* dark overlay */}
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1, pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: `rgba(0,0,0,${activeSection?.overlayOpacity ?? 0.35})`, zIndex: 1, pointerEvents: 'none' }} />
                   {/* subtle grid */}
                   <div style={{
                     position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
@@ -832,18 +854,34 @@ export default function Editor() {
                 el={selectedEl}
                 onUpdate={(changes) => selectedEl && updateElement(selectedEl.id, changes)}
                 onDuplicate={duplicateElement}
+                onOpenImageSearch={() => { if (selectedEl) { setImageSearchTarget(selectedEl.id); setImageSearchOpen(true); } }}
               />
             </div>
             <div style={{ display: rightTab === 'section' ? 'flex' : 'none', flexDirection: 'column' }}>
-              <SectionInspector section={activeSection} onUpdate={updateSection} />
+              <SectionInspector section={activeSection} onUpdate={updateSection}
+                onOpenImageSearch={() => { setImageSearchTarget('bg'); setImageSearchOpen(true); }} />
               <div className="border-t border-neutral-800 p-4 mt-auto">
-                <AiImportPanel onApply={handleAiApply} />
+                <AiImportPanel onApply={handleAiApply} currentSections={sections} />
               </div>
             </div>
           </div>
         </div>
 
       </div>
+
+      {/* Image Search Modal */}
+      <ImageSearchModal
+        isOpen={imageSearchOpen}
+        onClose={() => setImageSearchOpen(false)}
+        onSelect={(url) => {
+          if (imageSearchTarget === 'bg') {
+            updateSection({ bgImage: url });
+          } else if (imageSearchTarget) {
+            updateElement(imageSearchTarget, { src: url });
+          }
+          setImageSearchOpen(false);
+        }}
+      />
     </div>
   );
 }
