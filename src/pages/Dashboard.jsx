@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { generateSlug } from '../lib/slugify';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -40,6 +41,7 @@ export default function Dashboard() {
         .insert([
           { 
             title: newTitle, 
+            slug: generateSlug(newTitle),
             user_id: user.id, 
             slides_data: { slides: [{ id: crypto.randomUUID(), type: 'title', content: 'Diapositiva Inicial' }] },
             editors_emails: [user.email] 
@@ -157,10 +159,10 @@ export default function Dashboard() {
                 
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '10px', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn-cyber" style={{ flex: 1, padding: '8px', fontSize: '0.9rem' }} onClick={() => navigate(`/projector/${pres.id}`)}>
+                    <button className="btn-cyber" style={{ flex: 1, padding: '8px', fontSize: '0.9rem' }} onClick={() => navigate(`/projector/${pres.slug || pres.id}`)}>
                       📺 Proyectar 
                     </button>
-                    <button className="btn-cyber" style={{ flex: 1, padding: '8px', fontSize: '0.9rem', background: 'rgba(112,0,255,0.1)', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }} onClick={() => navigate(`/remote/${pres.id}`)}>
+                    <button className="btn-cyber" style={{ flex: 1, padding: '8px', fontSize: '0.9rem', background: 'rgba(112,0,255,0.1)', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }} onClick={() => navigate(`/remote/${pres.slug || pres.id}`)}>
                       📱 Láser
                     </button>
                   </div>
@@ -168,7 +170,7 @@ export default function Dashboard() {
                   {/* HERRAMIENTAS PROTEGIDAS */}
                   {canEdit && (
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button onClick={() => navigate(`/editor/${pres.id}`)} style={{ flex: 3, padding: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      <button onClick={() => navigate(`/editor/${pres.slug || pres.id}`)} style={{ flex: 3, padding: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }}>
                         ✏️ Editor Base
                       </button>
                       {isOwner && (

@@ -3,16 +3,53 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 
 export default function RemoteControl() {
-  const { id } = useParams();
+  const { slug: identifier } = useParams();
   const navigate = useNavigate();
   const channelRef = useRef(null);
   const lastEventRef = useRef(0);
   const lastScrollYRef = useRef(null);
+  const [presentation, setPresentation] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   const [mode, setMode] = useState('laser'); // 'laser' o 'scroll'
 
   useEffect(() => {
-    const channel = supabase.channel(`presentation-${id}`);
+    const loadPresentation = async () => {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      let data, error;
+
+      if (isUUID) {
+        // Fallback for old links: Fetch by ID
+        const res = await supabase.from('presentations').select('*').eq('id', identifier).single();
+        data = res.data; error = res.error;
+        
+        // Smart Redirect to the new slug URL
+        if (!error && data && data.slug) {
+          navigate(`/remote/${data.slug}`, { replace: true });
+          return;
+        }
+      } else {
+        // Fetch by Slug
+        const res = await supabase.from('presentations').select('*').eq('slug', identifier).single();
+        data = res.data; error = res.error;
+      }
+
+      if (error || !data) {
+        alert("Transmisión perdida o presentación no encontrada.");
+        navigate('/');
+        return;
+      }
+      setPresentation(data);
+      setLoading(false);
+    };
+
+    loadPresentation();
+  }, [identifier, navigate]);
+
+  useEffect(() => {
+    if (!presentation?.id) return;
+
+    const channel = supabase.channel(`presentation-${presentation.id}`);
     channel.subscribe();
     channelRef.current = channel;
 
@@ -60,6 +97,9 @@ export default function RemoteControl() {
   const handleTouchEnd = () => {
       lastScrollYRef.current = null;
   };
+
+  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems:'center', justifyContent:'center', color: 'white' }}>Enlazando Remoto...</div>;
+  if (!presentation) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '20px' }}>

@@ -8,7 +8,7 @@ import NasaWebTemplate from '../templates/NasaWebTemplate';
 import AiQuizWidget from '../components/AiQuizWidget';
 
 export default function ProjectorView() {
-  const { id } = useParams();
+  const { slug: identifier } = useParams();
   const navigate = useNavigate();
   
   const [presentation, setPresentation] = useState(null);
@@ -22,8 +22,26 @@ export default function ProjectorView() {
 
   useEffect(() => {
     const loadPresentation = async () => {
-      const { data, error } = await supabase.from('presentations').select('*').eq('id', id).single();
-      if (error) {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      let data, error;
+
+      if (isUUID) {
+        // Fallback for old links: Fetch by ID
+        const res = await supabase.from('presentations').select('*').eq('id', identifier).single();
+        data = res.data; error = res.error;
+        
+        // Smart Redirect to the new slug URL
+        if (!error && data && data.slug) {
+          navigate(`/projector/${data.slug}`, { replace: true });
+          return;
+        }
+      } else {
+        // Fetch by Slug
+        const res = await supabase.from('presentations').select('*').eq('slug', identifier).single();
+        data = res.data; error = res.error;
+      }
+
+      if (error || !data) {
         alert("Transmisión perdida o presentación no encontrada.");
         navigate('/');
         return;
@@ -33,11 +51,16 @@ export default function ProjectorView() {
     };
 
     loadPresentation();
+  }, [identifier, navigate]);
 
-    const channel = supabase.channel(`presentation-${id}`);
+  // Handle real-time connection logic separated so it uses presentation.id
+  useEffect(() => {
+    if (!presentation?.id) return;
+    
+    // We MUST use presentation.id to subscribe, since the remote controller sends events to the UUID channel
+    const channel = supabase.channel(`presentation-${presentation.id}`);
     channel
       .on('broadcast', { event: 'navigate' }, (payload) => {
-        // En la versión Web, los comandos next/prev hacen scroll directo
         const amount = window.innerHeight * 0.8;
         if (payload.payload.direction === 'next') {
             window.scrollBy({ top: amount, behavior: 'smooth' });
@@ -50,7 +73,6 @@ export default function ProjectorView() {
         laserY.set(payload.payload.y * window.innerHeight);
       })
       .on('broadcast', { event: 'remote-scroll' }, (payload) => {
-        // Scroll libre
         window.scrollBy({ top: payload.payload.deltaY, behavior: 'auto' });
       })
       .subscribe();
@@ -58,7 +80,7 @@ export default function ProjectorView() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, navigate, laserX, laserY]);
+  }, [presentation?.id, laserX, laserY]);
 
   if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
   if (!presentation) return null;

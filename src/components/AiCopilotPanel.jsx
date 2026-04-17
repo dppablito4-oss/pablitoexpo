@@ -7,7 +7,7 @@ export default function AiCopilotPanel({ currentSections }) {
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
 
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Habla, MI REY o REINA si eres diva! Soy P.A.B.L.O., tu co-piloto de confianza en esta bóveda. 🚀\n\nHe chequeado tu lienzo y estoy listo para tirarte las fijas. Ya no me pidas que edite (pa\' no wevearnos con el código), pero pregúntame lo que sea: desde paletas de colores finas hasta qué temas te faltan para que no paltees en la expo. Aquí estamos para que ese proyecto salga. ¿Qué sale hoy, causa? ¡GAAA!'
+    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asesor creativo de presentaciones 🚀\n\nHe leído tu lienzo y estoy aquí para darte ideas, sugerirte colores, revisar tus textos o decirte qué te falta. ¡Pregúntame lo que quieras!' }
   ]);
 
   const endOfMessagesRef = useRef(null);

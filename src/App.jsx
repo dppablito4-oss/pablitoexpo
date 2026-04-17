@@ -36,9 +36,9 @@ function AppLayout() {
       <Routes>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/editor/:id" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
-        <Route path="/projector/:id" element={<ProtectedRoute><ProjectorView /></ProtectedRoute>} />
-        <Route path="/remote/:id" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
+        <Route path="/editor/:slug" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+        <Route path="/projector/:slug" element={<ProtectedRoute><ProjectorView /></ProtectedRoute>} />
+        <Route path="/remote/:slug" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
       </Routes>
       {!hideFooter && <SiteFooter />}
     </>

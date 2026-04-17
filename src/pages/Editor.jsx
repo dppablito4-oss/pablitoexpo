@@ -229,7 +229,7 @@ function SectionInspector({ section, onUpdate }) {
 
 // ── Main Editor ───────────────────────────────────────────────────────────────
 export default function Editor() {
-  const { id } = useParams();
+  const { slug: identifier } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -256,11 +256,29 @@ export default function Editor() {
 
   useEffect(() => {
     // Only load from DB if we haven't loaded THIS specific presentation yet
-    if (hasLoadedId.current === id) return;
+    if (hasLoadedId.current === identifier) return;
 
     const load = async () => {
-      const { data, error } = await supabase.from('presentations').select('*').eq('id', id).single();
-      if (error) { alert('No encontrado'); navigate('/'); return; }
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      let data, error;
+
+      if (isUUID) {
+        // Fallback for old links: Fetch by ID
+        const res = await supabase.from('presentations').select('*').eq('id', identifier).single();
+        data = res.data; error = res.error;
+        
+        // Smart Redirect to the new slug URL
+        if (!error && data && data.slug) {
+          navigate(`/editor/${data.slug}`, { replace: true });
+          return;
+        }
+      } else {
+        // Fetch by Slug (New Default)
+        const res = await supabase.from('presentations').select('*').eq('slug', identifier).single();
+        data = res.data; error = res.error;
+      }
+
+      if (error || !data) { alert('No encontrado'); navigate('/'); return; }
       
       const isOwner  = data.user_id === user?.id;
       const isEditor = Array.isArray(data.editors_emails) && data.editors_emails.includes(user?.email);
@@ -271,13 +289,13 @@ export default function Editor() {
       setSections(secs);
       setActiveSectionId(secs[0]?.id || null);
       setLoading(false);
-      hasLoadedId.current = id;
+      hasLoadedId.current = identifier;
     };
     
     if (user?.id) {
       load();
     }
-  }, [id, user?.id, user?.email, navigate]);
+  }, [identifier, user?.id, user?.email, navigate]);
 
   // ── Debounced save ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -285,13 +303,14 @@ export default function Editor() {
     setSaveStatus('dirty');
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
+      if (!presentation?.id) return;
       setSaveStatus('saving');
-      await supabase.from('presentations').update({ slides_data: { sections } }).eq('id', id);
+      await supabase.from('presentations').update({ slides_data: { sections } }).eq('id', presentation.id);
       setSaveStatus('saved');
       setIsDirty(false);
     }, 1200);
     return () => clearTimeout(saveTimer.current);
-  }, [sections, isDirty, id, canEdit]);
+  }, [sections, isDirty, presentation, canEdit]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const markDirty = () => setIsDirty(true);
