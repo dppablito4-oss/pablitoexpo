@@ -58,7 +58,8 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
 
   const handleOpen = () => {
     setIsOpen(true);
-    if (!question && !loading) generateQuestion();
+    // Only fetch AI question if the user is logged in
+    if (user && !question && !loading) generateQuestion();
   };
 
   return (
@@ -82,36 +83,38 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
         🤖
       </motion.button>
 
-      {/* Guest blocker panel */}
-      {!user && isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40, scale: 0.9 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-          className="fixed bottom-24 right-6 z-[9997] w-[340px] max-w-[90vw]"
-        >
-          <div className="bg-black/90 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] overflow-hidden p-6 text-center">
-            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔒</div>
-            <p className="text-white font-bold text-lg mb-2">¡Hola, mi rey!</p>
-            <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
-              Crea una cuenta para poder realizar tu prueba gratuita del Quiz IA y desbloquear todas las funciones.
-            </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <a href="#/login" className="btn-cyber" style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--accent-primary)', color: 'black', fontWeight: 'bold', borderRadius: '10px', textDecoration: 'none' }}>
-                UNIRSE GRATIS
-              </a>
-              <button onClick={() => setIsOpen(false)} style={{ padding: '10px 16px', background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', cursor: 'pointer' }}>
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Panel flotante */}
+      {/* Guest blocker panel — solo cuando NO hay usuario */}
       <AnimatePresence>
-        {isOpen && (
+        {!user && isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+            className="fixed bottom-24 right-6 z-[9997] w-[340px] max-w-[90vw]"
+          >
+            <div className="bg-black/90 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] overflow-hidden p-6 text-center">
+              <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔒</div>
+              <p className="text-white font-bold text-lg mb-2">¡Hola, mi rey!</p>
+              <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
+                Crea una cuenta para poder realizar tu prueba gratuita del Quiz IA y desbloquear todas las funciones.
+              </p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <a href="#/login" className="btn-cyber" style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--accent-primary)', color: 'black', fontWeight: 'bold', borderRadius: '10px', textDecoration: 'none' }}>
+                  UNIRSE GRATIS
+                </a>
+                <button onClick={() => setIsOpen(false)} style={{ padding: '10px 16px', background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', cursor: 'pointer' }}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Panel completo del Quiz — SOLO para usuarios logueados */}
+      <AnimatePresence>
+        {user && isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
