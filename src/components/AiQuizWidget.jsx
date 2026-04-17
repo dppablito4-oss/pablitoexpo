@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const EDGE_FN_URL = 'https://wraogfketbdpfmrpfwfb.supabase.co/functions/v1/bright-responder';
 const SUPABASE_ANON_KEY = 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
 
-export default function AiQuizWidget({ nasaData = {} }) {
+export default function AiQuizWidget({ nasaData = {}, user = null }) {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -18,13 +18,27 @@ export default function AiQuizWidget({ nasaData = {} }) {
     setQuestion('');
 
     try {
+    // Extract meaningful text from slides so the AI asks RELEVANT questions
+    const sections = nasaData.sections || [];
+    const contextText = sections
+      .flatMap(sec => (sec.elements || []))
+      .filter(el => el.type === 'text' && el.content)
+      .map(el => el.content)
+      .join(' | ')
+      .slice(0, 1200); // cap tokens
+
+    const payload = { 
+      nasaData: contextText ? { context: contextText } : nasaData, 
+      questionCount 
+    };
+
       const response = await fetch(EDGE_FN_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ nasaData, questionCount }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -67,6 +81,33 @@ export default function AiQuizWidget({ nasaData = {} }) {
       >
         🤖
       </motion.button>
+
+      {/* Guest blocker panel */}
+      {!user && isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.9 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 200 }}
+          className="fixed bottom-24 right-6 z-[9997] w-[340px] max-w-[90vw]"
+        >
+          <div className="bg-black/90 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.2)] overflow-hidden p-6 text-center">
+            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔒</div>
+            <p className="text-white font-bold text-lg mb-2">¡Hola, mi rey!</p>
+            <p className="text-neutral-400 text-sm mb-4 leading-relaxed">
+              Crea una cuenta para poder realizar tu prueba gratuita del Quiz IA y desbloquear todas las funciones.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <a href="#/login" className="btn-cyber" style={{ padding: '10px 20px', fontSize: '0.9rem', background: 'var(--accent-primary)', color: 'black', fontWeight: 'bold', borderRadius: '10px', textDecoration: 'none' }}>
+                UNIRSE GRATIS
+              </a>
+              <button onClick={() => setIsOpen(false)} style={{ padding: '10px 16px', background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', cursor: 'pointer' }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Panel flotante */}
       <AnimatePresence>

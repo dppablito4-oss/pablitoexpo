@@ -119,7 +119,7 @@ export default function ProjectorView() {
       <NasaWebTemplate data={{ ...slidesData, sections }} />
 
       {/* Widget IA Quiz — pasa contexto de todas las secciones */}
-      <AiQuizWidget nasaData={{ sections, ...nasaData }} />
+      <AiQuizWidget nasaData={{ sections, ...nasaData }} user={user} />
 
       {/* Laser Virtual (Fixed a la ventana) */}
       <motion.div 
