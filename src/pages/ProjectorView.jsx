@@ -63,7 +63,10 @@ export default function ProjectorView() {
   if (loading) return <div className="h-screen w-full flex items-center justify-center bg-black text-white">Sincronizando Proyector...</div>;
   if (!presentation) return null;
 
-  const nasaData = presentation.slides_data?.nasa || {};
+  const slidesData = presentation.slides_data || {};
+  // Support both new sections[] format and old nasa{} format
+  const sections = slidesData.sections || [];
+  const nasaData = slidesData.nasa || (sections[0]?.elements ? {} : slidesData);
 
   return (
     <div className="w-full bg-black relative cursor-none scroll-smooth">
@@ -72,10 +75,10 @@ export default function ProjectorView() {
         EL PROYECTOR AHORA ES UNA PÁGINA WEB REAL,
         SIN BARRERAS DE ALTURA NI OVERFLOW HIDDEN.
       */}
-      <NasaWebTemplate data={nasaData} />
+      <NasaWebTemplate data={slidesData} />
 
-      {/* Widget IA Quiz — lee todo el JSON automáticamente */}
-      <AiQuizWidget nasaData={nasaData} />
+      {/* Widget IA Quiz — pasa contexto de todas las secciones */}
+      <AiQuizWidget nasaData={{ sections, ...nasaData }} />
 
       {/* Laser Virtual (Fixed a la ventana) */}
       <motion.div 
