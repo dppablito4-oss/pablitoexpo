@@ -5,11 +5,11 @@ export default function AiCopilotPanel({ currentSections }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
-  
+
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asesor creativo de presentaciones 🚀\n\nHe leído tu lienzo y estoy aquí para darte ideas, sugerirte colores, revisar tus textos o decirte qué te falta. ¡Pregúntame lo que quieras!' }
+    { role: 'assistant', text: '¡Habla, MI REY o REINA si eres diva! Soy P.A.B.L.O., tu co-piloto de confianza en esta bóveda. 🚀\n\nHe chequeado tu lienzo y estoy listo para tirarte las fijas. Ya no me pidas que edite (pa\' no wevearnos con el código), pero pregúntame lo que sea: desde paletas de colores finas hasta qué temas te faltan para que no paltees en la expo. Aquí estamos para que ese proyecto salga. ¿Qué sale hoy, causa? ¡GAAA!'
   ]);
-  
+
   const endOfMessagesRef = useRef(null);
 
   useEffect(() => {
@@ -58,15 +58,15 @@ export default function AiCopilotPanel({ currentSections }) {
 
   return (
     <div className="flex flex-col h-full bg-neutral-900 border-l border-neutral-800">
-      
+
       {/* Header */}
       <div className="p-4 border-b border-neutral-800 shrink-0"
-           style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
+        style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
-                   style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
+                style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
                 P
               </div>
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
@@ -74,7 +74,7 @@ export default function AiCopilotPanel({ currentSections }) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-black tracking-wider"
-                    style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   P.A.B.L.O.
                 </h3>
                 <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
@@ -104,7 +104,7 @@ export default function AiCopilotPanel({ currentSections }) {
         {isGenerating && (
           <div className="flex justify-start">
             <div className="border rounded-xl p-3 rounded-tl-sm w-fit flex items-center gap-2"
-                 style={{ background: '#0f0a1e', borderColor: 'rgba(168,85,247,0.3)' }}>
+              style={{ background: '#0f0a1e', borderColor: 'rgba(168,85,247,0.3)' }}>
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                 <div className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -123,21 +123,21 @@ export default function AiCopilotPanel({ currentSections }) {
         <div className="flex items-center justify-between bg-black border border-neutral-800 rounded-lg p-1.5">
           <span className="text-[9px] text-neutral-500 font-bold ml-2 uppercase tracking-widest">Largo de Respuestas:</span>
           <div className="flex gap-1 bg-neutral-900 rounded-md p-1 border border-neutral-800">
-            <button 
+            <button
               type="button"
               onClick={() => setVerbosity('short')}
               className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'short' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
             >
               Corta
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => setVerbosity('medium')}
               className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'medium' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
             >
               Media
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => setVerbosity('long')}
               className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'long' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
