@@ -28,7 +28,13 @@ serve(async (req) => {
 
     // Build the user message based on mode
     let userMessage;
-    if (mode === 'append') {
+    if (mode === 'chat') {
+      userMessage = `El usuario te está haciendo una pregunta conversacional en vez de pedirte cambiar el código.
+Responde de forma amigable, breve y como el asistente P.A.B.L.O.
+INSTRUCCIÓN DEL USUARIO: "${prompt}"
+
+Devuelve un JSON con un único campo "message": { "message": "Tu respuesta amistosa aquí..." }`;
+    } else if (mode === 'append') {
       // APPEND MODE: Only generate 1 new section, don't touch existing ones
       userMessage = `El estado actual de la presentación tiene ${currentSections?.length || 0} secciones.
 NO toques las secciones existentes. Solo añade UNA sección nueva al final del array.
@@ -51,8 +57,11 @@ Devuelve el JSON modificado con TODAS las secciones: { "sections": [...] }`;
     }
 
     // Configuración del modelo y comportamiento de la IA
-    const systemInstruction = `
-Eres el Copiloto de IA de un editor de presentaciones web llamado "Pablito Expo".
+    const systemInstruction = mode === 'chat' 
+      ? `Eres P.A.B.L.O. (Protocolo de Asistencia y Bits para Lienzos Optimizados), el asistente de Pablito Expo.
+Responde de forma breve, carismática y útil. Recuerda que no vas a modificar el lienzo esta vez, solo vas a conversar.
+Tu respuesta DEBE ser un JSON puro: { "message": "Tu respuesta aquí" }`
+      : `Eres el Copiloto de IA de un editor de presentaciones web llamado "Pablito Expo".
 Tu trabajo es recibir el estado actual del lienzo (un array JSON de 'sections') y las instrucciones del usuario, y devolver una VERSIÓN MODIFICADA O EXPANDIDA de ese mismo array JSON que cumpla con los cambios pedidos.
 
 REGLAS ABSOLUTAS (no las violes jamás):

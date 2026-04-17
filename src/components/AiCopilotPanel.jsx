@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 
-// Words that signal "add new section" mode vs "modify existing" mode
-const APPEND_KEYWORDS = /añad|agrega|crea una nueva|nueva seccion|nueva sección|append|add a|agreg/i;
+// Detect if the user is asking a question vs giving a command
+const QUESTION_KEYWORDS = /^(qu[eé]|c[oó]mo|cu[aá]l|qui[eé]n|por qu[eé]|cu[aá]ndo|puedes|sabes|eres|hola|hey|ayuda|explica|dime|cuentame|que eres|help)/i;
+const QUESTION_MARK = /\?/;
+const isQuestion = (text) => QUESTION_MARK.test(text) || QUESTION_KEYWORDS.test(text.trim());
+
+// Words that signal a new section should be appended
+const APPEND_KEYWORDS = /a[ñn]ad|agrega|crea una nueva|nueva secci[oó]n|append|add a/i;
 
 export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo, canUndo }) {
   const [prompt, setPrompt] = useState('');
@@ -26,17 +31,29 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges, onUndo
     setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
 
-    // Detect mode: append (add section) vs modify (change existing)
-    const isAppendMode = APPEND_KEYWORDS.test(userText);
+    // Detect intent: question or command
+    const isQ = isQuestion(userText);
+    const isAppendMode = !isQ && APPEND_KEYWORDS.test(userText);
+    const mode = isQ ? 'chat' : isAppendMode ? 'append' : 'modify';
 
     try {
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
           currentSections: currentSections,
-          mode: isAppendMode ? 'append' : 'modify',
+          mode,
         }
       });
+
+      if (error) throw new Error(error.message);
+
+      // ── CHAT MODE response (question answered) ─────────────────────────
+      if (data && data.message) {
+        setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
+          { role: 'assistant', text: data.message }
+        ));
+        return;
+      }
 
       if (error) throw new Error(error.message);
 
