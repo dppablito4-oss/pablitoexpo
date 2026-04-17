@@ -89,7 +89,7 @@ function AuthModal({ mode, onClose }) {
       >
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg,#00f0ff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '900', color: '#000', margin: '0 auto 12px', boxShadow: '0 0 20px rgba(0,240,255,0.3)' }}>P</div>
+          <img src="/favicon.svg" alt="Pablito Expo" style={{ width: '48px', height: '48px', borderRadius: '12px', margin: '0 auto 12px', display: 'block', boxShadow: '0 0 20px rgba(0,240,255,0.3)' }} />
           {/* Tabs */}
           <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', padding: '4px' }}>
             {['login', 'register'].map(t => (
@@ -240,9 +240,9 @@ function PresentationCard({ item, onViewClick }) {
           {item.title || 'Sin título'}
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'linear-gradient(135deg,#00f0ff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#000' }}>
-            {(item.author || 'U')[0].toUpperCase()}
-          </div>
+          <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <img src="/favicon.svg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>{item.author || 'Anónimo'}</span>
           {item.rank && <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>{item.rank}</span>}
         </div>
@@ -322,7 +322,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg,#00f0ff,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '900', color: '#000', boxShadow: '0 0 16px rgba(0,240,255,0.3)' }}>P</div>
+            <img src="/favicon.svg" alt="Pablito Expo" style={{ width: '36px', height: '36px', borderRadius: '10px', boxShadow: '0 0 16px rgba(0,240,255,0.3)' }} />
             <span style={{ fontWeight: '800', fontSize: '15px', letterSpacing: '-0.02em', background: 'linear-gradient(90deg,#00f0ff,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Pablito Expo
             </span>

@@ -127,14 +127,12 @@ export default function Login() {
       >
         {/* Logo + Title */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{
+          <img src="/favicon.svg" alt="Pablito Expo" style={{
             width: '52px', height: '52px', borderRadius: '14px',
-            background: 'linear-gradient(135deg, #00f0ff, #7c3aed)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '22px', fontWeight: '900', color: '#000',
             margin: '0 auto 16px',
             boxShadow: '0 0 24px rgba(0,240,255,0.35)',
-          }}>P</div>
+            display: 'block',
+          }} />
           <h1 style={{
             fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em',
             background: 'linear-gradient(90deg, #00f0ff, #a78bfa)',
