@@ -1,5 +1,6 @@
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import SiteFooter from './components/SiteFooter';
 
 // Import Pages
 import Login from './pages/Login';
@@ -24,11 +25,14 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+// Footer solo en páginas que no sean el editor ni el proyector full-screen
+function AppLayout() {
+  const location = useLocation();
+  const noFooterRoutes = ['/editor', '/projector', '/remote'];
+  const hideFooter = noFooterRoutes.some(r => location.pathname.startsWith(r));
+
   return (
-    <Router>
-      <div className="ambient-light"></div>
-      <div className="ambient-light-2"></div>
+    <>
       <Routes>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -36,6 +40,17 @@ function App() {
         <Route path="/projector/:id" element={<ProtectedRoute><ProjectorView /></ProtectedRoute>} />
         <Route path="/remote/:id" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
       </Routes>
+      {!hideFooter && <SiteFooter />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <div className="ambient-light"></div>
+      <div className="ambient-light-2"></div>
+      <AppLayout />
     </Router>
   );
 }
