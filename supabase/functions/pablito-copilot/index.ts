@@ -30,7 +30,11 @@ serve(async (req) => {
     let userMessage;
     if (mode === 'chat') {
       userMessage = `El usuario te está haciendo una pregunta conversacional en vez de pedirte cambiar el código.
-Responde de forma amigable, breve y como el asistente P.A.B.L.O.
+Responde de forma amigable, breve, un poco sarcástica (como un experto peruano) y como el asistente P.A.B.L.O.
+
+ESTE ES EL CONTEXTO DE LA PRESENTACIÓN ACTUAL (Úsalo para responder si te preguntan de qué trata):
+${JSON.stringify({ sections: currentSections })}
+
 INSTRUCCIÓN DEL USUARIO: "${prompt}"
 
 Devuelve un JSON con un único campo "message": { "message": "Tu respuesta amistosa aquí..." }`;
