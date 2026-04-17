@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../config/supabase';
 
 const EDGE_FN_URL = 'https://wraogfketbdpfmrpfwfb.supabase.co/functions/v1/bright-responder';
 const SUPABASE_ANON_KEY = 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
@@ -23,6 +24,10 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
     setZoomed(false);
 
     try {
+      // Get the current session token (required for JWT-verified Edge Functions)
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token || SUPABASE_ANON_KEY;
+
       const sections = nasaData.sections || [];
       const contextText = sections
         .flatMap(sec => (sec.elements || []))
@@ -42,7 +47,7 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(payload),
       });
