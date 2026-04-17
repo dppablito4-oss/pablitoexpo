@@ -1,28 +1,9 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const OPENAI_KEY = import.meta.env.VITE_OPENAI_KEY || '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';
-
-// Construye un contexto rico leyendo todo el JSON de la presentación
-function buildSystemPrompt(nasaData) {
-  const features = (nasaData.features || [])
-    .map(f => `${f.title}: ${f.val} — ${f.desc}`)
-    .join('; ');
-
-  return `Eres un host carismático y divertido de una exposición escolar. 
-El tema de la presentación es: "${nasaData.heroTitle || 'Tema desconocido'}".
-Descripción: "${nasaData.heroSubtitle || ''}".
-Misión / Detalle: "${nasaData.aboutHeading || ''}: ${nasaData.aboutText || ''}".
-Datos técnicos: ${features || 'sin datos adicionales'}.
-
-Tu trabajo: Generar UNA sola pregunta corta (máximo 15 palabras), intrigante y creativa para lanzar al público y generar debate. 
-REGLAS ESTRICTAS:
-- NO des la respuesta nunca
-- NO uses el formato "¿Sabías que...?"
-- Sé creativo, sorprendente, quizás un poco filosófico o retador
-- Solo escribe la pregunta, nada más
-- Varía el estilo cada vez (a veces curiosa, a veces desafiante, a veces absurda-divertida)`;
-}
+// Llama a la Edge Function de Supabase — la API key de OpenAI vive ahí, segura
+const EDGE_FN_URL = 'https://wraogfketbdpfmrpfwfb.supabase.co/functions/v1/bright-responder';
+const SUPABASE_ANON_KEY = 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
 
 export default function AiQuizWidget({ nasaData = {} }) {
   const [question, setQuestion] = useState('');
@@ -32,47 +13,30 @@ export default function AiQuizWidget({ nasaData = {} }) {
   const [questionCount, setQuestionCount] = useState(0);
 
   const generateQuestion = useCallback(async () => {
-    if (!OPENAI_KEY) {
-      setError('API Key no configurada en .env');
-      return;
-    }
-
     setLoading(true);
     setError('');
     setQuestion('');
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch(EDGE_FN_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_KEY}`,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 1.1,  // Alta creatividad para preguntas variadas
-          max_tokens: 80,
-          messages: [
-            { role: 'system', content: buildSystemPrompt(nasaData) },
-            { 
-              role: 'user', 
-              content: `Genera la pregunta #${questionCount + 1}. Debe ser diferente a las anteriores.` 
-            },
-          ],
-        }),
+        body: JSON.stringify({ nasaData, questionCount }),
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || `Error ${response.status}`);
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || `Error ${response.status}`);
       }
 
-      const data = await response.json();
-      const q = data.choices?.[0]?.message?.content?.trim();
-      setQuestion(q || '¿Sin respuesta del servidor?');
+      setQuestion(data.question || '¿Sin respuesta?');
       setQuestionCount(c => c + 1);
     } catch (e) {
-      setError(e.message);
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -104,7 +68,7 @@ export default function AiQuizWidget({ nasaData = {} }) {
         🤖
       </motion.button>
 
-      {/* Panel flotante de pregunta */}
+      {/* Panel flotante */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -117,7 +81,6 @@ export default function AiQuizWidget({ nasaData = {} }) {
             <div className="bg-black/80 backdrop-blur-2xl border border-fuchsia-500/30
                             rounded-2xl shadow-[0_0_60px_rgba(168,85,247,0.3)] overflow-hidden">
 
-              {/* Header */}
               <div className="flex items-center justify-between px-5 py-3
                               border-b border-white/10
                               bg-gradient-to-r from-fuchsia-900/40 to-purple-900/40">
@@ -135,7 +98,6 @@ export default function AiQuizWidget({ nasaData = {} }) {
                 </button>
               </div>
 
-              {/* Contenido */}
               <div className="p-6 min-h-[120px] flex flex-col items-center justify-center">
                 {loading && (
                   <motion.div
@@ -163,7 +125,6 @@ export default function AiQuizWidget({ nasaData = {} }) {
                 )}
               </div>
 
-              {/* Footer */}
               <div className="px-5 pb-4 flex gap-2">
                 <button
                   onClick={generateQuestion}
