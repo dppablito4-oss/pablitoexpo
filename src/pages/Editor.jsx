@@ -252,21 +252,32 @@ export default function Editor() {
   const saveTimer  = useRef(null);
 
   // ── Load ────────────────────────────────────────────────────────────────────
+  const hasLoadedId = useRef(null);
+
   useEffect(() => {
+    // Only load from DB if we haven't loaded THIS specific presentation yet
+    if (hasLoadedId.current === id) return;
+
     const load = async () => {
       const { data, error } = await supabase.from('presentations').select('*').eq('id', id).single();
       if (error) { alert('No encontrado'); navigate('/'); return; }
+      
       const isOwner  = data.user_id === user?.id;
       const isEditor = Array.isArray(data.editors_emails) && data.editors_emails.includes(user?.email);
       setCanEdit(isOwner || isEditor);
       setPresentation(data);
+      
       const secs = migrateToSections(data.slides_data);
       setSections(secs);
       setActiveSectionId(secs[0]?.id || null);
       setLoading(false);
+      hasLoadedId.current = id;
     };
-    load();
-  }, [id, user, navigate]);
+    
+    if (user?.id) {
+      load();
+    }
+  }, [id, user?.id, user?.email, navigate]);
 
   // ── Debounced save ───────────────────────────────────────────────────────────
   useEffect(() => {
