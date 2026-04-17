@@ -13,9 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') 
+                        || Deno.env.get('open ai key')
+                        || Deno.env.get('OPENAI_KEY');
     if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY No configurada en la Edge Function');
+      throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
     const { prompt, currentSections } = await req.json();

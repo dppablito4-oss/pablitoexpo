@@ -5,7 +5,7 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Hola! Soy tu Copiloto. Puedo cambiar colores, añadir secciones o ajustar textos de toda tu presentación. ¿Qué necesitas?' }
+    { role: 'assistant', text: '¡Qué tal! Soy P.A.B.L.O., tu asistente de presentaciones creado especialmente para Pablito_dp 🚀 Puedo cambiar colores, textos, añadir secciones completas o ajustar cualquier cosa del lienzo. ¿Qué necesitas hoy?' }
   ]);
   
   const endOfMessagesRef = useRef(null);
@@ -38,7 +38,15 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
       if (data && data.sections) {
         // Éxito: aplicamos la nueva data al Editor
         onApplyChanges(data.sections);
-        setChatHistory(prev => [...prev, { role: 'assistant', text: '¡Hecho! He aplicado los cambios en el lienzo. ✨' }]);
+        const successMsgs = [
+          '¡Hecho! He aplicado los cambios en tu lienzo. ✨',
+          '¡Listo, Pablito! Los cambios ya están en tu canvas. 🔥',
+          '¡Ejecutado! ¿Qué más le damos? 🚀',
+          '¡Pa\'lante! Cambios aplicados. 💪',
+        ];
+        setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
+          { role: 'assistant', text: successMsgs[Math.floor(Math.random() * successMsgs.length)] }
+        ));
       } else if (data && data.error) {
         throw new Error(data.error);
       } else {
@@ -47,7 +55,9 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
 
     } catch (err) {
       console.error(err);
-      setChatHistory(prev => [...prev, { role: 'assistant', text: `❌ Hubo un error: ${err.message}` }]);
+      setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
+        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}. Inténtalo de nuevo.` }
+      ));
     } finally {
       setIsGenerating(false);
     }
@@ -57,11 +67,28 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
     <div className="flex flex-col h-full bg-neutral-900 border-l border-neutral-800">
       
       {/* Header Copiloto */}
-      <div className="p-4 border-b border-neutral-800 flex items-center gap-2 bg-neutral-950 shrink-0">
-        <span className="text-xl">🤖</span>
-        <div>
-          <h3 className="text-xs font-bold text-cyan-400 tracking-wider">COPILOTO IA</h3>
-          <p className="text-[9px] text-neutral-500 uppercase tracking-widest mt-0.5">Potenciado por OpenAI</p>
+      <div className="p-4 border-b border-neutral-800 shrink-0"
+           style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
+                 style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
+              P
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black tracking-wider"
+                  style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                P.A.B.L.O.
+              </h3>
+              <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
+                IA
+              </span>
+            </div>
+            <p className="text-[9px] text-neutral-600 mt-0.5 italic">Protocolo de Asistencia y Bits para Lienzos Optimizados</p>
+          </div>
         </div>
       </div>
 
@@ -101,7 +128,7 @@ export default function AiCopilotPanel({ currentSections, onApplyChanges }) {
                 handleSubmit(e);
               }
             }}
-            placeholder="Ej: Cambia el título de la sección 2 a rojo..."
+            placeholder="Ej: Cambia el color del título a rojo brillante..."
             disabled={isGenerating}
             rows={3}
             className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
