@@ -17,6 +17,7 @@ export default function ProjectorView() {
   const [presentation, setPresentation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [guestViewsCount, setGuestViewsCount] = useState(0);
+  const [laserActive, setLaserActive] = useState(false); // hidden until phone sends event
   
   // Laser Nivel Dios (GPU directo)
   const laserX = useMotionValue(window.innerWidth / 2);
@@ -86,6 +87,7 @@ export default function ProjectorView() {
       .on('broadcast', { event: 'laser' }, (payload) => {
         laserX.set(payload.payload.x * window.innerWidth);
         laserY.set(payload.payload.y * window.innerHeight);
+        setLaserActive(true); // show laser only when phone sends signal
       })
       .on('broadcast', { event: 'remote-scroll' }, (payload) => {
         window.scrollBy({ top: payload.payload.deltaY, behavior: 'auto' });
@@ -109,7 +111,7 @@ export default function ProjectorView() {
   const nasaData = slidesData.nasa || (sections[0]?.elements ? {} : slidesData);
 
   return (
-    <div className="w-full bg-black relative cursor-none scroll-smooth">
+    <div className="w-full bg-black relative scroll-smooth">
       
       {/* 
         EL PROYECTOR AHORA ES UNA PÁGINA WEB REAL,
@@ -121,12 +123,12 @@ export default function ProjectorView() {
       {/* Widget IA Quiz — pasa contexto de todas las secciones */}
       <AiQuizWidget nasaData={{ sections, ...nasaData }} user={user} />
 
-      {/* Laser Virtual (Fixed a la ventana) */}
+      {/* Laser Virtual — oculto hasta que el celular envíe el primer evento */}
       <motion.div 
         style={{
           left: smoothX,
           top: smoothY,
-          position: 'fixed', // Cambiado de absoluto a fixed para que flote sobre el scroll
+          position: 'fixed',
           width: '20px',
           height: '20px',
           background: '#ff0055',
@@ -134,7 +136,9 @@ export default function ProjectorView() {
           boxShadow: '0 0 25px 10px rgba(255,0,85,0.6)',
           pointerEvents: 'none',
           transform: 'translate(-50%, -50%)',
-          zIndex: 9999
+          zIndex: 9999,
+          opacity: laserActive ? 1 : 0,
+          transition: 'opacity 0.3s ease'
         }}
       />
       
