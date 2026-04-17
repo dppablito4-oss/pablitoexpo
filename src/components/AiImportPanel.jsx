@@ -3,16 +3,15 @@ import { useState } from 'react';
 const uid = () => Math.random().toString(36).slice(2, 8);
 
 // The prompt the user copies to ChatGPT / Gemini
-const PROMPT = `Eres un asistente de presentaciones web. Dame contenido en EXACTAMENTE este formato JSON.
+const PROMPT = `Eres un asistente de presentaciones web. Dame el siguiente JSON rellenado con contenido real.
 
-REGLAS CRÍTICAS:
-- Devuelve SOLO el JSON, sin texto antes ni después, sin bloques de código markdown.
-- Las URLs de imágenes deben ser texto puro, NUNCA en formato Markdown [texto](url). Solo la URL directa.
-- Los colores deben ser hex estándar: "#ffffff", NUNCA "\\#ffffff".
-- El número de secciones NO está limitado a 3. Crea TODAS las secciones que el tema requiera para una presentación completa (mínimo 4-6 secciones).
-- Las URLs de bgImage deben ser de Unsplash en formato: https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070 (URL directa, sin corchetes).
+MUY IMPORTANTE: Escribe el JSON dentro de un bloque de código Markdown usando \`\`\`json al inicio y \`\`\` al final. De esta forma el formato no se corrompe.
 
-Formato JSON (respeta esta estructura exactamente):
+Número de secciones: crea MÍNIMO 5-6 secciones (no te limites al ejemplo de 3). Alterna secciones de texto con secciones de métricas.
+
+Para las URLs de bgImage usa imágenes reales de Unsplash: https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070
+
+Estructura del JSON:
 
 {
   "sections": [
@@ -68,17 +67,11 @@ Formato JSON (respeta esta estructura exactamente):
         { "id": "el-007", "type": "metric", "val": "VALOR 3", "title": "MÉTRICA 3", "desc": "Descripción corta", "x": 67, "y": 20, "w": 30, "h": 55, "style": { "fontSize": 72 } }
       ]
     }
-    // AGREGA MÁS SECCIONES AQUÍ — no hay límite, usa tantas como necesites
+    { "id": "sec-NNN", "bgImage": "https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070", "height": 100, "elements": [] }
   ]
 }
 
-El tema de la presentación es: [ESCRIBE TU TEMA AQUÍ]
-
-Instrucciones adicionales:
-- Crea al menos 4-6 secciones para una presentación completa.
-- Alterna entre secciones de texto (2 columnas) y secciones de métricas.
-- Busca imágenes de Unsplash relevantes para el tema (URL directa, sin formato Markdown).
-- Los IDs deben ser únicos (sec-001, sec-002... / el-001, el-002...).`;
+El tema de la presentación es: [ESCRIBE TU TEMA AQUÍ]`;
 
 export default function AiImportPanel({ onApply }) {
   const [open, setOpen] = useState(false);
@@ -91,14 +84,20 @@ export default function AiImportPanel({ onApply }) {
       // ── Auto-clean common AI formatting quirks ──────────────────────────────
       let raw = json.trim();
 
+      // 0. Strip markdown code fences: ```json ... ``` or ``` ... ```
+      raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
+
       // 1. Fix escaped hashes: \# → #
       raw = raw.replace(/\\#/g, '#');
 
       // 2. Fix markdown links in strings: "[text](url)" → "url"
-      //    Matches "[anything](url)" and replaces with just the bare URL
-      raw = raw.replace(/"?\[([^\]]*)\]\(([^)]+)\)"?/g, '"$2"');
+      //    Picks the URL inside () — the clean one without markdown escapes
+      raw = raw.replace(/"\[([^\]]*)\]\(([^)]+)\)"/g, '"$2"');
 
-      // 3. Remove trailing commas before } or ] (common AI mistake)
+      // 3. Fix \& inside URLs (markdown escapes & in links) → &
+      raw = raw.replace(/\\&/g, '&');
+
+      // 4. Remove trailing commas before } or ] (common AI mistake)
       raw = raw.replace(/,(\s*[}\]])/g, '$1');
 
       const parsed = JSON.parse(raw);
