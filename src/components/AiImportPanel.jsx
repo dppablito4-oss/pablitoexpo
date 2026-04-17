@@ -73,7 +73,20 @@ export default function AiImportPanel({ onApply }) {
 
   const handleApply = () => {
     try {
-      const parsed = JSON.parse(json.trim());
+      // ── Auto-clean common AI formatting quirks ──────────────────────────────
+      let raw = json.trim();
+
+      // 1. Fix escaped hashes: \# → #
+      raw = raw.replace(/\\#/g, '#');
+
+      // 2. Fix markdown links in strings: "[text](url)" → "url"
+      //    Matches "[anything](url)" and replaces with just the bare URL
+      raw = raw.replace(/"?\[([^\]]*)\]\(([^)]+)\)"?/g, '"$2"');
+
+      // 3. Remove trailing commas before } or ] (common AI mistake)
+      raw = raw.replace(/,(\s*[}\]])/g, '$1');
+
+      const parsed = JSON.parse(raw);
 
       // New format: has sections[]
       if (parsed.sections && Array.isArray(parsed.sections)) {
