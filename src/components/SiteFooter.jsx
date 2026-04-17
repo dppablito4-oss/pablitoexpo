@@ -6,7 +6,7 @@ export default function SiteFooter() {
       style={{
         width: '100%',
         borderTop: '1px solid rgba(255,255,255,0.04)',
-        padding: '12px 32px',
+        padding: '14px 20px',
         fontFamily: "'Inter', 'Segoe UI', sans-serif",
       }}
     >
@@ -17,7 +17,8 @@ export default function SiteFooter() {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '8px',
+        gap: '6px',
+        rowGap: '4px',
       }}>
 
         {/* Left — brand */}
