@@ -56,7 +56,7 @@ export default function RemoteControl() {
     return () => {
       channel.unsubscribe();
     };
-  }, [id]);
+  }, [presentation?.id]);
 
   const sendNav = (direction) => {
     if (channelRef.current) {
