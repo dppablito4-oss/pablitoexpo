@@ -62,6 +62,11 @@ export default function AiCopilotPanel({ currentSections }) {
     const shouldProfile = (messageCountRef.current % 5 === 0);
 
     try {
+      const historyPayload = chatHistory.slice(-10).map(m => ({
+        role: m.role,
+        content: m.text
+      }));
+
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
@@ -70,6 +75,7 @@ export default function AiCopilotPanel({ currentSections }) {
           personality,
           username: displayName,
           shouldProfile,
+          chatHistory: historyPayload
         }
       });
 

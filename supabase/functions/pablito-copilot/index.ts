@@ -39,7 +39,7 @@ serve(async (req) => {
       styleContext = profile?.style_context;
     }
 
-    const { prompt, currentSections, verbosity, username, shouldProfile, personality = 'brayan' } = await req.json();
+    const { prompt, currentSections, verbosity, username, shouldProfile, personality = 'brayan', chatHistory = [] } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
@@ -68,7 +68,13 @@ serve(async (req) => {
     let personalityInstruction = "";
     switch (personality) {
       case 'brayan':
-        personalityInstruction = "Eres Pablito El Brayan. Tu actitud es amigable, tienes mucha chispa, usas jergas peruanas sutiles ('causa', 'chibolo', 'bacán', 'mano', 'miking') pero mantienes el profesionalismo técnico. Eres como un pata de la pichanga que sabe mucho de tecnología.";
+        personalityInstruction = `Eres Pablito El Brayan. Tu tono es 'fierro'. No traduzcas palabras, mimetiza el habla del usuario.
+Reglas de Reacción:
+- Si algo sale bien: 'Fierro', 'Chevere' o 'Tambien tambien'.
+- Si el usuario falla o hay mala suerte: 'Estas piña' o 'Ya fue'.
+- Si el usuario dice algo gracioso: 'Payasito eres'.
+- Si no entiende algo: Dile 'Especial' o 'Besámela oe'.
+Muletillas: 'Yara', 'Calla oe', 'Socio', 'Basura', 'Q fue'.`;
         break;
       case 'renegon':
         personalityInstruction = "Eres Pablito Renegón. Eres sarcástico, impaciente y un poco 'hater'. Estás estresado porque no has dormido. Troleas al usuario si su presentación está 'tela' (fea o simple). Respondes de forma ruda pero finalmente das el consejo técnico correcto. Usa sarcasmo pesado.";
@@ -103,6 +109,12 @@ REGLAS STRICTAS:
 1. Siempre ayuda al usuario basándote en el contexto de su presentación.
 2. ${outputFormat}`;
 
+    // Validar el formato de los mensajes del historial
+    const formattedHistory = Array.isArray(chatHistory) ? chatHistory.map((m: any) => ({
+      role: m.role === 'user' || m.role === 'assistant' ? m.role : 'user',
+      content: String(m.content)
+    })) : [];
+
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -115,10 +127,11 @@ REGLAS STRICTAS:
         response_format: { type: "json_object" }, 
         messages: [
           { role: 'system', content: systemInstruction },
+          ...formattedHistory,
           { role: 'user', content: prompt }
         ],
         max_tokens: 1500,
-        temperature: 0.85, // Subido para mayor libertad creativa y dialectal
+        temperature: 0.8, // Configurado en 0.8 para variabilidad natural de jerga
       }),
     });
 
@@ -139,7 +152,7 @@ REGLAS STRICTAS:
     if (shouldProfile && finalParsed.newStyleContext && userId) {
       try {
         await supabaseClient.from('profiles').upsert({ id: userId, style_context: finalParsed.newStyleContext });
-      } catch (upsertErr) {
+      } catch (upsertErr: any) {
         console.error("Error guardando style_context:", upsertErr.message);
       }
     }
@@ -149,7 +162,7 @@ REGLAS STRICTAS:
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error capturado: ", error.message);
     // IMPORTANTE: Retornamos 200 para que supabase-js en el frontend nos deje leer el mensaje de error real.
     return new Response(
