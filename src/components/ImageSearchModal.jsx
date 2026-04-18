@@ -32,10 +32,17 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect }) {
         body: { query: queryToSearch, page: 1 }
       });
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        console.error("Supabase Invoke Error:", error);
+        throw new Error(`Error de conexión: ${error.message || 'La función no respondió.'}`);
+      }
+
+      if (data?.error) {
+        console.error("Unsplash Proxy Error:", data.error);
+        throw new Error(data.error);
+      }
       
-      setPhotos(data.results || []);
+      setPhotos(data?.results || []);
     } catch (err) {
       console.error("Unsplash Error:", err);
       // Fallback a algunas demos duras si falla por límite u otro error
@@ -77,16 +84,36 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect }) {
           boxShadow: '0 0 50px rgba(0,240,255,0.05)'
         }}
       >
-        {/* Header */}
+        {/* Header con Branding de Unsplash */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
           padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}>
-          <ImageIcon size={20} color="#22d3ee" />
-          <span style={{ fontSize: '13px', fontWeight: '800', color: '#22d3ee', letterSpacing: '0.1em', textTransform: 'uppercase', flex: 1 }}>
-            Galería de Unsplash
-          </span>
-          <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ImageIcon size={20} color="#22d3ee" />
+              <span style={{ fontSize: '14px', fontWeight: '800', color: '#fff', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                Buscador de Imágenes
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '28px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Powered by</span>
+              <svg width="12" height="12" viewBox="0 0 32 32" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z"></path>
+              </svg>
+              <a href="https://unsplash.com/?utm_source=pablito_expo&utm_medium=referral" target="_blank" rel="noopener noreferrer" 
+                 style={{ color: '#fff', fontSize: '11px', fontWeight: '800', textDecoration: 'none', letterSpacing: '0.02em', transition: 'color 0.2s' }}
+                 onMouseEnter={e => e.currentTarget.style.color = '#22d3ee'}
+                 onMouseLeave={e => e.currentTarget.style.color = '#fff'}
+              >
+                Unsplash
+              </a>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', transition: 'color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+          >
             <XIcon />
           </button>
         </div>
