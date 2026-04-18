@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { useAuth } from '../context/AuthContext';
 
 export default function AiCopilotPanel({ currentSections }) {
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Usuario';
+
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
 
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Habla, MI REY o REINA si eres diva! Soy P.A.B.L.O., tu co-piloto de confianza en esta bóveda. 🚀\n\nHe chequeado tu lienzo y estoy listo para tirarte las fijas. Ya no me pidas que edite (pa\' no wevearnos con el código), pero pregúntame lo que sea: desde paletas de colores finas hasta qué temas te faltan para que no paltees en la expo. Aquí estamos para que ese proyecto salga. ¿Qué sale hoy, causa? ¡GAAA!' }
+    { role: 'assistant', text: `¡Habla, ${displayName.toUpperCase()}! Soy P.A.B.L.O., tu co-piloto de confianza en esta bóveda. 🚀\n\nHe chequeado tu lienzo y estoy listo para tirarte las fijas. Pregúntame lo que sea: desde paletas de colores finas hasta qué temas te faltan para que no paltees en la expo. Aquí estamos para que ese proyecto salga. ¿Qué sale hoy, causa? ¡GAAA!` }
   ]);
 
   const endOfMessagesRef = useRef(null);
+  const messageCountRef = useRef(0);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,13 +29,18 @@ export default function AiCopilotPanel({ currentSections }) {
     setPrompt('');
     setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
+    
+    messageCountRef.current += 1;
+    const shouldProfile = (messageCountRef.current % 5 === 0);
 
     try {
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
           currentSections: currentSections,
-          verbosity, // "short", "medium", or "long"
+          verbosity,
+          username: displayName,
+          shouldProfile,
         }
       });
 
