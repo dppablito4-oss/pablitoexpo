@@ -1,16 +1,48 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { useAuth } from '../context/AuthContext';
+
+const PERSONALITIES = {
+  brayan: { id: 'brayan', emoji: '🧢', name: 'El Brayan', color: 'linear-gradient(135deg, #a855f7, #6366f1)', tooltip: 'Habla como tu pata de la pichanga. Te ayuda con confianza, mucha jerga peruana y cero filtros.' },
+  renegon: { id: 'renegon', emoji: '⚡', name: 'El Renegón', color: 'linear-gradient(135deg, #ef4444, #b91c1c)', tooltip: 'Está estresado porque no ha dormido. Te va a trolear si tu diapo está tela. Úsalo si aguantas el sarcasmo.' },
+  catedratico: { id: 'catedratico', emoji: '🎓', name: 'Catedrático', color: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', tooltip: 'Tu asesor de tesis personal. Se enfoca en la ortografía y la jerarquía visual impecable.' },
+  motivador: { id: 'motivador', emoji: '🚀', name: 'Motivador', color: 'linear-gradient(135deg, #f59e0b, #d97706)', tooltip: 'Tu fan número uno. Para él, todo lo que haces es arte. Te va a dar ánimos constantes.' },
+  cientifico: { id: 'cientifico', emoji: '⚛️', name: 'Científico', color: 'linear-gradient(135deg, #10b981, #047857)', tooltip: 'Un genio incomprendido que explicará el diseño usando la mecánica cuántica y física.' }
+};
 
 export default function AiCopilotPanel({ currentSections }) {
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
+  const [personality, setPersonality] = useState('brayan');
 
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Habla, MI REY o REINA si eres diva! Soy P.A.B.L.O., tu co-piloto de confianza en esta bóveda. 🚀\n\nHe chequeado tu lienzo y estoy listo para tirarte las fijas. Ya no me pidas que edite (pa\' no wevearnos con el código), pero pregúntame lo que sea: desde paletas de colores finas hasta qué temas te faltan para que no paltees en la expo. Aquí estamos para que ese proyecto salga. ¿Qué sale hoy, causa? ¡GAAA!' }
+    { role: 'assistant', text: '¡Habla! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.' }
   ]);
 
   const endOfMessagesRef = useRef(null);
+
+  // Load personality from Supabase
+  useEffect(() => {
+    const loadPersonality = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase.from('profiles').select('ai_personality').eq('id', user.id).single();
+      if (data && data.ai_personality) {
+        setPersonality(data.ai_personality);
+      }
+    };
+    loadPersonality();
+  }, [user?.id]);
+
+  const handlePersonalityChange = async (newPersonality) => {
+    setPersonality(newPersonality);
+    if (user?.id) {
+      await supabase.from('profiles').update({ ai_personality: newPersonality }).eq('id', user.id);
+    }
+    // Añadir mensaje de sistema indicando el cambio
+    setChatHistory(prev => [...prev, { role: 'assistant', text: `*Personalidad cambiada a ${PERSONALITIES[newPersonality].name} ${PERSONALITIES[newPersonality].emoji}*` }]);
+  };
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,6 +63,7 @@ export default function AiCopilotPanel({ currentSections }) {
           prompt: userText,
           currentSections: currentSections,
           verbosity, // "short", "medium", or "long"
+          personality, // Pass the selected personality
         }
       });
 
@@ -60,22 +93,21 @@ export default function AiCopilotPanel({ currentSections }) {
     <div className="flex flex-col h-full bg-neutral-900 border-l border-neutral-800">
 
       {/* Header */}
-      <div className="p-4 border-b border-neutral-800 shrink-0"
+      <div className="p-4 border-b border-neutral-800 shrink-0 relative"
         style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black"
-                style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}>
-                P
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black transition-all"
+                style={{ background: PERSONALITIES[personality].color, boxShadow: '0 0 16px rgba(0,0,0,0.5)' }}>
+                {PERSONALITIES[personality].emoji}
               </div>
               <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black tracking-wider"
-                  style={{ background: 'linear-gradient(90deg, #a855f7, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  P.A.B.L.O.
+                <h3 className="text-sm font-black tracking-wider text-white transition-colors">
+                  P.A.B.L.O. <span className="text-neutral-400 font-normal text-xs">| {PERSONALITIES[personality].name}</span>
                 </h3>
                 <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
                   ASESOR
@@ -85,6 +117,22 @@ export default function AiCopilotPanel({ currentSections }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Personality Selector Toolbar */}
+      <div className="px-4 py-2 border-b border-neutral-800 bg-black flex gap-2 overflow-x-auto hide-scrollbar shrink-0">
+        {Object.values(PERSONALITIES).map(p => (
+          <button
+            key={p.id}
+            onClick={() => handlePersonalityChange(p.id)}
+            title={p.tooltip}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold transition-all whitespace-nowrap
+              ${personality === p.id ? 'bg-neutral-800 text-white border border-neutral-600' : 'bg-transparent text-neutral-500 hover:bg-neutral-900 border border-transparent'}`}
+          >
+            <span>{p.emoji}</span>
+            <span>{p.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Chat history */}
