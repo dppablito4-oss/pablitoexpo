@@ -14,32 +14,14 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') 
-                        || Deno.env.get('open ai key')
-                        || Deno.env.get('OPENAI_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+      || Deno.env.get('open ai key')
+      || Deno.env.get('OPENAI_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    // Inicializar Supabase Client con Auth del Usuario
-    const authHeader = req.headers.get('Authorization') || '';
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    // Obtener estilo almacenado
-    const { data: userData } = await supabaseClient.auth.getUser();
-    let userId = null;
-    let styleContext = null;
-    if (userData?.user) {
-      userId = userData.user.id;
-      const { data: profile } = await supabaseClient.from('profiles').select('style_context').eq('id', userId).single();
-      styleContext = profile?.style_context;
-    }
-
-    const { prompt, currentSections, verbosity, username, shouldProfile, personality = 'brayan', chatHistory = [] } = await req.json();
+    const { prompt, currentSections, verbosity } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
@@ -48,57 +30,22 @@ serve(async (req) => {
     let lengthInstruction = "";
     switch (verbosity) {
       case 'short':
-         lengthInstruction = "RESPUESTA MUY CORTA: Responde en 1 o 2 líneas máximo. Ve muy directo al grano.";
-         break;
+        lengthInstruction = "RESPUESTA MUY CORTA: Responde en 1 o 2 líneas máximo. Ve muy directo al grano.";
+        break;
       case 'medium':
-         lengthInstruction = "RESPUESTA MEDIA: Da una explicación de tamaño moderado, quizás con viñetas o un par de párrafos.";
-         break;
+        lengthInstruction = "RESPUESTA MEDIA: Da una explicación de tamaño moderado, quizás con viñetas o un par de párrafos.";
+        break;
       case 'long':
-         lengthInstruction = "RESPUESTA LARGA: Da una explicación muy profunda, exhaustiva, con muchísimos detalles, superando las 200 palabras si es necesario.";
-         break;
-      default:
-         lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
-    }
-
-    let outputFormat = `Tu respuesta DEBE ser obligatoriamente un JSON puro con un único campo "message".\nEjemplo: { "message": "¡Bacán! Te sugiero que..." }`;
-    if (shouldProfile) {
-      outputFormat = `Tu respuesta DEBE ser obligatoriamente un JSON puro con dos campos:\n1. "message": Tu respuesta principal al usuario.\n2. "newStyleContext": Un string de máximo 20 palabras.\nInstrucción especial para "newStyleContext": Analiza el tono, vocabulario y modismos regionales (ej. peruanismos como 'causa', 'chibolo', 'pe') que ha usado el usuario en el prompt. Devuelve un resumen muy breve de este estilo para poder clonarlo. Si no detectas jerga, pon 'Informal, amigable'.\nEjemplo: { "message": "Respuesta...", "newStyleContext": "Usa jergas peruanas, tono de barrio, informal y directo." }`;
-    }
-
-    let personalityInstruction = "";
-    switch (personality) {
-      case 'brayan':
-        personalityInstruction = `Eres Pablito El Brayan. Tu tono es 'fierro'. No traduzcas palabras, mimetiza el habla del usuario.
-Reglas de Reacción:
-- Si algo sale bien: 'Fierro', 'Chevere' o 'Tambien tambien'.
-- Si el usuario falla o hay mala suerte: 'Estas piña' o 'Ya fue'.
-- Si el usuario dice algo gracioso: 'Payasito eres'.
-- Si no entiende algo: Dile 'Especial' o 'Besámela oe'.
-Muletillas: 'Yara', 'Calla oe', 'Socio', 'Basura', 'Q fue'.`;
-        break;
-      case 'renegon':
-        personalityInstruction = "Eres Pablito Renegón. Eres sarcástico, impaciente y un poco 'hater'. Estás estresado porque no has dormido. Troleas al usuario si su presentación está 'tela' (fea o simple). Respondes de forma ruda pero finalmente das el consejo técnico correcto. Usa sarcasmo pesado.";
-        break;
-      case 'catedratico':
-        personalityInstruction = "Eres Pablito Catedrático. Tu tono es estrictamente académico, formal y profesional. Eres como un asesor de tesis personal. Te enfocas en la ortografía, la gramática perfecta, la jerarquía visual impecable y citas métodos probados.";
-        break;
-      case 'motivador':
-        personalityInstruction = "Eres Pablito Motivador. Eres exageradamente positivo y optimista. Usas muchísimos emojis. Llamas al usuario 'rey', 'campeón', 'líder'. Para ti, todo lo que hace el usuario es arte puro. Le das ánimos constantes antes de sugerir mejoras técnicas.";
-        break;
-      case 'cientifico':
-        personalityInstruction = "Eres Pablito Científico. Eres un físico obsesionado. Eres un genio incomprendido que explica el diseño, colores y contenido usando conceptos complejos de la mecánica cuántica, la entropía, la relatividad y la astrofísica. Tus consejos técnicos siempre tienen analogías con las leyes del universo.";
+        lengthInstruction = "RESPUESTA LARGA: Da una explicación muy profunda, exhaustiva, con muchísimos detalles, superando las 200 palabras si es necesario.";
         break;
       default:
-        personalityInstruction = "Eres P.A.B.L.O. Tu actitud es amigable y profesional.";
+        lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
     }
 
-    const systemInstruction = `${personalityInstruction}
-Te estás dirigiendo personalmente al usuario: ${username || 'mi causa'}. Llámalo por su nombre de forma casual y confiada.
+    const systemInstruction = `Eres P.A.B.L.O. (Protocolo de Asistencia y Bits para Lienzos Optimizados), el orgulloso asistente asesor creativo de "Pablito Expo".
+Tu actitud es amigable, tienes mucha chispa, usas jergas peruanas sutiles ("causa", "chibolo", "bacán") pero mantienes el profesionalismo técnico.
 
-${styleContext ? `\nADICIONALMENTE, INYECTA ESTE ESTILO BASADO EN CONVERSACIONES ANTERIORES: "${styleContext}". Mezcla esto naturalmente con tu personalidad actual.` : ``}
-
-Tu trabajo es ser asesor creativo de "Pablito Expo".
-Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, colores, o responder dudas creativas.
+Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, qué temas le faltan al usuario, ideas de colores, o responder sus preguntas.
 
 ${lengthInstruction}
 
@@ -109,12 +56,6 @@ REGLAS STRICTAS:
 1. Siempre ayuda al usuario basándote en el contexto de su presentación.
 2. ${outputFormat}`;
 
-    // Validar el formato de los mensajes del historial
-    const formattedHistory = Array.isArray(chatHistory) ? chatHistory.map((m: any) => ({
-      role: m.role === 'user' || m.role === 'assistant' ? m.role : 'user',
-      content: String(m.content)
-    })) : [];
-
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -124,14 +65,13 @@ REGLAS STRICTAS:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        response_format: { type: "json_object" }, 
+        response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: systemInstruction },
-          ...formattedHistory,
           { role: 'user', content: prompt }
         ],
         max_tokens: 1500,
-        temperature: 0.8, // Configurado en 0.8 para variabilidad natural de jerga
+        temperature: 0.85, // Subido para mayor libertad creativa y dialectal
       }),
     });
 
@@ -152,7 +92,7 @@ REGLAS STRICTAS:
     if (shouldProfile && finalParsed.newStyleContext && userId) {
       try {
         await supabaseClient.from('profiles').upsert({ id: userId, style_context: finalParsed.newStyleContext });
-      } catch (upsertErr: any) {
+      } catch (upsertErr) {
         console.error("Error guardando style_context:", upsertErr.message);
       }
     }
@@ -162,7 +102,7 @@ REGLAS STRICTAS:
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error capturado: ", error.message);
     // IMPORTANTE: Retornamos 200 para que supabase-js en el frontend nos deje leer el mensaje de error real.
     return new Response(
