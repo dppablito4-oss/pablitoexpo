@@ -243,6 +243,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
                       {photo.user.profile_image && (
                         <img src={photo.user.profile_image.small} alt="" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
                       )}
+                      <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px' }}>Foto por</span>
                       <a
                         href={`https://unsplash.com/@${photo.user.username}?utm_source=pablito_expo&utm_medium=referral`}
                         target="_blank" rel="noopener noreferrer"
@@ -252,6 +253,16 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
                         title="Ver autor en Unsplash"
                       >
                         {photo.user.name}
+                      </a>
+                      <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px' }}>en</span>
+                      <a
+                        href={`https://unsplash.com/?utm_source=pablito_expo&utm_medium=referral`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{ color: '#fff', fontSize: '10px', textDecoration: 'none', fontWeight: 'bold', pointerEvents: 'auto' }}
+                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                      >
+                        Unsplash
                       </a>
                     </div>
                   </div>
