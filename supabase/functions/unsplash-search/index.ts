@@ -12,19 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Iniciando búsqueda en Unsplash...");
-    const { query, page = 1 } = await req.json()
-    console.log("Query:", query, "Page:", page);
-    if (!query) {
-      throw new Error('El parámetro de búsqueda (query) es requerido.')
-    }
-
+    console.log("Iniciando petición a Unsplash...");
+    const { query, page = 1, action, downloadUrl } = await req.json()
+    
     // Leemos la API key desde los secretos de Supabase
     const UNSPLASH_ACCESS_KEY = Deno.env.get('UNSPLASH_ACCESS_KEY')
 
     if (!UNSPLASH_ACCESS_KEY) {
       console.error("ERROR: UNSPLASH_ACCESS_KEY no encontrada en variables de entorno.");
       throw new Error('API Key de Unsplash no configurada en el servidor (Secrets).')
+    }
+
+    if (action === 'download' && downloadUrl) {
+      console.log("Triggering Unsplash track download:", downloadUrl);
+      const resp = await fetch(downloadUrl, {
+        headers: { 'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}` }
+      })
+      const d = await resp.json()
+      return new Response(JSON.stringify({ success: true, downloadEvent: d }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    console.log("Query:", query, "Page:", page);
+    if (!query) {
+      throw new Error('El parámetro de búsqueda (query) es requerido.')
     }
 
     // Buscamos en Unsplash: 15 imágenes por página

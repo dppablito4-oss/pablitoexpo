@@ -6,6 +6,7 @@ import CanvasElement from '../components/CanvasElement';
 import AiImportPanel from '../components/AiImportPanel';
 import AiCopilotPanel from '../components/AiCopilotPanel';
 import ImageSearchModal from '../components/ImageSearchModal';
+import UnsplashBadge from '../components/UnsplashBadge';
 import { Menu, Settings, X } from 'lucide-react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -880,15 +881,7 @@ export default function Editor() {
                   }} />
 
                   {/* Copyright Attribution Overlay */}
-                  {activeSection?.unsplashCredit && (
-                    <a
-                      href={`https://unsplash.com/@${activeSection.unsplashCredit.username}?utm_source=pablito_expo&utm_medium=referral`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="absolute bottom-3 right-3 bg-black/80 px-2 py-1 rounded text-[10px] text-white font-semibold opacity-30 hover:opacity-100 transition-opacity z-[100] pointer-events-auto"
-                    >
-                      Foto por {activeSection.unsplashCredit.name} en Unsplash
-                    </a>
-                  )}
+                  <UnsplashBadge credit={activeSection?.unsplashCredit} />
 
                   {/* Elements */}
                   <div style={{ position: 'absolute', inset: 0, zIndex: 3 }}>

@@ -223,7 +223,22 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
                 <div key={photo.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', background: '#111', aspect: '16/10' }}>
                   {/* Imagen (Click = Seleccionar) */}
                   <img
-                    onClick={() => { onSelect(photo.urls.regular, { name: photo.user.name, username: photo.user.username }); onClose(); }}
+                    onClick={async () => { 
+                      // 1. Requisito Unsplash: Notificar descarga (Download Tracking)
+                      if (photo.links?.download_location) {
+                        supabase.functions.invoke('unsplash-search', {
+                          body: { action: 'download', downloadUrl: photo.links.download_location }
+                        }).catch(e => console.error("Error tracking download:", e));
+                      }
+                      
+                      // 2. Pasar metadata completa para el sistema de créditos minimalista
+                      onSelect(photo.urls.regular, { 
+                        name: photo.user.name, 
+                        username: photo.user.username,
+                        link: photo.links?.html || `https://unsplash.com/@${photo.user.username}`
+                      }); 
+                      onClose(); 
+                    }}
                     src={`${photo.urls.raw}&q=60&w=400`}
                     alt={photo.alt_description || 'Unsplash image'}
                     loading="lazy"

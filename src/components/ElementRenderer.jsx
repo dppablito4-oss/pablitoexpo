@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import UnsplashBadge from './UnsplashBadge';
 
 // ── Text ─────────────────────────────────────────────────────────────────────
 export function TextContent({ el, editing = false, onContentChange }) {
@@ -62,23 +63,7 @@ export function ImageContent({ el }) {
         pointerEvents: 'none',
         display: 'block'
       }} />
-      {el.unsplashCredit && (
-        <a
-          href={`https://unsplash.com/@${el.unsplashCredit.username}?utm_source=pablito_expo&utm_medium=referral`}
-          target="_blank" rel="noopener noreferrer"
-          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '0.3'}
-          style={{
-            position: 'absolute', bottom: '6px', right: '6px',
-            background: 'rgba(0,0,0,0.75)', padding: '3px 6px', borderRadius: '4px',
-            fontSize: '9px', color: '#fff', textDecoration: 'none',
-            pointerEvents: 'auto', opacity: 0.3, transition: 'opacity 0.2s',
-            zIndex: 10, backdropFilter: 'blur(4px)', fontWeight: '600'
-          }}
-        >
-          Foto por {el.unsplashCredit.name} en Unsplash
-        </a>
-      )}
+      <UnsplashBadge credit={el.unsplashCredit} />
     </div>
   );
 }
