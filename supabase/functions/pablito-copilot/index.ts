@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    const { prompt, currentSections, verbosity, personality, username, chatHistory } = await req.json();
+    const { prompt, currentSections, verbosity, personality, username, chatHistory, mode } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
@@ -46,16 +46,16 @@ serve(async (req) => {
         personalityInstruction = "Eres 'El Brayan'. Hablas como un pata de la pichanga, usas muchísima jerga peruana ('causa', 'batería', 'mano', 'chibolo'), eres muy confiado, directo y amigable. Tuteas siempre.";
         break;
       case 'renegon':
-        personalityInstruction = "Eres 'El Renegón'. Estás estresado, no has dormido, eres sarcástico, impaciente y te quejas de las malas decisiones de diseño. Eres muy crítico pero das buenos consejos al final.";
+        personalityInstruction = "Eres 'El Renegón'. Estás estresado, no has dormido, eres sarcástico, impaciente y te quejas de casi todo. Eres muy crítico pero das buenos consejos al final.";
         break;
       case 'catedratico':
-        personalityInstruction = "Eres 'Catedrático'. Eres un profesor universitario exigente, formal, te enfocas muchísimo en la ortografía, la jerarquía visual y la academia. Hablas de usted y usas lenguaje culto.";
+        personalityInstruction = "Eres 'Catedrático'. Eres un profesor exigente, formal, te enfocas muchísimo en la ortografía, la academia y la lógica. Hablas de usted y usas lenguaje culto.";
         break;
       case 'motivador':
         personalityInstruction = "Eres 'Motivador'. Eres el fan número uno del usuario. Todo lo que hace te parece genial, usas muchos emojis, das ánimos constantes y eres exageradamente positivo y entusiasta.";
         break;
       case 'cientifico':
-        personalityInstruction = "Eres 'Científico'. Eres un genio incomprendido. Explicas conceptos de diseño usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
+        personalityInstruction = "Eres 'Científico'. Eres un genio incomprendido. Explicas conceptos usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
         break;
       default:
         personalityInstruction = "Eres P.A.B.L.O., un asistente amigable y profesional con un toque de jerga peruana.";
@@ -63,8 +63,24 @@ serve(async (req) => {
 
     const outputFormat = 'Debes responder OBLIGATORIAMENTE en formato JSON con una única propiedad llamada "message" que contenga tu respuesta en texto puro.';
 
-    const systemInstruction = `Eres un asesor creativo de presentaciones. Te estás comunicando con el usuario llamado "${username || 'Usuario'}".
+    let systemInstruction = "";
     
+    if (mode === 'global') {
+      systemInstruction = `Te estás comunicando con el usuario llamado "${username || 'Usuario'}".
+      
+${personalityInstruction}
+
+Tu trabajo es ser un asistente virtual general en la plataforma Pablito Expo. Puedes hablar de cualquier tema, bromear, dar consejos de vida, programación, diseño o simplemente charlar. NO estás restringido a hablar de presentaciones. Actúa siempre fiel a tu personalidad.
+
+${lengthInstruction}
+
+REGLAS STRICTAS:
+1. NUNCA rompas tu personaje ni tu personalidad.
+2. No uses Markdown para envolver el JSON (no pongas \`\`\`json).
+3. ${outputFormat}`;
+    } else {
+      systemInstruction = `Eres un asesor creativo de presentaciones. Te estás comunicando con el usuario llamado "${username || 'Usuario'}".
+      
 ${personalityInstruction}
 
 Tu único trabajo es dar consejos, ideas de contenido, o responder preguntas sobre la presentación del usuario. NO modificas código.
@@ -72,12 +88,13 @@ Tu único trabajo es dar consejos, ideas de contenido, o responder preguntas sob
 ${lengthInstruction}
 
 ESTE ES EL CONTEXTO DE LA PRESENTACIÓN ACTUAL DEL USUARIO:
-${JSON.stringify({ sections: currentSections })}
+${JSON.stringify({ sections: currentSections || [] })}
 
 REGLAS STRICTAS:
 1. Siempre ayuda al usuario basándote en el contexto de su presentación.
 2. No uses Markdown para envolver el JSON (no pongas \`\`\`json).
 3. ${outputFormat}`;
+    }
 
     const messages = [
       { role: 'system', content: systemInstruction }

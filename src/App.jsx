@@ -1,6 +1,7 @@
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import SiteFooter from './components/SiteFooter';
+import GlobalAiCopilot from './components/GlobalAiCopilot';
 
 // Import Pages
 import LandingPage from './pages/LandingPage';
@@ -47,6 +48,9 @@ function AppLayout() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!hideFooter && <SiteFooter />}
+      
+      {/* Asistente Flotante Global */}
+      <GlobalAiCopilot />
     </>
   );
 }
