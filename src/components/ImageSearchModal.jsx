@@ -46,7 +46,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect }) {
     } catch (err) {
       console.error("Unsplash Error:", err);
       // Fallback a algunas demos duras si falla por límite u otro error
-      setErrorMsg('Error al conectar con Unsplash. Mostrando demos de reserva.');
+      setErrorMsg(`Error: ${err.message || 'Fallo al conectar con Unsplash'}`);
       setPhotos([
         { id: 'dev1', urls: { regular: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070' }, user: { name: 'Unsplash Demo', links: { html: 'https://unsplash.com' } } },
         { id: 'dev2', urls: { regular: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070' }, user: { name: 'Unsplash Demo', links: { html: 'https://unsplash.com' } } },
