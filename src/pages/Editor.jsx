@@ -980,11 +980,11 @@ export default function Editor() {
         isOpen={imageSearchOpen}
         initialQuery={imageSearchInitialQuery}
         onClose={() => setImageSearchOpen(false)}
-        onSelect={(url) => {
+        onSelect={(url, photoDetails) => {
           if (imageSearchTarget === 'bg') {
-            updateSection({ bgImage: url });
+            updateSection({ bgImage: url, ...(photoDetails && { unsplashCredit: photoDetails }) });
           } else if (imageSearchTarget) {
-            updateElement(imageSearchTarget, { src: url });
+            updateElement(imageSearchTarget, { src: url, ...(photoDetails && { unsplashCredit: photoDetails }) });
           }
           setImageSearchOpen(false);
         }}
