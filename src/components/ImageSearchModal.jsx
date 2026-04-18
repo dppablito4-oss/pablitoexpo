@@ -13,8 +13,8 @@ const CATEGORIES = [
   { label: '🏥 Medicina',      query: 'medicine health' },
 ];
 
-export default function ImageSearchModal({ isOpen, onClose, onSelect }) {
-  const [activeCategory, setActiveCategory] = useState(0);
+export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQuery }) {
+  const [activeCategory, setActiveCategory] = useState(-1);
   const [customUrl, setCustomUrl] = useState('');
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,9 +59,17 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect }) {
   // Cargar categoría inicial cuando el modal se abre
   useEffect(() => {
     if (isOpen) {
-      fetchImages(CATEGORIES[activeCategory].query);
+      if (initialQuery) {
+        setSearchQuery(initialQuery);
+        setActiveCategory(-1);
+        fetchImages(initialQuery);
+      } else {
+        setSearchQuery('');
+        setActiveCategory(0);
+        fetchImages(CATEGORIES[0].query);
+      }
     }
-  }, [isOpen, activeCategory]);
+  }, [isOpen, initialQuery]);
 
   if (!isOpen) return null;
 
