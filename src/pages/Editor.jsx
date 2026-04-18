@@ -855,12 +855,13 @@ export default function Editor() {
 
                 {/* The canvas */}
                 <div
-                  className="w-full aspect-video relative overflow-hidden rounded-xl border border-zinc-800 shadow-2xl focus:outline-none"
+                  className="w-full relative overflow-hidden rounded-xl border border-zinc-800 shadow-2xl focus:outline-none"
                   ref={canvasRef}
                   onClick={() => setSelectedElId(null)}
                   onKeyDown={(e) => { if (e.key === 'Escape') setSelectedElId(null); }}
                   tabIndex={-1}
                   style={{
+                    aspectRatio: `16 / ${9 * ((activeSection?.height || 100) / 100)}`,
                     backgroundImage: activeSection.bgImage ? `url(${activeSection.bgImage})` : undefined,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',

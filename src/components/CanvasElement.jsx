@@ -46,7 +46,8 @@ export default function CanvasElement({
         x: Math.max(0,  toPct(pos.x, cW())),
         y: Math.max(0,  toPct(pos.y, cH())),
       })}
-      onClick={handleClick}
+      onClick={(e) => { e.stopPropagation(); }} // prevent double selection if pointerdown handled it
+      onPointerDown={handleClick}
       onDoubleClick={handleDblClick}
       bounds="parent"
       style={{ zIndex: isSelected ? 200 : 10 }}
