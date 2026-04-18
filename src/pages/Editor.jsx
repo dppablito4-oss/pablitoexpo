@@ -722,7 +722,7 @@ export default function Editor() {
             {saveStatus === 'saved' ? '✓ guardado' : saveStatus === 'saving' ? '● guardando...' : '○ sin guardar'}
           </span>
           <button
-            onClick={() => window.open(`/#/projector/${id}`, '_blank')}
+            onClick={() => window.open(`/#/projector/${identifier}`, '_blank')}
             className="px-3 py-2 md:py-1 rounded-lg text-xs md:text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition-colors">
             ▶ Ver Proyector
           </button>
