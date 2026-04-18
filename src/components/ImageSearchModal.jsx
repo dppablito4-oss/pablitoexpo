@@ -166,7 +166,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
               }}
             />
             <button
-              onClick={() => { if (customUrl.trim()) { onSelect(customUrl.trim()); onClose(); } }}
+              onClick={() => { if (customUrl.trim()) { onSelect(customUrl.trim(), null); onClose(); } }}
               disabled={!customUrl.trim()}
               style={{
                 padding: '0 16px', borderRadius: '10px', fontSize: '12px', fontWeight: '700',
@@ -223,7 +223,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
                 <div key={photo.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', background: '#111', aspect: '16/10' }}>
                   {/* Imagen (Click = Seleccionar) */}
                   <img
-                    onClick={() => { onSelect(photo.urls.regular); onClose(); }}
+                    onClick={() => { onSelect(photo.urls.regular, { name: photo.user.name, username: photo.user.username }); onClose(); }}
                     src={`${photo.urls.raw}&q=60&w=400`}
                     alt={photo.alt_description || 'Unsplash image'}
                     loading="lazy"

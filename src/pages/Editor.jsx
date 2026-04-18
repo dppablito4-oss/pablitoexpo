@@ -879,6 +879,17 @@ export default function Editor() {
                     backgroundSize: '50px 50px',
                   }} />
 
+                  {/* Copyright Attribution Overlay */}
+                  {activeSection?.unsplashCredit && (
+                    <a
+                      href={`https://unsplash.com/@${activeSection.unsplashCredit.username}?utm_source=pablito_expo&utm_medium=referral`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="absolute bottom-3 right-3 bg-black/80 px-2 py-1 rounded text-[10px] text-white font-semibold opacity-30 hover:opacity-100 transition-opacity z-[100] pointer-events-auto"
+                    >
+                      Foto por {activeSection.unsplashCredit.name} en Unsplash
+                    </a>
+                  )}
+
                   {/* Elements */}
                   <div style={{ position: 'absolute', inset: 0, zIndex: 3 }}>
                     {(activeSection.elements || []).map(el =>
