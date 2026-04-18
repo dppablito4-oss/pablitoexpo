@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     // Inicializar Supabase Client con Auth del Usuario
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization') || '';
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -129,9 +129,10 @@ REGLAS STRICTAS:
 
   } catch (error) {
     console.error("Error capturado: ", error.message);
+    // IMPORTANTE: Retornamos 200 para que supabase-js en el frontend nos deje leer el mensaje de error real.
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message, stack: error.stack }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
