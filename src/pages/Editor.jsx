@@ -705,18 +705,16 @@ export default function Editor() {
         <span className="text-sm font-bold text-neutral-200 truncate mx-2">
           {presentation?.title || 'Editor'}
         </span>
-        <button onClick={() => setIsRightPanelOpen(true)} className="p-2 text-neutral-400 hover:text-white bg-neutral-900 rounded-lg">
-          <Settings size={20} />
-        </button>
+        <div className="w-9" /> {/* Spacer para centrar el título */}
       </div>
 
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
 
-        {/* ── MOBILE OVERLAY ── */}
-        {(isLeftPanelOpen || isRightPanelOpen) && (
+        {/* ── MOBILE OVERLAY (Solo para Drawer Izquierdo) ── */}
+        {isLeftPanelOpen && (
           <div 
             className="md:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 transition-opacity"
-            onClick={() => { setIsLeftPanelOpen(false); setIsRightPanelOpen(false); }}
+            onClick={() => setIsLeftPanelOpen(false)}
           />
         )}
 
@@ -770,11 +768,11 @@ export default function Editor() {
         </div>
 
         {/* ── CENTER: Canvas ── */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-zinc-950 h-full">
+        <div className="flex-none h-[40vh] md:h-auto md:flex-1 flex flex-col overflow-hidden bg-zinc-950">
 
           {/* Toolbar */}
           {canEdit && (
-            <div className="h-12 border-b border-zinc-800 flex items-center gap-2 shrink-0 bg-zinc-900/40 overflow-x-auto scrollbar-hide px-3 py-1">
+            <div className="order-2 md:order-1 h-12 md:h-12 border-t border-b md:border-t-0 border-zinc-800 flex items-center gap-2 shrink-0 bg-zinc-900/40 overflow-x-auto scrollbar-hide px-3 py-1">
               <span className="hidden sm:inline text-[10px] text-zinc-500 font-mono uppercase mr-1 mt-0.5">Añadir bloque:</span>
               {[
                 { type: 'text',       label: '📝' },
@@ -811,7 +809,7 @@ export default function Editor() {
           )}
 
           {/* Scrollable canvas area */}
-          <div className="flex-1 overflow-y-auto scrollbar-hide p-4 md:p-8 flex items-center justify-center">
+          <div className="order-1 md:order-2 flex-1 overflow-y-auto scrollbar-hide p-4 md:p-8 flex items-center justify-center bg-black/50">
             {activeSection ? (
               <div className="w-full max-w-5xl flex flex-col items-center">
 
@@ -882,16 +880,7 @@ export default function Editor() {
         </div>
 
         {/* ── RIGHT: Inspector ── */}
-        <div className={`
-          fixed md:static inset-y-0 right-0 w-80 md:w-[320px] bg-zinc-900 border-l border-zinc-800 flex flex-col shrink-0 z-50
-          transform transition-transform duration-300 ease-in-out md:translate-x-0
-          ${isRightPanelOpen ? 'translate-x-0' : 'translate-x-full'}
-        `}>
-          
-          <div className="md:hidden flex items-center justify-between p-3 border-b border-zinc-800 bg-zinc-950/50">
-            <span className="font-bold text-sm text-zinc-300">Ajustes</span>
-            <button onClick={() => setIsRightPanelOpen(false)}><X size={18} className="text-zinc-500" /></button>
-          </div>
+        <div className="flex-1 md:flex-none md:w-[320px] bg-zinc-900 border-t md:border-l border-zinc-800 flex flex-col shrink-0 z-10 overflow-hidden">
 
           {/* Tabs */}
           <div className="flex border-b border-zinc-800 shrink-0">
