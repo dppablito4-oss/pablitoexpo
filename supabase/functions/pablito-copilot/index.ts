@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -21,7 +19,7 @@ serve(async (req) => {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    const { prompt, currentSections, verbosity } = await req.json();
+    const { prompt, currentSections, verbosity, personality, username, chatHistory } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
@@ -42,10 +40,34 @@ serve(async (req) => {
         lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
     }
 
-    const systemInstruction = `Eres P.A.B.L.O. (Protocolo de Asistencia y Bits para Lienzos Optimizados), el orgulloso asistente asesor creativo de "Pablito Expo".
-Tu actitud es amigable, tienes mucha chispa, usas jergas peruanas sutiles ("causa", "chibolo", "bacán") pero mantienes el profesionalismo técnico.
+    let personalityInstruction = "";
+    switch (personality) {
+      case 'brayan':
+        personalityInstruction = "Eres 'El Brayan'. Hablas como un pata de la pichanga, usas muchísima jerga peruana ('causa', 'batería', 'mano', 'chibolo'), eres muy confiado, directo y amigable. Tuteas siempre.";
+        break;
+      case 'renegon':
+        personalityInstruction = "Eres 'El Renegón'. Estás estresado, no has dormido, eres sarcástico, impaciente y te quejas de las malas decisiones de diseño. Eres muy crítico pero das buenos consejos al final.";
+        break;
+      case 'catedratico':
+        personalityInstruction = "Eres 'Catedrático'. Eres un profesor universitario exigente, formal, te enfocas muchísimo en la ortografía, la jerarquía visual y la academia. Hablas de usted y usas lenguaje culto.";
+        break;
+      case 'motivador':
+        personalityInstruction = "Eres 'Motivador'. Eres el fan número uno del usuario. Todo lo que hace te parece genial, usas muchos emojis, das ánimos constantes y eres exageradamente positivo y entusiasta.";
+        break;
+      case 'cientifico':
+        personalityInstruction = "Eres 'Científico'. Eres un genio incomprendido. Explicas conceptos de diseño usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
+        break;
+      default:
+        personalityInstruction = "Eres P.A.B.L.O., un asistente amigable y profesional con un toque de jerga peruana.";
+    }
 
-Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, qué temas le faltan al usuario, ideas de colores, o responder sus preguntas.
+    const outputFormat = 'Debes responder OBLIGATORIAMENTE en formato JSON con una única propiedad llamada "message" que contenga tu respuesta en texto puro.';
+
+    const systemInstruction = `Eres un asesor creativo de presentaciones. Te estás comunicando con el usuario llamado "${username || 'Usuario'}".
+    
+${personalityInstruction}
+
+Tu único trabajo es dar consejos, ideas de contenido, o responder preguntas sobre la presentación del usuario. NO modificas código.
 
 ${lengthInstruction}
 
@@ -54,7 +76,18 @@ ${JSON.stringify({ sections: currentSections })}
 
 REGLAS STRICTAS:
 1. Siempre ayuda al usuario basándote en el contexto de su presentación.
-2. ${outputFormat}`;
+2. No uses Markdown para envolver el JSON (no pongas \`\`\`json).
+3. ${outputFormat}`;
+
+    const messages = [
+      { role: 'system', content: systemInstruction }
+    ];
+
+    if (chatHistory && Array.isArray(chatHistory)) {
+      messages.push(...chatHistory);
+    }
+    
+    messages.push({ role: 'user', content: prompt });
 
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -66,36 +99,21 @@ REGLAS STRICTAS:
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         response_format: { type: "json_object" },
-        messages: [
-          { role: 'system', content: systemInstruction },
-          { role: 'user', content: prompt }
-        ],
+        messages: messages,
         max_tokens: 1500,
-        temperature: 0.85, // Subido para mayor libertad creativa y dialectal
+        temperature: 0.85,
       }),
     });
-
 
     const data = await aiResponse.json();
 
     if (!aiResponse.ok) {
       console.error("Error from OpenAI:", data);
-      throw new Error("Error en la API de OpenAI");
+      throw new Error(data.error?.message || "Error en la API de OpenAI");
     }
 
-    // La respuesta en texto devuelta por OpenAI
     const resultJsonText = data.choices[0].message.content;
-
-    // Se asume que viene limpio debido a response_format: "json_object"
     const finalParsed = JSON.parse(resultJsonText);
-
-    if (shouldProfile && finalParsed.newStyleContext && userId) {
-      try {
-        await supabaseClient.from('profiles').upsert({ id: userId, style_context: finalParsed.newStyleContext });
-      } catch (upsertErr) {
-        console.error("Error guardando style_context:", upsertErr.message);
-      }
-    }
 
     return new Response(
       JSON.stringify(finalParsed),
@@ -104,10 +122,9 @@ REGLAS STRICTAS:
 
   } catch (error) {
     console.error("Error capturado: ", error.message);
-    // IMPORTANTE: Retornamos 200 para que supabase-js en el frontend nos deje leer el mensaje de error real.
     return new Response(
-      JSON.stringify({ error: error.message, stack: error.stack }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
