@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
-
 const PERSONALITIES = {
   brayan: { id: 'brayan', emoji: '🧢', name: 'El Brayan', color: 'linear-gradient(135deg, #a855f7, #6366f1)', tooltip: 'Habla como tu pata de la pichanga. Te ayuda con confianza, mucha jerga peruana y cero filtros.' },
   renegon: { id: 'renegon', emoji: '⚡', name: 'El Renegón', color: 'linear-gradient(135deg, #ef4444, #b91c1c)', tooltip: 'Está estresado porque no ha dormido. Te va a trolear si tu diapo está tela. Úsalo si aguantas el sarcasmo.' },
@@ -12,16 +11,18 @@ const PERSONALITIES = {
 
 export default function AiCopilotPanel({ currentSections }) {
   const { user } = useAuth();
+  const displayName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Usuario';
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
   const [personality, setPersonality] = useState('brayan');
 
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: '¡Habla! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.' }
+    { role: 'assistant', text: `¡Habla, ${displayName.toUpperCase()}! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.` }
   ]);
 
   const endOfMessagesRef = useRef(null);
+  const messageCountRef = useRef(0);
 
   // Load personality from Supabase
   useEffect(() => {
@@ -56,14 +57,19 @@ export default function AiCopilotPanel({ currentSections }) {
     setPrompt('');
     setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
     setIsGenerating(true);
+    
+    messageCountRef.current += 1;
+    const shouldProfile = (messageCountRef.current % 5 === 0);
 
     try {
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
         body: {
           prompt: userText,
           currentSections: currentSections,
-          verbosity, // "short", "medium", or "long"
-          personality, // Pass the selected personality
+          verbosity,
+          personality,
+          username: displayName,
+          shouldProfile,
         }
       });
 

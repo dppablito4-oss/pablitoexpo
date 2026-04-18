@@ -1,4 +1,5 @@
 import { ProjectorElement } from '../components/ElementRenderer';
+import UnsplashBadge from '../components/UnsplashBadge';
 
 /**
  * NasaWebTemplate — reads the new sections[] format.
@@ -53,10 +54,12 @@ function SectionBlock({ section }) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
+          background: `rgba(0, 0, 0, ${section.overlayOpacity ?? 0.4})`,
           zIndex: 1,
         }}
       />
+
+      <UnsplashBadge credit={section.unsplashCredit} />
 
       {/* Elements */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>

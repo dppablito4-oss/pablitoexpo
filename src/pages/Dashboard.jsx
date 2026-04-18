@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [trashedPresentations, setTrashedPresentations] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [activeNav, setActiveNav] = useState('vault');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => { fetchPresentations(); }, [user]);
@@ -103,20 +104,55 @@ export default function Dashboard() {
   const handleNavClick = (id) => {
     setActiveNav(id);
     if (id === 'trash') fetchTrashed();
+    setIsMobileMenuOpen(false);
   };
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: C.bg, fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+    <div className="flex flex-col md:flex-row min-h-screen relative" style={{ background: C.bg, fontFamily: "'Inter','Segoe UI',sans-serif" }}>
+
+      {/* ── MOBILE TOP BAR ── */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b shrink-0" style={{ borderColor: C.border, background: C.sidebar, zIndex: 40 }}>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          style={{
+            width: '34px', height: '34px', borderRadius: '10px',
+            background: 'linear-gradient(135deg, #00f0ff, #7c3aed)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '15px', fontWeight: '900', color: '#000',
+            boxShadow: '0 0 16px rgba(0,240,255,0.35)',
+          }}>
+          {user?.email?.[0]?.toUpperCase() || 'P'}
+        </button>
+        <div style={{ fontSize: '14px', fontWeight: '800', letterSpacing: '0.08em',
+          background: 'linear-gradient(90deg, #00f0ff, #7c3aed)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          PABLITO EXPO
+        </div>
+        <div style={{ width: '34px' }} /> {/* Spacer */}
+      </div>
+
+      {/* ── MOBILE OVERLAY ── */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-40 transition-opacity"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
       {/* ── SIDEBAR ── */}
-      <aside style={{
-        width: '240px', flexShrink: 0,
+      <aside className={`
+        fixed md:sticky top-0 inset-y-0 left-0 z-50 shrink-0
+        transform transition-transform duration-300 md:translate-x-0
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `} 
+      style={{
+        width: '240px', height: '100vh',
         background: C.sidebar,
         borderRight: `1px solid ${C.border}`,
         display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh',
-        backdropFilter: 'blur(20px)', zIndex: 10,
+        backdropFilter: 'blur(20px)',
       }}>
         {/* Logo */}
         <div style={{ padding: '28px 20px 24px', borderBottom: `1px solid ${C.border}` }}>
@@ -216,7 +252,7 @@ export default function Dashboard() {
       </aside>
 
       {/* ── MAIN CONTENT ── */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '40px 36px' }}>
+      <main className="flex-1 overflow-y-auto p-5 md:p-10 w-full hidden-scrollbar" style={{}}>
 
         {/* Page Header */}
         <div style={{ marginBottom: '32px' }}>

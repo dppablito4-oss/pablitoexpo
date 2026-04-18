@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import UnsplashBadge from './UnsplashBadge';
 
 // ── Text ─────────────────────────────────────────────────────────────────────
 export function TextContent({ el, editing = false, onContentChange }) {
@@ -52,14 +53,18 @@ export function ImageContent({ el }) {
     );
   }
   return (
-    <img src={el.src} alt="" draggable={false} style={{
-      width: '100%', height: '100%',
-      objectFit: s.objectFit || 'cover',
-      opacity: s.opacity ?? 1,
-      borderRadius: `${s.borderRadius || 0}px`,
-      boxShadow: s.shadow ? '0 20px 60px rgba(0,0,0,0.7)' : 'none',
-      pointerEvents: 'none',
-    }} />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <img src={el.src} alt="" draggable={false} style={{
+        width: '100%', height: '100%',
+        objectFit: s.objectFit || 'cover',
+        opacity: s.opacity ?? 1,
+        borderRadius: `${s.borderRadius || 0}px`,
+        boxShadow: s.shadow ? '0 20px 60px rgba(0,0,0,0.7)' : 'none',
+        pointerEvents: 'none',
+        display: 'block'
+      }} />
+      <UnsplashBadge credit={el.unsplashCredit} />
+    </div>
   );
 }
 

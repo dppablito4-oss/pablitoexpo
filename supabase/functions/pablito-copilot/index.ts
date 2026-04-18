@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +21,25 @@ serve(async (req) => {
       throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
     }
 
-    const { prompt, currentSections, verbosity, personality = 'brayan' } = await req.json();
+    // Inicializar Supabase Client con Auth del Usuario
+    const authHeader = req.headers.get('Authorization') || '';
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Obtener estilo almacenado
+    const { data: userData } = await supabaseClient.auth.getUser();
+    let userId = null;
+    let styleContext = null;
+    if (userData?.user) {
+      userId = userData.user.id;
+      const { data: profile } = await supabaseClient.from('profiles').select('style_context').eq('id', userId).single();
+      styleContext = profile?.style_context;
+    }
+
+    const { prompt, currentSections, verbosity, username, shouldProfile, personality = 'brayan' } = await req.json();
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');
@@ -39,6 +58,11 @@ serve(async (req) => {
          break;
       default:
          lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
+    }
+
+    let outputFormat = `Tu respuesta DEBE ser obligatoriamente un JSON puro con un único campo "message".\nEjemplo: { "message": "¡Bacán! Te sugiero que..." }`;
+    if (shouldProfile) {
+      outputFormat = `Tu respuesta DEBE ser obligatoriamente un JSON puro con dos campos:\n1. "message": Tu respuesta principal al usuario.\n2. "newStyleContext": Un string de máximo 20 palabras.\nInstrucción especial para "newStyleContext": Analiza el tono, vocabulario y modismos regionales (ej. peruanismos como 'causa', 'chibolo', 'pe') que ha usado el usuario en el prompt. Devuelve un resumen muy breve de este estilo para poder clonarlo. Si no detectas jerga, pon 'Informal, amigable'.\nEjemplo: { "message": "Respuesta...", "newStyleContext": "Usa jergas peruanas, tono de barrio, informal y directo." }`;
     }
 
     let personalityInstruction = "";
@@ -63,8 +87,12 @@ serve(async (req) => {
     }
 
     const systemInstruction = `${personalityInstruction}
+Te estás dirigiendo personalmente al usuario: ${username || 'mi causa'}. Llámalo por su nombre de forma casual y confiada.
+
+${styleContext ? `\nADICIONALMENTE, INYECTA ESTE ESTILO BASADO EN CONVERSACIONES ANTERIORES: "${styleContext}". Mezcla esto naturalmente con tu personalidad actual.` : ``}
+
 Tu trabajo es ser asesor creativo de "Pablito Expo".
-Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, qué temas le faltan al usuario, ideas de colores, o responder sus preguntas.
+Ya NO modificas código ni JSON. TU ÚNICO TRABAJO es dar consejos, ideas de qué contenido añadir, colores, o responder dudas creativas.
 
 ${lengthInstruction}
 
@@ -73,8 +101,7 @@ ${JSON.stringify({ sections: currentSections })}
 
 REGLAS STRICTAS:
 1. Siempre ayuda al usuario basándote en el contexto de su presentación.
-2. Tu respuesta DEBE ser obligatoriamente un JSON puro con un único campo "message".
-Ejemplo: { "message": "¡Bacán! Te sugiero que..." }`;
+2. ${outputFormat}`;
 
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -91,7 +118,7 @@ Ejemplo: { "message": "¡Bacán! Te sugiero que..." }`;
           { role: 'user', content: prompt }
         ],
         max_tokens: 1500,
-        temperature: 0.6, // Un poco más alto para creatividad
+        temperature: 0.85, // Subido para mayor libertad creativa y dialectal
       }),
     });
 
@@ -109,6 +136,14 @@ Ejemplo: { "message": "¡Bacán! Te sugiero que..." }`;
     // Se asume que viene limpio debido a response_format: "json_object"
     const finalParsed = JSON.parse(resultJsonText);
 
+    if (shouldProfile && finalParsed.newStyleContext && userId) {
+      try {
+        await supabaseClient.from('profiles').upsert({ id: userId, style_context: finalParsed.newStyleContext });
+      } catch (upsertErr) {
+        console.error("Error guardando style_context:", upsertErr.message);
+      }
+    }
+
     return new Response(
       JSON.stringify(finalParsed),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -116,9 +151,10 @@ Ejemplo: { "message": "¡Bacán! Te sugiero que..." }`;
 
   } catch (error) {
     console.error("Error capturado: ", error.message);
+    // IMPORTANTE: Retornamos 200 para que supabase-js en el frontend nos deje leer el mensaje de error real.
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message, stack: error.stack }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
