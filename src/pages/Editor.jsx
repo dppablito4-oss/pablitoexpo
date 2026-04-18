@@ -78,6 +78,8 @@ function InspectorInput({ label, value, onChange, type = 'text', ...rest }) {
 }
 
 function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch }) {
+  const [localQuery, setLocalQuery] = useState('');
+
   if (!el) return (
     <div className="p-4 text-center text-neutral-600 text-xs py-10">
       Selecciona un elemento en<br />el canvas para editar
@@ -172,14 +174,44 @@ function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch }) {
       {/* IMAGE controls */}
       {el.type === 'image' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          
+          {/* Nuevo Buscador Directo de Unsplash */}
+          <div className="mt-2 flex flex-col items-center bg-neutral-900 border border-neutral-800 rounded-xl p-3">
+            <span className="text-[13px] font-bold text-white mb-1">Buscar Imágenes</span>
+            <div className="flex flex-col items-center gap-1 mb-3">
+                <span className="text-[9px] text-neutral-500">Powered by</span>
+                <div className="flex items-center gap-1">
+                   <svg width="10" height="10" viewBox="0 0 32 32" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 9V0h12v9H10zm12 5h10v18H0V14h10v9h12v-9z"></path>
+                    </svg>
+                   <span className="text-[11px] font-bold text-white tracking-widest">Unsplash</span>
+                </div>
+            </div>
+            <div className="flex gap-1 w-full relative">
+               <input 
+                 type="text" 
+                 value={localQuery}
+                 onChange={e => setLocalQuery(e.target.value)}
+                 onKeyDown={e => { if(e.key === 'Enter') onOpenImageSearch(localQuery.trim()); }}
+                 placeholder="Escribe algo aquí..."
+                 className="flex-1 bg-black border border-neutral-700 rounded-lg p-2 pl-3 text-white text-xs focus:outline-none focus:border-cyan-500" 
+               />
+               <button 
+                 onClick={() => onOpenImageSearch(localQuery.trim())}
+                 className="px-3 py-1 rounded-lg bg-cyan-900/50 text-cyan-400 text-xs font-bold hover:bg-cyan-800/50 border border-cyan-700/30 transition-colors">
+                 Buscar
+               </button>
+            </div>
+          </div>
+
+          <div className="h-px w-full bg-neutral-800 my-2" />
+
+          {/* URL Oculta */}
+          <label className="text-[10px] text-neutral-500">URL Avanzada (Imagen)</label>
           <div className="flex gap-1">
             <input type="text" value={el.src || ''} placeholder="https://..."
               onChange={e => onUpdate({ src: e.target.value })}
-              className="flex-1 bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none focus:border-cyan-700" />
-            <button onClick={onOpenImageSearch}
-              className="px-2 py-1 rounded bg-cyan-900/40 text-cyan-400 text-xs font-bold hover:bg-cyan-800/40 border border-cyan-700/30">
-              🖼️
-            </button>
+              className="flex-1 bg-black border border-neutral-700 rounded p-2 text-neutral-400 text-[10px] focus:outline-none focus:border-cyan-700" />
           </div>
           <label className="text-[10px] text-neutral-500">Borde redondeado: {s.borderRadius || 0}px</label>
           <input type="range" min="0" max="50" value={s.borderRadius || 0}
@@ -915,7 +947,7 @@ export default function Editor() {
                 el={selectedEl}
                 onUpdate={(changes) => selectedEl && updateElement(selectedEl.id, changes)}
                 onDuplicate={duplicateElement}
-                onOpenImageSearch={() => { if (selectedEl) { setImageSearchTarget(selectedEl.id); setImageSearchOpen(true); } }}
+                onOpenImageSearch={(query) => { if (selectedEl) { setImageSearchTarget(selectedEl.id); setImageSearchInitialQuery(query || ''); setImageSearchOpen(true); } }}
               />
             </div>
             <div style={{ display: rightTab === 'section' ? 'flex' : 'none', flexDirection: 'column' }}>
