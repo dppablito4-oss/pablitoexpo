@@ -381,13 +381,9 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {loadingCards ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>Cargando galería...</div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
-            {cards.map(item => <PresentationCard key={item.id} item={item} onViewClick={handleViewCard} />)}
-          </div>
-        )}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
+          {cards.map(item => <PresentationCard key={item.id} item={item} onViewClick={handleViewCard} />)}
+        </div>
 
         {/* CTA bottom */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}

@@ -1,0 +1,10 @@
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 0 seconds"
+  
+  # Cache assets for 1 year
+  <FilesMatch "\.(css|js|svg|jpg|jpeg|png|gif|woff2)$">
+    ExpiresDefault "access plus 1 year"
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
