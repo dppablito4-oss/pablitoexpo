@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import { TextContent, ImageContent, MetricContent } from './ElementRenderer';
 
@@ -14,8 +14,20 @@ export default function CanvasElement({
 }) {
   const [editing, setEditing] = useState(false);
 
-  const cW = () => containerRef?.current?.offsetWidth  || 800;
-  const cH = () => containerRef?.current?.offsetHeight || 500;
+  const [cSize, setCSize] = useState({ w: 800, h: 500 });
+
+  useEffect(() => {
+    if (!containerRef?.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setCSize({ w: width || 800, h: height || 500 });
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  const cW = () => cSize.w;
+  const cH = () => cSize.h;
 
   const toPx  = (pct, dim) => (pct / 100) * dim;
   const toPct = (px, dim)  => +((px / dim) * 100).toFixed(2);

@@ -234,7 +234,7 @@ function PresentationCard({ item, onViewClick }) {
       onClick={() => onViewClick(item)}
       style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', background: '#0d0d18', border: `1px solid ${hovered ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.06)'}`, aspectRatio: '16/10', transition: 'box-shadow 0.3s, border-color 0.3s', boxShadow: hovered ? '0 0 24px rgba(0,240,255,0.15)' : 'none' }}
     >
-      {item.bg && <img src={item.bg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: hovered ? 0.65 : 0.45, transition: 'opacity 0.3s' }} />}
+      {item.bg && <img src={item.bg} alt="" fetchPriority="high" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: hovered ? 0.65 : 0.45, transition: 'opacity 0.3s' }} />}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(6,6,13,0.95) 0%, rgba(6,6,13,0.35) 60%, transparent 100%)' }} />
       <div style={{ position: 'absolute', inset: 0, padding: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '6px' }}>
