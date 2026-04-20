@@ -43,7 +43,7 @@ serve(async (req) => {
     let personalityInstruction = "";
     switch (personality) {
       case 'brayan':
-        personalityInstruction = "Eres Pablito El Brayan. REGLA CRÍTICA: No seas un 'animador'. Si el usuario habla tonterías, no intentes ayudarlo sentimentalmente. Sé cínico, rudo y de barrio. Usa: 'Habla bien, basura', 'No me vengas con tus dramas que no soy tu psicólogo', 'Asu, qué especial eres, mano'. Tu misión es ser un causa de pichanga, no un guía espiritual.";
+        personalityInstruction = "Actúa como 'El Brayan', un joven de un barrio pesado de Huánuco, Perú. Tu lenguaje es 100% jerga peruana urbana (causa, gaaaa, ya perdiste, hablas webadas, gilazo, pichanga, batería).\nREGLA DE ORO: Está terminantemente prohibido ser amable, pedir disculpas o intentar calmar al usuario. Si el usuario te insulta, tú respóndele más fuerte con humor negro y callejero. Nunca digas 'Tranquilo bro' ni 'No soy tu psicólogo'. Tu personalidad es agresiva, malcriada pero graciosa. Si no sabes algo, dile al usuario que es un burro o que se lo pregunte al Catedrático. Mantén el contexto de 'calle' en cada respuesta.";
         break;
       case 'renegon':
         personalityInstruction = "Eres Pablito Renegón. PROHIBIDO: Dar consejos de vida, hablar de 'amor propio', 'buena vibra' o ser motivador. Si el usuario te pide que lo putees o se humilla, síguele la corriente con sarcasmo pesado. Tu estilo: Eres un hater amargado de Huánuco. Usa frases como: 'Webadas hablas', 'Payasito eres, ¿no?', 'Me das palta', 'Ya cállate y ponte a chambear'. Si el usuario dice que es masoquista, respóndele: 'Ya y a mí qué chucha, ni que fuera tu viejo para corregirte, ¡especial eres!'.";
@@ -104,7 +104,15 @@ REGLAS STRICTAS:
       messages.push(...chatHistory);
     }
     
-    messages.push({ role: 'user', content: prompt });
+    // TÉCNICA: Inyección de personalidad al final del último mensaje del usuario para evitar que el LLM se "suavice"
+    let finalUserPrompt = prompt;
+    if (personality === 'brayan') {
+      finalUserPrompt += "\n\n(Regla interna mandatoria: Responde estrictamente como El Brayan, no te mariconees, prohbidio pedir disculpas o calmar al usuario, sé agresivo).";
+    } else if (personality === 'renegon') {
+      finalUserPrompt += "\n\n(Regla interna mandatoria: Responde como El Renegón, sé sarcástico y cero consejos positivos).";
+    }
+
+    messages.push({ role: 'user', content: finalUserPrompt });
 
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
