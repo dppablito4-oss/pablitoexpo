@@ -108,11 +108,28 @@ export default function ProjectorView() {
   const isGuestMode = !user && rawSections.length > 2;
   const sections = isGuestMode ? rawSections.slice(0, 2) : rawSections;
   
-  const nasaData = slidesData.nasa || (sections[0]?.elements ? {} : slidesData);
+  const isOwner = user && presentation.user_id === user.id;
+  const isEditor = user && presentation.editors_emails?.includes(user?.email);
+  const canEdit = isOwner || isEditor;
+  const isReaderOnly = user && !canEdit;
 
   return (
-    <div className="w-full bg-black relative scroll-smooth">
+    <div className="w-full bg-black relative scroll-smooth overflow-hidden">
       
+      {/* 🛡️ SECURITY WATERMARK FOR READERS 🛡️ */}
+      {isReaderOnly && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 40, pointerEvents: 'none',
+          display: 'flex', flexWrap: 'wrap', overflow: 'hidden', opacity: 0.05,
+          userSelect: 'none', color: '#fff', fontSize: '4rem', fontWeight: '900',
+          transform: 'rotate(-30deg) scale(1.5)', gap: '40px', justifyContent: 'center'
+        }}>
+          {Array(30).fill(user.email).map((mail, i) => (
+            <span key={i}>{mail}</span>
+          ))}
+        </div>
+      )}
+
       {/* 
         EL PROYECTOR AHORA ES UNA PÁGINA WEB REAL,
         SIN BARRERAS DE ALTURA NI OVERFLOW HIDDEN.

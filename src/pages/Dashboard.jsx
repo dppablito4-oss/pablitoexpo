@@ -458,9 +458,11 @@ function ProjectCard({ pres, index, user, onProject, onLaser, onEdit, onVip, onD
             <ActionBtn flex={1} onClick={onProject} style={{ background: 'rgba(0,240,255,0.06)', color: '#00f0ff', border: '1px solid rgba(0,240,255,0.2)' }}>
               📺 Proyectar
             </ActionBtn>
-            <ActionBtn flex={1} onClick={onLaser} style={{ background: 'rgba(124,58,237,0.08)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' }}>
-              📱 Láser
-            </ActionBtn>
+            {canEdit && (
+              <ActionBtn flex={1} onClick={onLaser} style={{ background: 'rgba(124,58,237,0.08)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.25)' }}>
+                📱 Láser
+              </ActionBtn>
+            )}
           </div>
 
           {canEdit && (

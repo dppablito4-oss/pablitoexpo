@@ -189,10 +189,15 @@ export default function AdminPanel() {
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                   {presentations.map(pres => (
-                    <div key={pres.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '12px' }}>
+                    <div key={pres.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                       <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem' }}>{pres.title}</h3>
                       <p style={{ fontSize: '0.8rem', color: C.textMuted, margin: '0 0 15px' }}>Propiedad de ID: {pres.user_id.split('-')[0]}...</p>
-                      <ActionBtn color="gold" onClick={() => navigate(`/editor/${pres.slug || pres.id}`)}>👁️ Inspeccionar en Editor</ActionBtn>
+                      
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                        <ActionBtn color="cyan" onClick={() => navigate(`/projector/${pres.slug || pres.id}`)}>📺 Proyectar</ActionBtn>
+                        <ActionBtn color="red" onClick={() => navigate(`/remote/${pres.slug || pres.id}`)}>📱 Láser</ActionBtn>
+                      </div>
+                      <ActionBtn color="gold" onClick={() => navigate(`/editor/${pres.slug || pres.id}`)}>👁️ Editar / Inspeccionar</ActionBtn>
                     </div>
                   ))}
                 </div>
