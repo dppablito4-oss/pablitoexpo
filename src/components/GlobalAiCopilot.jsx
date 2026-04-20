@@ -115,13 +115,10 @@ export default function GlobalAiCopilot() {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       await supabase.from('profiles').update({ otp_code: code }).eq('id', user.id);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pablito-mailer`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-         body: JSON.stringify({ action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } })
+      await supabase.functions.invoke('pablito-mailer', {
+         body: { action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } }
       });
+      
       setOtpSent(true);
       setChatHistory(prev => [...prev, { role: 'assistant', text: `🔐 Acabo de enviar un código de 6 dígitos a tu correo corporativo (${user.email}). Ingrésalo para seguir.` }]);
     } catch (err) {

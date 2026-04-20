@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.security_logs (
 -- 4. Proteger los logs con Seguridad a Nivel de Filas (solo superadmins)
 ALTER TABLE public.security_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Superadmins can view security logs" ON public.security_logs;
 CREATE POLICY "Superadmins can view security logs" ON public.security_logs
     FOR SELECT USING (
         EXISTS (
@@ -31,15 +32,18 @@ CREATE POLICY "Superadmins can view security logs" ON public.security_logs
     );
 
 -- (Opcional) permitir que el mismo sistema registre logs desde el cliente autenticado
+DROP POLICY IF EXISTS "Cualquiera puede insertar logs de su propia cuenta" ON public.security_logs;
 CREATE POLICY "Cualquiera puede insertar logs de su propia cuenta" ON public.security_logs
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- 5. Modo Dios para la tabla de presentaciones (para poder revisar lo que publican)
 -- Supabase acumula políticas con un OR lógico, esto significa que la política existente sigue intacta, sólo sumamos esta excepción.
+DROP POLICY IF EXISTS "Superadmin can view all presentations" ON public.presentations;
 CREATE POLICY "Superadmin can view all presentations" ON public.presentations
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin'
+        )
     );
 
 -- ==========================================
@@ -66,6 +70,7 @@ INSERT INTO public.corporate_email_settings (id) VALUES (1) ON CONFLICT (id) DO 
 -- Proteger con RLS: solo superadmins
 ALTER TABLE public.corporate_email_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Superadmins can manage email config" ON public.corporate_email_settings;
 CREATE POLICY "Superadmins can manage email config" ON public.corporate_email_settings
     FOR ALL USING (
         EXISTS (

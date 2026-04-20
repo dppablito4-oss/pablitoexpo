@@ -108,17 +108,13 @@ export default function AdminPanel() {
     if (!window.confirm(`¿LISTO PARA DESPACHAR LA OLEADA DE CORREOS?`)) return;
     
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pablito-mailer`, {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-         body: JSON.stringify({ action: 'MANUAL_BLAST', payload: { target: blastData.target, subject: blastData.subject, customHtml: blastData.message } })
+      const { data, error } = await supabase.functions.invoke('pablito-mailer', {
+         body: { action: 'MANUAL_BLAST', payload: { target: blastData.target, subject: blastData.subject, customHtml: blastData.message } }
       });
-      const json = await res.json();
-      if (res.ok) alert(json.message);
-      else throw new Error(json.error);
+      if (error) throw error;
+      alert(data?.message || 'Correos enviados exitosamente');
     } catch (e) {
       alert("Error en el hiperfoco de correo: " + e.message);
     } finally {
