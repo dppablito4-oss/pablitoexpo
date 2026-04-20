@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'reac
 import { useAuth } from './context/AuthContext';
 import SiteFooter from './components/SiteFooter';
 import GlobalAiCopilot from './components/GlobalAiCopilot';
+import AdminRoute from './components/AdminRoute';
 
 // La Landing siempre se importa normal para proteger el LCP inicial
 import LandingPage from './pages/LandingPage';
@@ -14,6 +15,7 @@ const Editor = lazy(() => import('./pages/Editor'));
 const ProjectorView = lazy(() => import('./pages/ProjectorView'));
 const RemoteControl = lazy(() => import('./pages/RemoteControl'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 
 // Proteger rutas — redirige a landing si no hay sesión
 const ProtectedRoute = ({ children }) => {
@@ -26,7 +28,7 @@ const ProtectedRoute = ({ children }) => {
 // Footer solo en páginas normales (no editor / proyector / remoto)
 function AppLayout() {
   const location = useLocation();
-  const noFooterRoutes = ['/editor', '/projector', '/remote', '/dashboard'];
+  const noFooterRoutes = ['/editor', '/projector', '/remote', '/dashboard', '/admin'];
   const hideFooter = noFooterRoutes.some(r => location.pathname.startsWith(r));
 
   return (
@@ -43,6 +45,9 @@ function AppLayout() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/editor/:slug" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
           <Route path="/remote/:slug" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
+
+          {/* Súper Admin Route */}
+          <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
 
           {/* Completamente públicas */}
           <Route path="/projector/:slug" element={<ProjectorView />} />

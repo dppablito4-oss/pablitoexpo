@@ -189,6 +189,17 @@ export default function Dashboard() {
             />
           ))}
 
+          {/* ADMIN ACTION */}
+          {user?.email === 'pabloclsa87@gmail.com' && (
+            <NavItem
+              key="admin"
+              item={{ id: 'admin', icon: '👑', label: 'Panel Admin' }}
+              active={activeNav === 'admin'}
+              onClick={() => navigate('/admin')}
+              isGold={true}
+            />
+          )}
+
           {/* Divider + Fundar */}
           <div style={{ margin: '20px 0 14px', borderTop: `1px solid ${C.border}` }} />
           <button
@@ -343,23 +354,29 @@ export default function Dashboard() {
 
 // ─── SUB-COMPONENTS ──────────────────────────────────────────────────────────
 
-function NavItem({ item, active, onClick }) {
+function NavItem({ item, active, onClick, isGold }) {
+  const activeBg = isGold ? 'rgba(255, 215, 0, 0.08)' : 'rgba(0,240,255,0.08)';
+  const activeBorder = isGold ? '1px solid rgba(255, 215, 0, 0.3)' : '1px solid rgba(0,240,255,0.2)';
+  const activeColor = isGold ? '#ffd700' : '#00f0ff';
+  const dormantColor = isGold ? 'rgba(255, 215, 0, 0.6)' : 'rgba(255,255,255,0.45)';
+
   return (
     <button
       onClick={onClick}
       style={{
         width: '100%', padding: '10px 12px', marginBottom: '4px',
-        background: active ? 'rgba(0,240,255,0.08)' : 'transparent',
-        border: active ? '1px solid rgba(0,240,255,0.2)' : '1px solid transparent',
+        background: active ? activeBg : 'transparent',
+        border: active ? activeBorder : '1px solid transparent',
         borderRadius: '10px',
-        color: active ? '#00f0ff' : 'rgba(255,255,255,0.45)',
-        fontSize: '12px', fontWeight: active ? '600' : '500',
+        color: active ? activeColor : dormantColor,
+        fontSize: '12px', fontWeight: active ? '700' : '500',
         letterSpacing: '0.04em',
         cursor: 'pointer', textAlign: 'left',
         display: 'flex', alignItems: 'center', gap: '10px',
         transition: 'all 0.2s',
+        boxShadow: isGold && active ? '0 0 12px rgba(255, 215, 0, 0.15)' : 'none',
       }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = isGold ? 'rgba(255, 215, 0, 0.05)' : 'rgba(255,255,255,0.04)'; }}
       onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
     >
       <span style={{ fontSize: '14px' }}>{item.icon}</span>
