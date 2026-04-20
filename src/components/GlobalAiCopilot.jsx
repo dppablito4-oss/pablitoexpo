@@ -35,6 +35,15 @@ export default function GlobalAiCopilot() {
 
   // Load personality and OTP status from Supabase
   useEffect(() => {
+    // Resetear Caché Visual y Variables cuando la sesión cambia (Log out / Log in)
+    setChatHistory([
+      { role: 'assistant', text: `¡Hola, ${displayName.toUpperCase()}! Soy tu asistente virtual global. Selecciona una personalidad arriba y charlemos sobre lo que quieras.` }
+    ]);
+    setIsOpen(false);
+    setOtpSent(false);
+    setOtpInput('');
+    setAiVerified(false); // Por defecto bloqueado hasta comprobar BBDD
+
     const loadProfileState = async () => {
       if (!user?.id) return;
       const { data } = await supabase.from('profiles').select('ai_personality, ai_verified').eq('id', user.id).single();
