@@ -113,8 +113,13 @@ export default function GlobalAiCopilot() {
     setIsGenerating(true);
     try {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await supabase.from('profiles').update({ otp_code: code }).eq('id', user.id);
+      const { error: updateErr } = await supabase.from('profiles').update({ otp_code: code }).eq('id', user.id);
       
+      if (updateErr) {
+        alert("Error crítico guardando en BBDD local: " + updateErr.message);
+        return;
+      }
+
       await supabase.functions.invoke('pablito-mailer', {
          body: { action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } }
       });
@@ -131,13 +136,20 @@ export default function GlobalAiCopilot() {
   const handleVerifyOTP = async () => {
     setIsGenerating(true);
     try {
-      const { data } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
-      if (data && data.otp_code === otpInput.trim()) {
+      const { data, error } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
+      if (error) {
+         alert('Fallo al consultar BBDD: ' + error.message);
+         return;
+      }
+      
+      const cleanInput = otpInput.replace(/\s/g, '').trim();
+
+      if (data && data.otp_code === cleanInput) {
          await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
          setAiVerified(true);
          setChatHistory(prev => [...prev, { role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de Inteligencia Artificial otorgados con éxito.` }]);
       } else {
-         alert('Código denegado. Intenta nuevamente.');
+         alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'} \nTu intento: ${cleanInput}`);
       }
     } finally {
       setIsGenerating(false);
