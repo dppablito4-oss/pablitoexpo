@@ -22,22 +22,28 @@ export default function GlobalAiCopilot() {
   const [verbosity, setVerbosity] = useState('short');
   const [personality, setPersonality] = useState('brayan');
 
+  // Nivel de Seguridad (OTP)
+  const [aiVerified, setAiVerified] = useState(true);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+
   const [chatHistory, setChatHistory] = useState([
     { role: 'assistant', text: `¡Hola, ${displayName.toUpperCase()}! Soy tu asistente virtual global. Selecciona una personalidad arriba y charlemos sobre lo que quieras.` }
   ]);
 
   const endOfMessagesRef = useRef(null);
 
-  // Load personality from Supabase
+  // Load personality and OTP status from Supabase
   useEffect(() => {
-    const loadPersonality = async () => {
+    const loadProfileState = async () => {
       if (!user?.id) return;
-      const { data } = await supabase.from('profiles').select('ai_personality').eq('id', user.id).single();
-      if (data && data.ai_personality) {
-        setPersonality(data.ai_personality);
+      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified').eq('id', user.id).single();
+      if (data) {
+        if (data.ai_personality) setPersonality(data.ai_personality);
+        setAiVerified(!!data.ai_verified);
       }
     };
-    loadPersonality();
+    loadProfileState();
   }, [user?.id]);
 
   const handlePersonalityChange = async (newPersonality) => {
@@ -97,6 +103,45 @@ export default function GlobalAiCopilot() {
       setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
         { role: 'assistant', text: `❌ Hubo un error: ${err.message}.\n\nInténtalo de nuevo.` }
       ));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // --- OTP Handlers ---
+  const handleRequestOTP = async () => {
+    setIsGenerating(true);
+    try {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await supabase.from('profiles').update({ otp_code: code }).eq('id', user.id);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pablito-mailer`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+         body: JSON.stringify({ action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } })
+      });
+      setOtpSent(true);
+      setChatHistory(prev => [...prev, { role: 'assistant', text: `🔐 Acabo de enviar un código de 6 dígitos a tu correo corporativo (${user.email}). Ingrésalo para seguir.` }]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    setIsGenerating(true);
+    try {
+      const { data } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
+      if (data && data.otp_code === otpInput.trim()) {
+         await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
+         setAiVerified(true);
+         setChatHistory(prev => [...prev, { role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de Inteligencia Artificial otorgados con éxito.` }]);
+      } else {
+         alert('Código denegado. Intenta nuevamente.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -221,35 +266,52 @@ export default function GlobalAiCopilot() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="relative">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
-              placeholder="Ej: Cuéntame un chiste..."
-              disabled={isGenerating}
-              rows={3}
-              className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
-                         text-white text-xs resize-none
-                         focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            />
-            <button
-              type="submit"
-              disabled={!prompt.trim() || isGenerating}
-              className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider
-                         text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
-            >
-              Enviar
-            </button>
-          </form>
-        </div>
+            {aiVerified ? (
+              <form onSubmit={handleSubmit} className="relative">
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                  placeholder="Ej: Cuéntame un chiste..."
+                  disabled={isGenerating}
+                  rows={3}
+                  className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10 text-white text-xs resize-none focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30 disabled:opacity-50 transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={!prompt.trim() || isGenerating}
+                  className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider text-white disabled:opacity-30 transition-all"
+                  style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
+                >
+                  Enviar
+                </button>
+              </form>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {!otpSent ? (
+                  <button onClick={handleRequestOTP} disabled={isGenerating} className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs uppercase tracking-widest transition-all">
+                    🔒 Solicitar Clave OTP de IA
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" maxLength={6} placeholder="OOOOOO" value={otpInput} onChange={e=>setOtpInput(e.target.value)}
+                      className="flex-1 bg-black border border-neutral-700 rounded-lg p-2 text-center tracking-[1em] text-white font-mono uppercase"
+                    />
+                    <button onClick={handleVerifyOTP} disabled={isGenerating || otpInput.length<6} className="bg-green-600 hover:bg-green-700 px-4 text-white font-bold rounded-lg text-[10px] uppercase">
+                      Verificar
+                    </button>
+                  </div>
+                )}
+                <p className="text-[9px] text-neutral-500 text-center leading-tight">Debido a nuestras políticas anti-spam, debes vincular tu correo de hardware antes de que P.A.B.L.O te atienda.</p>
+              </div>
+            )}
+          </div>
       </div>
     </>
   );

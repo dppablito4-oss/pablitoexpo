@@ -40,5 +40,35 @@ CREATE POLICY "Superadmin can view all presentations" ON public.presentations
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin'
+    );
+
+-- ==========================================
+-- Extensión: Módulo de Emisión de Correos y OTP
+-- ==========================================
+
+-- 1. Campos de Verificación OTP en perfiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ai_verified boolean DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS otp_code text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS otp_expires_at timestamp with time zone;
+
+-- 2. Tabla para credenciales y configuración del Mailer Corporativo
+CREATE TABLE IF NOT EXISTS public.corporate_email_settings (
+    id integer PRIMARY KEY DEFAULT 1, -- Solo existirá 1 fila
+    smtp_email text,
+    smtp_app_password text,
+    html_template text DEFAULT '<div style="background:#06060d; color:#fff; padding:40px; font-family:sans-serif; text-align:center;"><img src="{{LOGO_URL}}" width="80" style="margin-bottom:20px;" /><h1 style="color:#00f0ff;">Hola {{NICKNAME}}</h1><div style="background:#111; padding:20px; border-radius:10px; border:1px solid #333; margin:20px 0; font-size:16px;">{{MESSAGE}}</div><p style="color:#777; font-size:12px;">© 2026 Pablito Expo</p></div>',
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+-- Asegurarse de que exista la fila de configuración única
+INSERT INTO public.corporate_email_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- Proteger con RLS: solo superadmins
+ALTER TABLE public.corporate_email_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Superadmins can manage email config" ON public.corporate_email_settings
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'superadmin'
         )
     );

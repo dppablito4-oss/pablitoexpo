@@ -16,8 +16,10 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
   const [presentations, setPresentations] = useState([]);
+  const [emailConfig, setEmailConfig] = useState({ smtp_email: '', smtp_app_password: '' });
+  const [blastData, setBlastData] = useState({ target: 'ALL', subject: '', message: '' });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('users'); // users, logs, boveda
+  const [activeTab, setActiveTab] = useState('users'); // users, logs, boveda, emails
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +41,11 @@ export default function AdminPanel() {
         // Modo Dios para ver todas las presentaciones gracias a la política que acabamos de agregar (bypass is_public)
         const { data, error } = await supabase.from('presentations').select('*').order('created_at', { ascending: false });
         if (!error && data) setPresentations(data);
+      } else if (activeTab === 'emails') {
+        const { data, error } = await supabase.from('corporate_email_settings').select('*').eq('id', 1).single();
+        if (!error && data) {
+          setEmailConfig({ smtp_email: data.smtp_email || '', smtp_app_password: data.smtp_app_password || '' });
+        }
       }
     } catch (e) {
       console.error("Error devorando base de datos:", e);
@@ -82,9 +89,40 @@ export default function AdminPanel() {
     if (window.confirm(`¿Seguro que deseas cambiar el estado de este creador a ${newStatus.toUpperCase()}?`)) {
       const { error } = await supabase.from('profiles').update({ account_status: newStatus }).eq('id', userId);
       if (!error) {
-        await supabase.from('security_logs').insert([{ action: 'STATUS_CHANGED', details: `Estado cambiado de ${currentStatus} a ${newStatus}`, user_id: userId }]);
+        await supabase.from('security_logs').insert([{ action: 'STATUS_CHANGED', details: `Estado cambiado a ${newStatus}`, user_id: userId }]);
         fetchData();
       }
+    }
+  };
+
+  const handleSaveEmailConfig = async () => {
+    if (!emailConfig.smtp_email || !emailConfig.smtp_app_password) return alert('No dejes los campos vacíos.');
+    const { error } = await supabase.from('corporate_email_settings').upsert({ id: 1, smtp_email: emailConfig.smtp_email, smtp_app_password: emailConfig.smtp_app_password });
+    if (!error) {
+      alert('Credenciales blindadas en la bóveda de la BD.');
+    } else alert('Error: ' + error.message);
+  };
+
+  const handleFireBlast = async () => {
+    if (!blastData.subject || !blastData.message) return alert('Redacta tu mensaje comandante.');
+    if (!window.confirm(`¿LISTO PARA DESPACHAR LA OLEADA DE CORREOS?`)) return;
+    
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pablito-mailer`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+         body: JSON.stringify({ action: 'MANUAL_BLAST', payload: { target: blastData.target, subject: blastData.subject, customHtml: blastData.message } })
+      });
+      const json = await res.json();
+      if (res.ok) alert(json.message);
+      else throw new Error(json.error);
+    } catch (e) {
+      alert("Error en el hiperfoco de correo: " + e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,6 +152,7 @@ export default function AdminPanel() {
         <TabBtn active={activeTab === 'users'} onClick={() => setActiveTab('users')}>👥 Habitantes</TabBtn>
         <TabBtn active={activeTab === 'logs'} onClick={() => setActiveTab('logs')}>⚠️ Security Logs</TabBtn>
         <TabBtn active={activeTab === 'boveda'} onClick={() => setActiveTab('boveda')}>👁️ Bóveda Global</TabBtn>
+        <TabBtn active={activeTab === 'emails'} onClick={() => setActiveTab('emails')}>📧 Emisor Corporativo</TabBtn>
       </div>
 
       {/* Contenido Principal */}
@@ -205,6 +244,55 @@ export default function AdminPanel() {
             )}
 
           </motion.div>
+        )}
+
+        {!loading && activeTab === 'emails' && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
+             
+             {/* CONFIG SECTION */}
+             <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '25px', borderRadius: '15px' }}>
+                <h3 style={{ color: C.gold, marginTop: 0 }}>⚙️ Credenciales SMTP Seguras</h3>
+                <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Por seguridad del sistema, ingresa una "Contraseña de Aplicaciones" oficial de Google (16 dígitos sin espacios), NUNCA tu pass global de la nube.</p>
+                
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Gmail Originador:</label>
+                <input 
+                  type="email" value={emailConfig.smtp_email} onChange={e => setEmailConfig(p => ({...p, smtp_email: e.target.value}))}
+                  style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }} 
+                  placeholder="pabloclsa87@gmail.com"
+                />
+
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Token de Aplicación SMTP:</label>
+                <input 
+                  type="password" value={emailConfig.smtp_app_password} onChange={e => setEmailConfig(p => ({...p, smtp_app_password: e.target.value}))}
+                  style={{ width: '100%', padding: '12px', marginBottom: '25px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', letterSpacing: '3px' }} 
+                  placeholder="••••••••••••••••"
+                />
+
+                <button onClick={handleSaveEmailConfig} style={{ width: '100%', background: 'var(--accent-primary)', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 0 20px rgba(0,240,255,0.2)' }}>
+                  Blindar Credenciales
+                </button>
+             </div>
+
+             {/* BLAST SECTION */}
+             <div style={{ flex: '2 1 400px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${C.border}`, padding: '25px', borderRadius: '15px' }}>
+                <h3 style={{ color: C.gold, marginTop: 0 }}>🚀 Transmisor Personalizado</h3>
+                <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Usa código HTML simple para redactar tu mensaje de evento o aniversario. Cuentas con etiqueta inyectable genérica `{"{"}{"{"}NICKNAME{"}"}{"}"}`.</p>
+                
+                <select value={blastData.target} onChange={e => setBlastData(p=>({...p, target: e.target.value}))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }}>
+                   <option value="ALL">Para toda la lista de suscripción 🌍 (Todos Pablito Expo)</option>
+                   <option value="TEST">Sólo Mí mismo (Modo Piloto)</option>
+                </select>
+
+                <input placeholder="Asunto (Ej: 🔥 Nuevo Editor ya disponible)" value={blastData.subject} onChange={e => setBlastData(p=>({...p, subject: e.target.value}))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }} />
+
+                <textarea placeholder="<h1>Amigos!</h1><p>Les deseo feliz navidad.</p>" value={blastData.message} onChange={e => setBlastData(p=>({...p, message: e.target.value}))} style={{ width: '100%', height: '200px', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', fontFamily: 'monospace', resize: 'vertical' }} />
+
+                <button onClick={handleFireBlast} style={{ width: '100%', background: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(255,255,255,0.2)' }}>
+                  ☄️ Iniciar Despliegue SMTP Masivo
+                </button>
+             </div>
+
+           </motion.div>
         )}
       </div>
     </div>
