@@ -64,7 +64,7 @@ serve(async (req) => {
     const outputFormat = 'Debes responder OBLIGATORIAMENTE en formato JSON con una única propiedad llamada "message" que contenga tu respuesta en texto puro.';
 
     let systemInstruction = "";
-    
+
     if (mode === 'global') {
       systemInstruction = `Te estás comunicando con el usuario llamado "${username || 'Usuario'}".
       
@@ -103,7 +103,7 @@ REGLAS STRICTAS:
     if (chatHistory && Array.isArray(chatHistory)) {
       messages.push(...chatHistory);
     }
-    
+
     // TÉCNICA: Inyección de personalidad al final del último mensaje del usuario para evitar que el LLM se "suavice"
     let finalUserPrompt = prompt;
     if (personality === 'brayan') {
@@ -126,7 +126,7 @@ REGLAS STRICTAS:
         response_format: { type: "json_object" },
         messages: messages,
         max_tokens: 1500,
-        temperature: 0.85,
+        temperature: 0.95,
       }),
     });
 
