@@ -75,17 +75,22 @@ serve(async (req) => {
         const baseTemplate = configData.html_template || "<div>{{MESSAGE}}</div>";
 
         for (const user of emailsToBlast) {
-            const finalHtml = baseTemplate
-                .replace(/{{LOGO_URL}}/g, 'https://raw.githubusercontent.com/dppablito4-oss/pablitoexpo/main/public/favicon.svg')
-                .replace(/{{NICKNAME}}/g, user.username || user.email.split('@')[0])
-                .replace(/{{MESSAGE}}/g, customHtml || 'Mensaje Corporativo');
+            try {
+                const finalHtml = baseTemplate
+                    .replace(/{{LOGO_URL}}/g, 'https://raw.githubusercontent.com/dppablito4-oss/pablitoexpo/main/public/favicon.svg')
+                    .replace(/{{NICKNAME}}/g, user.username || user.email.split('@')[0])
+                    .replace(/{{MESSAGE}}/g, customHtml || 'Mensaje Corporativo');
 
-            await transporter.sendMail({
-                from: `"Pablito Expo C.E.O." <${configData.smtp_email}>`,
-                to: user.email,
-                subject: payload.subject || "Notificación de Pablito Expo",
-                html: finalHtml
-            });
+                await transporter.sendMail({
+                    from: `"Pablito Expo C.E.O." <${configData.smtp_email}>`,
+                    to: user.email,
+                    subject: payload.subject || "Notificación de Pablito Expo",
+                    html: finalHtml
+                });
+            } catch (sendingErr) {
+                console.error(`Error enviando a ${user.email}:`, sendingErr);
+                // Evitamos que falle todo el ciclo por culpa de un proveedor estricto
+            }
         }
 
     } else if (action === 'SEND_OTP') {
