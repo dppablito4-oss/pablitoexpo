@@ -21,10 +21,20 @@ serve(async (req) => {
     );
 
     // 1. Validar el body de la petición
-    const { action, payload, authHeader } = await req.json();
+    const reqBody = await req.json();
+    let action = reqBody.action;
+    let payload = reqBody.payload;
+
+    // MAGIA: Si la petición viene directo de Supabase Webhook en automático:
+    if (reqBody.type === 'INSERT' && reqBody.record && reqBody.record.email) {
+       action = 'WELCOME';
+       payload = {
+          email: reqBody.record.email,
+          username: reqBody.record.username || reqBody.record.email.split('@')[0]
+       };
+    }
     
-    // Verificamos si quien llama la función es el administrador y es legítimo
-    // O si es la automatización (en ese caso, la propia DB llama a la función).
+    // Verificamos si la configuración existe
     
     // 2. Extraer configuración de la base de datos ultra secreta
     const { data: configData, error: configError } = await supabaseClient
