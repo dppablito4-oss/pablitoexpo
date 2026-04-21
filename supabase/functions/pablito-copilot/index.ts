@@ -114,6 +114,12 @@ REGLAS STRICTAS:
 
     messages.push({ role: 'user', content: finalUserPrompt });
 
+    // Seleccionar el modelo de LLM adecuado según la personalidad
+    let aiModel = 'gpt-5.4-mini';
+    if (personality === 'motivador') {
+      aiModel = 'gpt-5.4-nano';
+    }
+
     // Hacer la llamada a OpenAI
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -122,7 +128,7 @@ REGLAS STRICTAS:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: aiModel,
         response_format: { type: "json_object" },
         messages: messages,
         max_tokens: 1500,
