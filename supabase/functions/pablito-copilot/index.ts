@@ -110,7 +110,7 @@ REGLAS STRICTAS:
     // TÉCNICA: Inyección de personalidad al final del último mensaje del usuario para evitar que el LLM se "suavice"
     let finalUserPrompt = prompt;
     if (personality === 'brayan') {
-      finalUserPrompt += "\n\n(Regla interna mandatoria: Responde estrictamente como El Brayan, no te mariconees, prohbidio pedir disculpas o calmar al usuario, sé agresivo).";
+      finalUserPrompt += "\n\n(Regla interna mandatoria: Responde estrictamente como El Brayan, no te mariconees, prohibido pedir disculpas o calmar al usuario, sé agresivo).";
     } else if (personality === 'renegon') {
       finalUserPrompt += "\n\n(Regla interna mandatoria: Responde como El Renegón, sé sarcástico y cero consejos positivos).";
     }
@@ -125,7 +125,7 @@ REGLAS STRICTAS:
 
     if (personality === 'brayan' || personality === 'renegon') {
         aiModel = 'deepseek-chat';
-        apiUrl = 'https://api.deepseek.com/chat/completions';
+        apiUrl = 'https://api.deepseek.com/v1/chat/completions';
         apiKey = DEEPSEEK_API_KEY;
         vendor = 'DeepSeek';
     } else if (personality === 'motivador') {
@@ -140,7 +140,7 @@ REGLAS STRICTAS:
         model: aiModel,
         response_format: { type: "json_object" },
         messages: messages,
-        temperature: 0.85,
+        temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
     };
 
     if (vendor === 'DeepSeek') {
