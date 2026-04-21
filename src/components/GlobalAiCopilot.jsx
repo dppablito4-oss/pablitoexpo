@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
@@ -11,41 +11,95 @@ const PERSONALITIES = {
   cientifico: { id: 'cientifico', emoji: '⚛️', name: 'Científico', color: 'linear-gradient(135deg, #10b981, #047857)', tooltip: 'Un genio incomprendido que explicará el diseño usando la mecánica cuántica y física.' }
 };
 
+const MAX_CHATS = 5;
+const MAX_MESSAGES_PER_CHAT = 10;
+const MAX_INPUT_CHARS = 500;
+const OTP_COOLDOWN = 60;
+
+function createNewChat(displayName) {
+  return {
+    id: Date.now().toString(),
+    title: 'Nuevo Chat',
+    messages: [
+      { role: 'assistant', text: `¡Hola, ${displayName.toUpperCase()}! Soy tu asistente virtual global. Selecciona una personalidad arriba y charlemos sobre lo que quieras.` }
+    ],
+    createdAt: Date.now()
+  };
+}
+
 export default function GlobalAiCopilot() {
   const { user } = useAuth();
   const location = useLocation();
   const displayName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Usuario';
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short');
   const [personality, setPersonality] = useState('brayan');
+  const [showChatList, setShowChatList] = useState(false);
 
-  // Nivel de Seguridad (OTP)
-  const [aiVerified, setAiVerified] = useState(true);
+  // Multi-Chat state
+  const [chats, setChats] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+
+  // OTP state
+  const [aiVerified, setAiVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpInput, setOtpInput] = useState('');
-
-  const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: `¡Hola, ${displayName.toUpperCase()}! Soy tu asistente virtual global. Selecciona una personalidad arriba y charlemos sobre lo que quieras.` }
-  ]);
+  const [otpCooldown, setOtpCooldown] = useState(0); // segundos restantes
+  const otpTimerRef = useRef(null);
 
   const endOfMessagesRef = useRef(null);
 
-  // Load personality and OTP status from Supabase
+  // Helper: leer chats del localStorage para este usuario
+  const getStorageKey = useCallback((uid) => `pablo_chats_${uid}`, []);
+
+  const loadChatsFromStorage = useCallback((uid) => {
+    try {
+      const raw = localStorage.getItem(getStorageKey(uid));
+      if (raw) return JSON.parse(raw);
+    } catch (_) { /* ignore */ }
+    return null;
+  }, [getStorageKey]);
+
+  const saveChatsToStorage = useCallback((uid, chatsData) => {
+    try {
+      localStorage.setItem(getStorageKey(uid), JSON.stringify(chatsData));
+    } catch (_) { /* ignore */ }
+  }, [getStorageKey]);
+
+  // Inicializar cuando cambia el usuario
   useEffect(() => {
-    // Resetear Caché Visual y Variables cuando la sesión cambia (Log out / Log in)
-    setChatHistory([
-      { role: 'assistant', text: `¡Hola, ${displayName.toUpperCase()}! Soy tu asistente virtual global. Selecciona una personalidad arriba y charlemos sobre lo que quieras.` }
-    ]);
     setIsOpen(false);
     setOtpSent(false);
     setOtpInput('');
-    setAiVerified(false); // Por defecto bloqueado hasta comprobar BBDD
+    setOtpCooldown(0);
+    setPrompt('');
+    setShowChatList(false);
+    clearInterval(otpTimerRef.current);
+    setAiVerified(false);
 
+    if (!user?.id) {
+      setChats([]);
+      setActiveChatId(null);
+      return;
+    }
+
+    // Cargar chats del localStorage
+    const stored = loadChatsFromStorage(user.id);
+    let initialChats;
+    if (stored && stored.length > 0) {
+      initialChats = stored;
+    } else {
+      const newChat = createNewChat(displayName);
+      initialChats = [newChat];
+    }
+    setChats(initialChats);
+    setActiveChatId(initialChats[0].id);
+
+    // Cargar estado de la BD
     const loadProfileState = async () => {
-      if (!user?.id) return;
       const { data } = await supabase.from('profiles').select('ai_personality, ai_verified').eq('id', user.id).single();
       if (data) {
         if (data.ai_personality) setPersonality(data.ai_personality);
@@ -53,65 +107,102 @@ export default function GlobalAiCopilot() {
       }
     };
     loadProfileState();
-  }, [user?.id]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Guardar chats en localStorage cada vez que cambian
+  useEffect(() => {
+    if (user?.id && chats.length > 0) {
+      saveChatsToStorage(user.id, chats);
+    }
+  }, [chats, user?.id, saveChatsToStorage]);
+
+  // Scroll al último mensaje
+  useEffect(() => {
+    if (isOpen) endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chats, isGenerating, isOpen, activeChatId]);
+
+  // Countdown timer del OTP
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    otpTimerRef.current = setInterval(() => {
+      setOtpCooldown(prev => {
+        if (prev <= 1) { clearInterval(otpTimerRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(otpTimerRef.current);
+  }, [otpCooldown]);
+
+  // Helpers para chats activos
+  const activeChat = chats.find(c => c.id === activeChatId);
+  const chatHistory = activeChat?.messages || [];
+
+  const updateActiveChat = (updater) => {
+    setChats(prev => prev.map(c => c.id === activeChatId ? updater(c) : c));
+  };
+
+  const addMessage = (msg, chatId = activeChatId) => {
+    setChats(prev => prev.map(c => {
+      if (c.id !== chatId) return c;
+      const newMessages = [...c.messages, msg].slice(-MAX_MESSAGES_PER_CHAT);
+      // Actualizar título del chat con el primer mensaje del usuario
+      const firstUserMsg = newMessages.find(m => m.role === 'user');
+      const title = firstUserMsg ? firstUserMsg.text.slice(0, 30) + (firstUserMsg.text.length > 30 ? '…' : '') : c.title;
+      return { ...c, messages: newMessages, title };
+    }));
+  };
 
   const handlePersonalityChange = async (newPersonality) => {
     setPersonality(newPersonality);
     if (user?.id) {
       await supabase.from('profiles').update({ ai_personality: newPersonality }).eq('id', user.id);
     }
-    setChatHistory(prev => [...prev, { role: 'assistant', text: `*Personalidad cambiada a ${PERSONALITIES[newPersonality].name} ${PERSONALITIES[newPersonality].emoji}*` }]);
+    addMessage({ role: 'assistant', text: `*Personalidad cambiada a ${PERSONALITIES[newPersonality].name} ${PERSONALITIES[newPersonality].emoji}*` });
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatHistory, isGenerating, isOpen]);
+  const handleNewChat = () => {
+    const newChat = createNewChat(displayName);
+    setChats(prev => {
+      const updated = [newChat, ...prev].slice(0, MAX_CHATS);
+      return updated;
+    });
+    setActiveChatId(newChat.id);
+    setShowChatList(false);
+  };
+
+  const handleSelectChat = (chatId) => {
+    setActiveChatId(chatId);
+    setShowChatList(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim() || isGenerating) return;
 
-    const userText = prompt.trim();
+    const userText = prompt.trim().slice(0, MAX_INPUT_CHARS);
     setPrompt('');
-    setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
+    addMessage({ role: 'user', text: userText });
     setIsGenerating(true);
 
     try {
-      const historyPayload = chatHistory.slice(-10).map(m => ({
-        role: m.role,
-        content: m.text
-      }));
+      const historyPayload = chatHistory.slice(-10).map(m => ({ role: m.role, content: m.text }));
 
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {
-        body: {
-          prompt: userText,
-          verbosity,
-          personality,
-          username: displayName,
-          chatHistory: historyPayload,
-          mode: 'global' // Indicamos modo global
-        }
+        body: { prompt: userText, verbosity, personality, username: displayName, chatHistory: historyPayload, mode: 'global' }
       });
 
       if (error) throw new Error(error.message);
 
-      if (data && data.message) {
-        setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-          { role: 'assistant', text: data.message }
-        ));
-      } else if (data && data.error) {
+      if (data?.message) {
+        addMessage({ role: 'assistant', text: data.message });
+      } else if (data?.error) {
         throw new Error(data.error);
       } else {
         throw new Error('Respuesta inválida de la IA');
       }
-
     } catch (err) {
       console.error(err);
-      setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-        { role: 'assistant', text: `❌ Hubo un error: ${err.message}.\n\nInténtalo de nuevo.` }
-      ));
+      addMessage({ role: 'assistant', text: `❌ Error: ${err.message}.\n\nInténtalo de nuevo.` });
     } finally {
       setIsGenerating(false);
     }
@@ -119,22 +210,24 @@ export default function GlobalAiCopilot() {
 
   // --- OTP Handlers ---
   const handleRequestOTP = async () => {
+    if (otpCooldown > 0) return;
     setIsGenerating(true);
     try {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       const { error: updateErr } = await supabase.from('profiles').update({ otp_code: code }).eq('id', user.id);
-      
+
       if (updateErr) {
-        alert("Error crítico guardando en BBDD local: " + updateErr.message);
+        alert('Error crítico guardando en BBDD: ' + updateErr.message);
         return;
       }
 
       await supabase.functions.invoke('pablito-mailer', {
-         body: { action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } }
+        body: { action: 'SEND_OTP', payload: { email: user.email, username: displayName, code } }
       });
-      
+
       setOtpSent(true);
-      setChatHistory(prev => [...prev, { role: 'assistant', text: `🔐 Acabo de enviar un código de 6 dígitos a tu correo corporativo (${user.email}). Ingrésalo para seguir.` }]);
+      setOtpCooldown(OTP_COOLDOWN);
+      addMessage({ role: 'assistant', text: `🔐 Código enviado a ${user.email}. Tienes 60 segundos antes de poder reenviar.` });
     } catch (err) {
       console.error(err);
     } finally {
@@ -143,29 +236,37 @@ export default function GlobalAiCopilot() {
   };
 
   const handleVerifyOTP = async () => {
+    if (isGenerating) return;
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
-      if (error) {
-         alert('Fallo al consultar BBDD: ' + error.message);
-         return;
-      }
-      
-      const cleanInput = otpInput.replace(/\s/g, '').trim();
+      if (error) { alert('Fallo al consultar BBDD: ' + error.message); return; }
 
-      if (data && data.otp_code === cleanInput) {
-         await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
-         setAiVerified(true);
-         setChatHistory(prev => [...prev, { role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de Inteligencia Artificial otorgados con éxito.` }]);
+      const cleanInput = otpInput.replace(/\s/g, '').trim();
+      if (data?.otp_code === cleanInput) {
+        await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
+        setAiVerified(true);
+        addMessage({ role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de IA otorgados con éxito.` });
       } else {
-         alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'} \nTu intento: ${cleanInput}`);
+        alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'}\nTu intento: ${cleanInput}`);
+        setOtpInput('');
       }
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // Si no hay usuario o estamos en el editor, no renderizamos nada
+  // Auto-verificación al completar 6 dígitos
+  const handleOtpInputChange = (e) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setOtpInput(val);
+    if (val.length === 6) {
+      // Disparar verificación automáticamente
+      setTimeout(() => handleVerifyOTP(), 200);
+    }
+  };
+
+  // Ocultar si no hay usuario o en rutas de proyección
   if (!user || location.pathname.startsWith('/editor') || location.pathname.startsWith('/projector') || location.pathname.startsWith('/remote')) {
     return null;
   }
@@ -176,30 +277,21 @@ export default function GlobalAiCopilot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-2xl transition-all hover:scale-110"
-        style={{ 
-          background: PERSONALITIES[personality].color, 
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          border: '2px solid rgba(255,255,255,0.1)'
-        }}
+        style={{ background: PERSONALITIES[personality].color, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', border: '2px solid rgba(255,255,255,0.1)' }}
       >
         {isOpen ? '✕' : PERSONALITIES[personality].emoji}
       </button>
 
-      {/* Overlay Oscuro (opcional, para cerrar al hacer clic afuera) */}
+      {/* Overlay Oscuro */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm transition-opacity"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm transition-opacity" onClick={() => setIsOpen(false)} />
       )}
 
       {/* Panel Deslizante Lateral */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-[350px] z-50 transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col bg-neutral-900 border-l border-neutral-800 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-      >
+      <div className={`fixed top-0 right-0 h-full w-[350px] z-50 transform transition-transform duration-300 ease-in-out shadow-2xl flex flex-col bg-neutral-900 border-l border-neutral-800 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
         {/* Header */}
-        <div className="p-4 border-b border-neutral-800 shrink-0 relative"
-          style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
+        <div className="p-4 border-b border-neutral-800 shrink-0" style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -211,20 +303,51 @@ export default function GlobalAiCopilot() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black tracking-wider text-white transition-colors">
+                  <h3 className="text-sm font-black tracking-wider text-white">
                     P.A.B.L.O. <span className="text-neutral-400 font-normal text-xs">| {PERSONALITIES[personality].name}</span>
                   </h3>
-                  <span className="text-[8px] bg-indigo-950 text-indigo-400 border border-indigo-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
-                    GLOBAL
-                  </span>
+                  <span className="text-[8px] bg-indigo-950 text-indigo-400 border border-indigo-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">GLOBAL</span>
                 </div>
                 <p className="text-[9px] text-neutral-600 mt-0.5 italic">Tu asistente virtual</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white transition-colors p-1">
-              ✕
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Botón Historial de Chats */}
+              <button
+                onClick={() => setShowChatList(!showChatList)}
+                title="Mis Chats"
+                className="text-neutral-500 hover:text-white transition-colors p-1 text-sm"
+              >
+                🗂️
+              </button>
+              {/* Botón Nuevo Chat */}
+              <button
+                onClick={handleNewChat}
+                title="Nuevo Chat"
+                className="text-neutral-500 hover:text-green-400 transition-colors p-1 text-sm"
+              >
+                ✏️
+              </button>
+              <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white transition-colors p-1">✕</button>
+            </div>
           </div>
+
+          {/* Lista de Chats Guardados */}
+          {showChatList && (
+            <div className="mt-3 bg-black/60 rounded-lg border border-neutral-800 overflow-hidden">
+              <p className="text-[9px] text-neutral-500 uppercase tracking-widest px-3 py-1.5 border-b border-neutral-800">Chats recientes (máx. {MAX_CHATS})</p>
+              {chats.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => handleSelectChat(chat.id)}
+                  className={`w-full text-left px-3 py-2 text-[10px] transition-colors truncate border-b border-neutral-900/50 last:border-0
+                    ${chat.id === activeChatId ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white'}`}
+                >
+                  <span className="mr-2">💬</span>{chat.title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Personality Selector Toolbar */}
@@ -245,6 +368,11 @@ export default function GlobalAiCopilot() {
 
         {/* Chat history */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar flex flex-col">
+          {/* Info de sesión */}
+          <div className="text-center">
+            <span className="text-[8px] text-neutral-700 uppercase tracking-widest">Chat: {activeChat?.title || 'Nuevo Chat'} — {chatHistory.length}/{MAX_MESSAGES_PER_CHAT} msgs</span>
+          </div>
+
           {chatHistory.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[88%] rounded-xl p-3 text-xs leading-relaxed whitespace-pre-line
@@ -284,52 +412,80 @@ export default function GlobalAiCopilot() {
             </div>
           </div>
 
-            {aiVerified ? (
-              <form onSubmit={handleSubmit} className="relative">
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                  placeholder="Ej: Cuéntame un chiste..."
-                  disabled={isGenerating}
-                  rows={3}
-                  className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10 text-white text-xs resize-none focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30 disabled:opacity-50 transition-all"
-                />
+          {aiVerified ? (
+            <form onSubmit={handleSubmit} className="relative">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value.slice(0, MAX_INPUT_CHARS))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }
+                }}
+                placeholder="Ej: Cuéntame un chiste..."
+                disabled={isGenerating}
+                rows={3}
+                maxLength={MAX_INPUT_CHARS}
+                className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10 text-white text-xs resize-none focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30 disabled:opacity-50 transition-all"
+              />
+              <div className="absolute bottom-2 left-3 text-[9px] text-neutral-700">
+                {prompt.length}/{MAX_INPUT_CHARS}
+              </div>
+              <button
+                type="submit"
+                disabled={!prompt.trim() || isGenerating}
+                className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider text-white disabled:opacity-30 transition-all"
+                style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
+              >
+                Enviar
+              </button>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {!otpSent ? (
                 <button
-                  type="submit"
-                  disabled={!prompt.trim() || isGenerating}
-                  className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider text-white disabled:opacity-30 transition-all"
-                  style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
+                  onClick={handleRequestOTP}
+                  disabled={isGenerating || otpCooldown > 0}
+                  className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs uppercase tracking-widest transition-all"
                 >
-                  Enviar
+                  🔒 Solicitar Clave OTP de IA
                 </button>
-              </form>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {!otpSent ? (
-                  <button onClick={handleRequestOTP} disabled={isGenerating} className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs uppercase tracking-widest transition-all">
-                    🔒 Solicitar Clave OTP de IA
-                  </button>
-                ) : (
+              ) : (
+                <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
-                    <input 
-                      type="text" maxLength={6} placeholder="OOOOOO" value={otpInput} onChange={e=>setOtpInput(e.target.value)}
-                      className="flex-1 bg-black border border-neutral-700 rounded-lg p-2 text-center tracking-[1em] text-white font-mono uppercase"
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={otpInput}
+                      onChange={handleOtpInputChange}
+                      className="flex-1 bg-black border border-neutral-700 rounded-lg p-2 text-center tracking-[1em] text-white font-mono text-lg"
+                      autoFocus
                     />
-                    <button onClick={handleVerifyOTP} disabled={isGenerating || otpInput.length<6} className="bg-green-600 hover:bg-green-700 px-4 text-white font-bold rounded-lg text-[10px] uppercase">
+                    <button
+                      onClick={handleVerifyOTP}
+                      disabled={isGenerating || otpInput.length < 6}
+                      className="bg-green-600 hover:bg-green-700 disabled:opacity-40 px-4 text-white font-bold rounded-lg text-[10px] uppercase transition-all"
+                    >
                       Verificar
                     </button>
                   </div>
-                )}
-                <p className="text-[9px] text-neutral-500 text-center leading-tight">Debido a nuestras políticas anti-spam, debes vincular tu correo de hardware antes de que P.A.B.L.O te atienda.</p>
-              </div>
-            )}
-          </div>
+                  {/* Botón Reenviar con Countdown */}
+                  <button
+                    onClick={handleRequestOTP}
+                    disabled={otpCooldown > 0 || isGenerating}
+                    className="text-[9px] text-neutral-500 hover:text-fuchsia-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-center"
+                  >
+                    {otpCooldown > 0
+                      ? `⏱️ Reenviar en ${otpCooldown}s`
+                      : '↩️ Reenviar código'}
+                  </button>
+                </div>
+              )}
+              <p className="text-[9px] text-neutral-500 text-center leading-tight">Debido a nuestras políticas anti-spam, debes verificar tu correo antes de usar P.A.B.L.O.</p>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
