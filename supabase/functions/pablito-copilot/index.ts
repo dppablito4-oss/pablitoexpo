@@ -26,18 +26,25 @@ serve(async (req) => {
     }
 
     let lengthInstruction = "";
-    switch (verbosity) {
-      case 'short':
-        lengthInstruction = "RESPUESTA MUY CORTA: Responde en 1 o 2 líneas máximo. Ve muy directo al grano.";
-        break;
-      case 'medium':
-        lengthInstruction = "RESPUESTA MEDIA: Da una explicación de tamaño moderado, quizás con viñetas o un par de párrafos.";
-        break;
-      case 'long':
-        lengthInstruction = "RESPUESTA LARGA: Da una explicación muy profunda, exhaustiva, con muchísimos detalles, superando las 200 palabras si es necesario.";
-        break;
-      default:
-        lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
+
+    // Lógica con "Cap" (techo) de longitud para personajes de barrio
+    if ((personality === 'brayan' || personality === 'renegon') && verbosity === 'long') {
+        // Forzamos a que no sea largo para no romper el personaje
+        lengthInstruction = "RESPUESTA MEDIA: Máximo 2 párrafos cortos. Sé directo y rudo, no des discursos.";
+    } else {
+        switch (verbosity) {
+            case 'short':
+                lengthInstruction = "RESPUESTA MUY CORTA: 1 o 2 líneas. Ve al grano.";
+                break;
+            case 'medium':
+                lengthInstruction = "RESPUESTA MEDIA: Un par de párrafos moderados.";
+                break;
+            case 'long':
+                lengthInstruction = "RESPUESTA LARGA: Explicación profunda y detallada (más de 200 palabras).";
+                break;
+            default:
+                lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
+        }
     }
 
     let personalityInstruction = "";
