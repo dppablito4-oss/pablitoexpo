@@ -49,6 +49,7 @@ export default function GlobalAiCopilot() {
   const [otpInput, setOtpInput] = useState('');
   const [otpCooldown, setOtpCooldown] = useState(0); // segundos restantes
   const otpTimerRef = useRef(null);
+  const currentOtpRef = useRef('');
 
   const endOfMessagesRef = useRef(null);
 
@@ -251,22 +252,22 @@ export default function GlobalAiCopilot() {
     }
   };
 
-  const handleVerifyOTP = async (autoCode) => {
+  const handleVerifyOTP = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
       if (error) { alert('Fallo al consultar BBDD: ' + error.message); return; }
 
-      const inputToUse = typeof autoCode === 'string' ? autoCode : otpInput;
-      const cleanInput = inputToUse.replace(/\s/g, '').trim();
-      if (data?.otp_code === cleanInput) {
+      const codeToVerify = currentOtpRef.current;
+      if (data?.otp_code === codeToVerify) {
         await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
         setAiVerified(true);
         addMessage({ role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de IA otorgados con éxito.` });
       } else {
-        alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'}\nTu intento: ${cleanInput}`);
+        alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'}\nTu intento: ${codeToVerify}`);
         setOtpInput('');
+        currentOtpRef.current = '';
       }
     } finally {
       setIsGenerating(false);
@@ -276,10 +277,10 @@ export default function GlobalAiCopilot() {
   // Auto-verificación al completar 6 dígitos
   const handleOtpInputChange = (e) => {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+    currentOtpRef.current = val;
     setOtpInput(val);
     if (val.length === 6) {
-      // Disparar verificación automáticamente pasándole el valor al instante
-      setTimeout(() => handleVerifyOTP(val), 200);
+      setTimeout(() => handleVerifyOTP(), 200);
     }
   };
 

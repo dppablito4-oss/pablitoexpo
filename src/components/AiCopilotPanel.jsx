@@ -16,6 +16,7 @@ export default function AiCopilotPanel({ currentSections }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
   const [personality, setPersonality] = useState('brayan');
+  const [aiVerified, setAiVerified] = useState(false);
 
   const [chatHistory, setChatHistory] = useState([
     { role: 'assistant', text: `¡Habla, ${displayName.toUpperCase()}! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.` }
@@ -26,14 +27,17 @@ export default function AiCopilotPanel({ currentSections }) {
 
   // Load personality from Supabase
   useEffect(() => {
-    const loadPersonality = async () => {
+    const loadState = async () => {
       if (!user?.id) return;
-      const { data } = await supabase.from('profiles').select('ai_personality').eq('id', user.id).single();
-      if (data && data.ai_personality) {
+      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified').eq('id', user.id).single();
+      if (data?.ai_personality) {
         setPersonality(data.ai_personality);
       }
+      if (data) {
+        setAiVerified(!!data.ai_verified);
+      }
     };
-    loadPersonality();
+    loadState();
   }, [user?.id]);
 
   const handlePersonalityChange = async (newPersonality) => {
@@ -207,34 +211,44 @@ export default function AiCopilotPanel({ currentSections }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="relative">
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
-            placeholder="Ej: ¿Qué secciones me faltan añadir para hablar sobre Galaxias?..."
-            disabled={isGenerating}
-            rows={3}
-            className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
-                       text-white text-xs resize-none
-                       focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30
-                       disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          />
-          <button
-            type="submit"
-            disabled={!prompt.trim() || isGenerating}
-            className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider
-                       text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
-          >
-            Preguntar
-          </button>
-        </form>
+        {aiVerified ? (
+          <form onSubmit={handleSubmit} className="relative">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+              placeholder="Ej: ¿Qué secciones me faltan añadir para hablar sobre Galaxias?..."
+              disabled={isGenerating}
+              rows={3}
+              className="w-full bg-black border border-neutral-700 rounded-lg p-3 pb-10
+                         text-white text-xs resize-none
+                         focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30
+                         disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            />
+            <button
+              type="submit"
+              disabled={!prompt.trim() || isGenerating}
+              className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider
+                         text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
+            >
+              Preguntar
+            </button>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-2 bg-[#0a0a0a] border border-neutral-800 rounded-lg p-4 text-center mt-2">
+            <div className="text-xl mb-1 mt-2">🔒</div>
+            <p className="text-xs text-neutral-300 font-bold tracking-wide uppercase">Cerebro de P.A.B.L.O. Asegurado</p>
+            <p className="text-[10px] text-neutral-500 mb-2 px-2 pb-2 leading-relaxed">
+              El motor cognitivo está bloqueado. Por favor, abre tu <span className="text-fuchsia-400">Asistente Global</span> (el botón flotante inferior derecho) e introduce tu código sagrado OTP para sincronizar ambos núcleos.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
