@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
+import { deductHP } from '../lib/xpService';
 
 const PERSONALITIES = {
   brayan: { id: 'brayan', emoji: '🧢', name: 'El Brayan', color: 'linear-gradient(135deg, #a855f7, #6366f1)', tooltip: 'Habla como tu pata de la pichanga. Te ayuda con confianza, mucha jerga peruana y cero filtros.' },
@@ -202,6 +203,16 @@ export default function GlobalAiCopilot() {
     setIsGenerating(true);
 
     try {
+      // ⚡ Verificar y descontar HP antes de llamar a la IA
+      if (user?.id) {
+        const hpResult = await deductHP(supabase, user.id, personality);
+        if (!hpResult.success) {
+          addMessage({ role: 'assistant', text: `⚡ Sin energía: ${hpResult.error}` });
+          setIsGenerating(false);
+          return;
+        }
+      }
+
       const historyPayload = chatHistory.slice(-10).map(m => ({ role: m.role, content: m.text }));
 
       const { data, error } = await supabase.functions.invoke('pablito-copilot', {

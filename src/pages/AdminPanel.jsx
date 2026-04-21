@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import AdminXpPanel from '../components/AdminXpPanel';
 
 const C = {
   bg:       '#06060d',
@@ -149,6 +150,7 @@ export default function AdminPanel() {
         <TabBtn active={activeTab === 'logs'} onClick={() => setActiveTab('logs')}>⚠️ Security Logs</TabBtn>
         <TabBtn active={activeTab === 'boveda'} onClick={() => setActiveTab('boveda')}>👁️ Bóveda Global</TabBtn>
         <TabBtn active={activeTab === 'emails'} onClick={() => setActiveTab('emails')}>📧 Emisor Corporativo</TabBtn>
+        <TabBtn active={activeTab === 'xp'} onClick={() => setActiveTab('xp')}>⭐ XP System</TabBtn>
       </div>
 
       {/* Contenido Principal */}
@@ -289,6 +291,12 @@ export default function AdminPanel() {
              </div>
 
            </motion.div>
+        )}
+
+        {!loading && activeTab === 'xp' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <AdminXpPanel />
+          </motion.div>
         )}
       </div>
     </div>

@@ -4,6 +4,8 @@ import { supabase } from '../config/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { generateSlug } from '../lib/slugify';
+import XpWidget from '../components/XpWidget';
+import { awardXP, fetchXpConfig } from '../lib/xpService';
 
 // ─── PALETTE ─────────────────────────────────────────────────────────────────
 const C = {
@@ -32,9 +34,19 @@ export default function Dashboard() {
   const [loading, setLoading]   = useState(true);
   const [activeNav, setActiveNav] = useState('vault');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [xpData, setXpData] = useState({ xp: 0, level: 0, hp: 0 });
+  const [xpConfig, setXpConfig] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => { fetchPresentations(); }, [user]);
+  useEffect(() => {
+    fetchPresentations();
+    if (user?.id) {
+      // Cargar XP/HP del perfil y config global
+      supabase.from('profiles').select('xp, level, hp').eq('id', user.id).single()
+        .then(({ data }) => { if (data) setXpData({ xp: data.xp || 0, level: data.level || 0, hp: data.hp || 0 }); });
+      fetchXpConfig(supabase).then(cfg => setXpConfig(cfg));
+    }
+  }, [user]);
 
   // ── DATA FETCHING (ORIGINAL, SIN TOCAR) ────────────────────────────────────
   const fetchPresentations = async () => {
@@ -65,7 +77,14 @@ export default function Dashboard() {
       slides_data: { slides: [{ id: crypto.randomUUID(), type: 'title', content: 'Diapositiva Inicial' }] },
       editors_emails: [user.email]
     }]).select();
-    if (!error && data) fetchPresentations();
+    if (!error && data) {
+      fetchPresentations();
+      // Award XP por crear proyecto
+      if (user?.id && xpConfig?.enabled) {
+        const xpResult = await awardXP(supabase, user.id, 'create');
+        if (xpResult.awarded) setXpData(prev => ({ ...prev, xp: xpResult.newTotal, level: xpResult.newLevel }));
+      }
+    }
     else if (error) alert('Error al crear: ' + error.message);
   };
 
@@ -238,7 +257,7 @@ export default function Dashboard() {
               <div style={{ fontSize: '10px', fontWeight: '600', color: C.textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.email}
               </div>
-              <div style={{ fontSize: '9px', color: C.textMuted }}>Operador Registrado</div>
+              <XpWidget xp={xpData.xp} level={xpData.level} hp={xpData.hp} config={xpConfig} />
             </div>
           </div>
           <button
