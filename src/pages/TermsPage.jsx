@@ -9,32 +9,53 @@ const SECTIONS = [
     content: [
       {
         heading: '1. Aceptación del Servicio',
-        text: `Bienvenido a la plataforma de edición de presentaciones desarrollado por Samuel Y. Pablo Claudio. Al registrarte y utilizar nuestras herramientas, aceptas cumplir con las reglas aquí descritas. Este es un entorno educativo y tecnológico en fase de desarrollo, diseñado para potenciar la creación de contenido visual dinámico mediante bloques y asistencia de IA.`,
+        text: `Bienvenido a Pablito Expo, plataforma de edición y despliegue de presentaciones web interactivas, desarrollada por Samuel Y. Pablo Claudio (Grafiplot). Al registrarte y utilizar nuestras herramientas, aceptas cumplir con las reglas aquí descritas. Este es un entorno educativo y tecnológico en fase de desarrollo activo, diseñado para potenciar la creación de contenido visual dinámico mediante bloques inteligentes, recursos gráficos avanzados y asistencia de Inteligencia Artificial.`,
       },
       {
         heading: '2. Cuentas, Verificación y Seguridad',
         items: [
-          { label: 'Registro y OTP', text: 'Para acceder a funciones avanzadas (IA, bloques complejos, sistema de rangos), es obligatorio verificar la cuenta mediante un código OTP enviado a tu correo electrónico.' },
+          { label: 'Registro y OTP', text: 'Para acceder a funciones avanzadas (IA, bloques complejos, sistema de rangos), es obligatorio verificar la cuenta mediante un código OTP de un solo uso enviado a tu correo electrónico. Este mecanismo garantiza la integridad del sistema y previene el abuso de créditos computacionales.' },
+          { label: 'Rate Limiting y Anti-Spam', text: 'Para garantizar la estabilidad del servidor, se aplican políticas de limitación de velocidad (Rate Limiting). El sistema bloqueará temporalmente las solicitudes de OTP si detecta un comportamiento repetitivo o sospechoso. El intervalo mínimo entre solicitudes de código es de 60 segundos.' },
+          { label: 'Límite de Caracteres por Mensaje', text: 'El sistema limita los mensajes enviados a la IA a un máximo de 500 caracteres por consulta del usuario. Esta medida previene el "Bombeo de Tokens", que elevaría los costos operativos y perjudicaría la disponibilidad del servicio para toda la comunidad.' },
           { label: 'Identidad Única', text: 'El sistema utiliza identificadores técnicos anónimos del dispositivo para prevenir fraude, ataques de bots y asegurar la integridad del sistema de puntos. Este identificador no identifica a la persona, sino que vincula la actividad al equipo para evitar el abuso de créditos gratuitos. El usuario puede solicitar la eliminación de estos datos contactando al administrador.' },
-          { label: 'Responsabilidad', text: 'El usuario es responsable de la custodia de sus credenciales. No compartas tu acceso con terceros.' },
+          { label: 'Responsabilidad de Credenciales', text: 'El usuario es responsable de la custodia de sus credenciales de acceso. No compartas tu cuenta con terceros. Las contraseñas están cifradas y no son accesibles por el administrador del sistema.' },
         ],
       },
       {
-        heading: '3. Uso del Asistente "Pablito" y Sistema de Créditos',
+        heading: '3. El Asistente P.A.B.L.O. — Arquitectura Híbrida de IA',
+        text: 'El asistente P.A.B.L.O. (Planificación Avanzada de Bloques, Layouts y Operaciones) opera mediante una arquitectura de procesamiento distribuido que selecciona el motor de IA según el perfil de personalidad elegido por el usuario:',
         items: [
-          { label: 'Asistente Digital', text: 'El asistente Pablito (Pablo - Planificación de Tareas Complejas) utiliza la API de OpenAI. Cada consulta consume créditos de la billetera del usuario.' },
-          { label: 'Consumo y Niveles', text: 'Existen tres niveles de respuesta (Corta, Media y Larga). El costo en créditos se indica antes de cada consulta.' },
-          { label: 'Recargas', text: 'Las recargas de créditos para el asistente Pablito se gestionan de forma manual y directa (transferencia bancaria, Yape/Plin o efectivo).' },
-          { label: 'No Reembolsos', text: 'Una vez asignados los créditos, no existen reembolsos, salvo error verificable del sistema (ej. se descontaron créditos pero la IA no generó respuesta por un fallo técnico del servidor).' },
+          { label: 'Perfiles de Entretenimiento (El Brayan / El Renegón)', text: 'Procesados mediante la tecnología DeepSeek V3. Estos modelos están diseñados para emplear un lenguaje informal, altamente sarcástico y coloquial (jerga urbana peruana), con fines de parodia y entretenimiento. Al activar estos modos, el usuario acepta interactuar con una simulación de carácter satírico.' },
+          { label: 'Perfiles Académicos y Asistenciales (Catedrático, Científico)', text: 'Procesados mediante OpenAI GPT-5.4 Mini, enfocados en la precisión técnica, terminología académica y formalidad lingüística.' },
+          { label: 'Perfil de Motivación (Motivador)', text: 'Procesado mediante OpenAI GPT-5.4 Nano, optimizado para respuestas emocionales cortas y positivas.' },
+        ],
+      },
+      {
+        heading: '3.1. Exención de Responsabilidad por Tono y Contenido Generado',
+        text: 'Los modos de entretenimiento (El Brayan, El Renegón) utilizan lenguaje de barrio, sarcasmo e ironía urbana. Estos personajes son simulaciones algorítmicas de parodia cultural y no reflejan la opinión personal del desarrollador ni buscan promover discriminación real. Al activar dichos modos, el usuario acepta interactuar con un personaje satírico de ficción y libera al equipo de Grafiplot de cualquier responsabilidad por el tono de las respuestas generadas.\n\nAdemás, el sistema de IA puede cometer errores, producir "alucinaciones" o respuestas imprecisas. La plataforma no garantiza la exactitud de las respuestas generadas por ninguna de las personalidades.',
+      },
+      {
+        heading: '3.2. Contexto de Conversación y Privacidad de Chats',
+        items: [
+          { label: 'Ventana de Contexto', text: 'Para mantener el hilo de la conversación, el sistema envía al motor de IA únicamente los últimos 10 mensajes del chat activo. No se almacena historial permanente de conversaciones en el servidor.' },
+          { label: 'Almacenamiento Local de Chats', text: 'El historial de conversaciones (hasta 5 sesiones de chat, con un máximo de 10 mensajes cada una) se guarda exclusivamente en el almacenamiento local (localStorage) de tu navegador, vinculado a tu identificador de usuario. La plataforma no interfiere con estos datos locales.' },
+          { label: 'Control Total', text: 'El usuario puede eliminar manualmente cualquiera de sus conversaciones desde el panel del asistente en cualquier momento.' },
+        ],
+      },
+      {
+        heading: '3.3. Créditos de IA y Sostenibilidad del Proyecto',
+        items: [
+          { label: 'Créditos No Ilimitados', text: 'Debido a los costos operativos reales de las APIs de OpenAI y DeepSeek, los créditos de IA no son ilimitados. El consumo dependerá del nivel de verbosidad seleccionado: Corta, Media o Larga.' },
+          { label: 'Recargas', text: 'Las recargas de créditos se gestionan de forma directa (transferencia bancaria, Yape/Plin o efectivo). Cualquier apoyo económico es recibido como contribución al proyecto y puede otorgar beneficios exclusivos, como una mayor cuota de tokens disponibles.' },
+          { label: 'No Reembolsos', text: 'Una vez asignados los créditos, no existen reembolsos, salvo error verificable del sistema (ej: se descontaron créditos pero la IA no generó respuesta por un fallo técnico del servidor).' },
         ],
       },
       {
         heading: '4. Propiedad Intelectual e Imágenes',
         items: [
           { label: 'Contenido del Usuario', text: 'Los textos y la estructura de las presentaciones pertenecen al creador. Si el usuario decide "Publicar" su trabajo en la galería comunitaria, otorga permiso implícito para que otros usuarios puedan clonar dicho proyecto gratuitamente.' },
-          { label: 'Integración de Unsplash', text: 'El catálogo de imágenes es proporcionado por la API de Unsplash. Las imágenes pertenecen a sus respectivos autores. Las imágenes incluyen un enlace directo a la fuente original y el nombre del autor, respetando la Licencia de Unsplash. Está prohibido descargar o intentar comercializar las imágenes fuera del entorno de la presentación.' },
-          { label: 'Hotlinking', text: 'No almacenamos imágenes en nuestros servidores; estas cargan directamente desde Unsplash para garantizar la calidad y el cumplimiento de sus licencias.' },
-          { label: 'Contenido Generado por IA y Responsabilidad de Imágenes Externas', text: 'La plataforma permite importar estructuras generadas por asistentes de IA externos (ChatGPT, Gemini). Las imágenes vinculadas en estos contenidos no pertenecen al catálogo verificado de Unsplash. La plataforma no valida ni garantiza los derechos de uso de dichos enlaces. El usuario asume plena responsabilidad sobre su uso y se compromete a verificar sus licencias o reemplazarlas con el buscador integrado de Unsplash.' },
+          { label: 'Integración de Unsplash', text: 'El catálogo de imágenes es proporcionado por la API de Unsplash. Las imágenes pertenecen a sus respectivos autores y se muestran con atribución directa al fotógrafo y enlace a la fuente. Las búsquedas de imágenes son anónimas: no existe vínculo entre tu perfil y tus preferencias de búsqueda en servidores externos. Está prohibido comercializar las imágenes fuera del entorno de la presentación.' },
+          { label: 'Contenido Generado por IA Externa', text: 'La plataforma permite importar estructuras desde asistentes externos (ChatGPT, Gemini). Las imágenes vinculadas en esos contenidos no son validadas por Unsplash. El usuario asume plena responsabilidad sobre su uso y se compromete a verificar sus licencias o reemplazarlas con el buscador integrado.' },
         ],
       },
       {
@@ -42,12 +63,16 @@ const SECTIONS = [
         items: [
           { label: 'Puntos de Experiencia (XP)', text: 'Los usuarios ganan puntos por crear contenido real, invitar colaboradores y proyectar en vivo.' },
           { label: 'Anti-Farming', text: 'Queda prohibida la creación de secciones vacías o el uso de scripts para subir de rango artificialmente. El Administrador se reserva el derecho de resetear los puntos de cualquier cuenta fraudulenta.' },
-          { label: 'Límites', text: 'Las cuentas gratuitas tienen un límite de 5 presentaciones activas. Al subir de rango, se desbloquean más beneficios y temas visuales premium.' },
+          { label: 'Límites', text: 'Las cuentas gratuitas tienen un límite de 5 presentaciones activas. Al subir de rango se desbloquean beneficios adicionales y temas visuales premium.' },
         ],
       },
       {
-        heading: '6. Edad Mínima y Responsabilidad Legal',
-        text: 'El usuario debe ser mayor de 18 años para realizar recargas de créditos. En caso de ser menor de edad, deberá contar con la autorización y supervisión de un padre o tutor legal para cualquier transacción o uso de la plataforma.',
+        heading: '6. Financiamiento y Transparencia del Proyecto',
+        text: 'Pablito Expo es un proyecto independiente desarrollado con recursos propios. No vendemos, alquilamos ni comercializamos los datos de los usuarios con terceros. Nuestra única fuente de ingresos son las recargas directas de créditos y el apoyo voluntario de la comunidad. Cualquier donación se destina íntegramente al mantenimiento de la infraestructura (servidores, APIs y desarrollo continuo).',
+      },
+      {
+        heading: '7. Edad Mínima y Responsabilidad Legal',
+        text: 'El usuario debe ser mayor de 18 años para realizar recargas de créditos. En caso de ser menor, deberá contar con la autorización y supervisión de un padre o tutor legal para cualquier transacción o uso avanzado de la plataforma.',
       },
     ],
   },
@@ -57,32 +82,43 @@ const SECTIONS = [
     accent: '#a78bfa',
     content: [
       {
-        heading: '1. Recopilación de Datos',
+        heading: '1. Recopilación Minimalista de Datos',
+        text: 'En Pablito Expo aplicamos el principio de minimización de datos. Solo recolectamos lo estrictamente necesario para el funcionamiento del servicio:',
         items: [
-          { label: 'Datos de Registro', text: 'Correo electrónico y nombre de usuario proporcionados voluntariamente.' },
-          { label: 'Datos de Uso', text: 'Historial de presentaciones, créditos de IA consumidos, puntos de XP y rangos alcanzados.' },
-          { label: 'Seguridad', text: 'Identificador de hardware anónimo para prevenir fraudes y ataques de bots. No rastreamos tu navegación externa ni vendemos esta información a terceros.' },
+          { label: 'Identidad', text: 'Correo electrónico (para login y seguridad) y nombre de usuario único "Nigma", para que el asistente pueda dirigirse a ti de forma personalizada.' },
+          { label: 'Datos de Uso', text: 'Historial de presentaciones, créditos de IA consumidos y puntos de XP acumulados.' },
+          { label: 'Seguridad', text: 'Identificador de hardware anónimo para prevenir fraudes y ataques de bots. No rastreamos tu navegación externa.' },
         ],
       },
       {
-        heading: '2. Proveedores de Servicios (Terceros)',
-        text: 'Compartimos datos estrictamente necesarios con los siguientes proveedores:',
+        heading: '2. Interacción con Terceros (Aislamiento de Datos)',
+        text: 'Compartimos datos mínimos estrictamente necesarios con los siguientes proveedores. En ningún caso compartimos tu correo, IP real ni datos de cuenta con los motores de IA:',
         items: [
-          { label: 'Supabase', text: 'Almacenamiento seguro de la base de datos y autenticación.' },
-          { label: 'OpenAI', text: 'Procesamiento de las consultas enviadas a través del asistente "Pablito".' },
-          { label: 'Unsplash', text: 'Gestión de solicitudes de imágenes mediante su API.' },
+          { label: 'Supabase', text: 'Almacenamiento seguro de la base de datos, autenticación y ejecución de funciones en el servidor (Edge Functions). Actúa como intermediario entre tu navegador y los proveedores de IA.' },
+          { label: 'OpenAI (Catedrático, Científico, Motivador)', text: 'Solo se envía el contenido del mensaje (prompt) y el contexto inmediato de los últimos 10 mensajes. No enviamos tu correo, IP ni datos de cuenta.' },
+          { label: 'DeepSeek (El Brayan, El Renegón)', text: 'Igual que con OpenAI: solo el contenido del mensaje y el contexto. No compartimos ningún dato personal con este proveedor.' },
+          { label: 'Unsplash', text: 'Las búsquedas de imágenes son completamente anónimas. No existe ningún vínculo entre tu perfil y tus preferencias de búsqueda en sus servidores.' },
         ],
       },
       {
-        heading: '3. Protección y "Soft Delete"',
+        heading: '3. Memoria Efímera y Control de Conversaciones',
         items: [
-          { label: 'Papelera Secreta', text: 'Cuando eliminas una presentación, el sistema aplica un "Borrado Lógico". El contenido se oculta de tu vista y se archiva temporalmente. Esto permite recuperar tu trabajo en caso de ataques maliciosos de colaboradores o errores accidentales.' },
-          { label: 'Seguridad del Servidor', text: 'Utilizamos cifrado y túneles seguros para proteger la comunicación entre tu navegador y nuestra base de datos.' },
+          { label: 'Sin Historial Permanente en Servidor', text: 'El sistema no almacena historiales de conversación en nuestra base de datos. Solo se mantiene en memoria durante la sesión activa para enviar el contexto a la IA.' },
+          { label: 'Almacenamiento Local', text: 'Las conversaciones se guardan en el localStorage de tu propio navegador (máx. 5 chats, 10 mensajes c/u). Estos datos no abandonan tu dispositivo.' },
+          { label: 'Control Total', text: 'Puedes eliminar cualquier conversación desde el panel del asistente en cualquier momento usando el botón 🗑️ disponible en el historial.' },
+          { label: 'Nota sobre Caché', text: 'El sistema no interfiere con la memoria caché de tu navegador. La gestión de esos datos locales queda bajo control exclusivo del usuario.' },
         ],
       },
       {
-        heading: '4. Derechos del Usuario',
-        text: 'Puedes solicitar la eliminación permanente de tu cuenta y todos tus datos asociados en cualquier momento contactando directamente con el administrador del sistema.',
+        heading: '4. Protección y "Soft Delete"',
+        items: [
+          { label: 'Papelera Secreta', text: 'Cuando eliminas una presentación, el sistema aplica un "Borrado Lógico". El contenido se oculta de tu vista y se archiva temporalmente, permitiendo recuperarlo en caso de errores accidentales o ataques de colaboradores maliciosos.' },
+          { label: 'Seguridad del Servidor', text: 'Utilizamos cifrado y túneles seguros (HTTPS/TLS) para proteger la comunicación entre tu navegador y nuestra base de datos.' },
+        ],
+      },
+      {
+        heading: '5. Derechos del Usuario',
+        text: 'Puedes solicitar la eliminación permanente de tu cuenta y todos tus datos asociados en cualquier momento contactando directamente con el administrador del sistema. Esta solicitud se procesará en un plazo máximo de 72 horas hábiles.',
       },
     ],
   },
@@ -135,7 +171,7 @@ export default function TermsPage() {
                   {block.heading}
                 </h3>
                 {block.text && (
-                  <p style={{ margin: '0 0 12px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                     {block.text}
                   </p>
                 )}
