@@ -12,12 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
-      || Deno.env.get('open ai key')
-      || Deno.env.get('OPENAI_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('No se encontró la API Key de OpenAI. Configura el secreto como OPENAI_API_KEY en tu proyecto Supabase.');
-    }
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('open ai key') || Deno.env.get('OPENAI_KEY');
 
     const { prompt, currentSections, verbosity, personality, username, chatHistory, mode } = await req.json();
 
@@ -121,33 +117,52 @@ REGLAS STRICTAS:
 
     messages.push({ role: 'user', content: finalUserPrompt });
 
-    // Seleccionar el modelo de LLM adecuado según la personalidad
+    // Enrutador Bi-Motor Analítico (OpenAI vs DeepSeek)
     let aiModel = 'gpt-5.4-mini';
-    if (personality === 'motivador') {
-      aiModel = 'gpt-5.4-nano';
+    let apiUrl = 'https://api.openai.com/v1/chat/completions';
+    let apiKey = OPENAI_API_KEY;
+    let vendor = 'OpenAI';
+
+    if (personality === 'brayan' || personality === 'renegon') {
+        aiModel = 'deepseek-chat';
+        apiUrl = 'https://api.deepseek.com/chat/completions';
+        apiKey = DEEPSEEK_API_KEY;
+        vendor = 'DeepSeek';
+    } else if (personality === 'motivador') {
+        aiModel = 'gpt-5.4-nano';
     }
 
-    // Hacer la llamada a OpenAI
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    if (!apiKey) {
+        throw new Error(`Error Fatal Administrativo: No se encontró la API Key para el proveedor asignado (${vendor}). Verifica tus secretos en Supabase.`);
+    }
+
+    const payload: any = {
         model: aiModel,
         response_format: { type: "json_object" },
         messages: messages,
-        max_completion_tokens: 1500,
-        temperature: 1.1,
-      }),
+        temperature: 0.85,
+    };
+
+    if (vendor === 'DeepSeek') {
+        payload.max_tokens = 1500;
+    } else {
+        payload.max_completion_tokens = 1500;
+    }
+
+    const aiResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
     const data = await aiResponse.json();
 
     if (!aiResponse.ok) {
-      console.error("Error from OpenAI:", data);
-      throw new Error(data.error?.message || "Error en la API de OpenAI");
+      console.error(`Error from ${vendor}:`, data);
+      throw new Error(data.error?.message || `Error en la API híbrida de ${vendor}`);
     }
 
     const resultJsonText = data.choices[0].message.content;
