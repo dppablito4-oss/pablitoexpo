@@ -131,8 +131,8 @@ REGLAS STRICTAS:
         model: aiModel,
         response_format: { type: "json_object" },
         messages: messages,
-        max_tokens: 1500,
-        temperature: 0.95,
+        max_completion_tokens: 1500,
+        temperature: 1.1,
       }),
     });
 
