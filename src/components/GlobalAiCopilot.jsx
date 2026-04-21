@@ -43,6 +43,9 @@ export default function GlobalAiCopilot() {
   // Multi-Chat state
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+  
+  // HP state
+  const [userHP, setUserHP] = useState(0);
 
   // OTP state
   const [aiVerified, setAiVerified] = useState(false);
@@ -102,10 +105,11 @@ export default function GlobalAiCopilot() {
 
     // Cargar estado de la BD
     const loadProfileState = async () => {
-      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified').eq('id', user.id).single();
+      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified, hp').eq('id', user.id).single();
       if (data) {
         if (data.ai_personality) setPersonality(data.ai_personality);
         setAiVerified(!!data.ai_verified);
+        if (data.hp !== undefined) setUserHP(data.hp);
       }
     };
     loadProfileState();
@@ -210,6 +214,8 @@ export default function GlobalAiCopilot() {
           addMessage({ role: 'assistant', text: `⚡ Sin energía: ${hpResult.error}` });
           setIsGenerating(false);
           return;
+        } else {
+          setUserHP(hpResult.remainingHP);
         }
       }
 
@@ -341,11 +347,16 @@ export default function GlobalAiCopilot() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {/* Badge de HP */}
+              <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border mr-2 flex items-center gap-1 ${userHP > 20 ? 'text-green-400 border-green-400/30 bg-green-400/10' : userHP > 0 ? 'text-amber-400 border-amber-400/30 bg-amber-400/10' : 'text-red-400 border-red-400/30 bg-red-400/10'}`}>
+                ⚡ {userHP} HP
+              </div>
+              
               {/* Botón Historial de Chats */}
               <button
                 onClick={() => setShowChatList(!showChatList)}
                 title="Mis Chats"
-                className="text-neutral-500 hover:text-white transition-colors p-1 text-sm"
+                className={`transition-colors p-1 text-sm ${showChatList ? 'text-white' : 'text-neutral-500 hover:text-white'}`}
               >
                 🗂️
               </button>
