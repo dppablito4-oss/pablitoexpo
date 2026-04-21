@@ -11,11 +11,19 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // 🔥 WARM-UP PING: Responde instantáneamente para mantener la función "caliente"
+  const body = await req.text();
+  if (body === '{"ping":true}' || body.includes('"ping":true')) {
+    return new Response(JSON.stringify({ pong: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('open ai key') || Deno.env.get('OPENAI_KEY');
 
-    const { prompt, currentSections, verbosity, personality, username, chatHistory, mode } = await req.json();
+    const { prompt, currentSections, verbosity, personality, username, chatHistory, mode } = JSON.parse(body);
 
     if (!prompt) {
       throw new Error('El prompt del usuario está vacío');

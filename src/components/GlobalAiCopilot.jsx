@@ -175,6 +175,22 @@ export default function GlobalAiCopilot() {
     setShowChatList(false);
   };
 
+  const handleDeleteChat = (e, chatId) => {
+    e.stopPropagation(); // No abrir el chat al borrar
+    setChats(prev => {
+      const updated = prev.filter(c => c.id !== chatId);
+      if (updated.length === 0) {
+        // Si borras el único chat, crea uno nuevo vacío
+        const fresh = createNewChat(displayName);
+        setActiveChatId(fresh.id);
+        return [fresh];
+      }
+      // Si borras el chat activo, activa el primero de la lista
+      if (chatId === activeChatId) setActiveChatId(updated[0].id);
+      return updated;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim() || isGenerating) return;
@@ -337,14 +353,19 @@ export default function GlobalAiCopilot() {
             <div className="mt-3 bg-black/60 rounded-lg border border-neutral-800 overflow-hidden">
               <p className="text-[9px] text-neutral-500 uppercase tracking-widest px-3 py-1.5 border-b border-neutral-800">Chats recientes (máx. {MAX_CHATS})</p>
               {chats.map((chat) => (
-                <button
+                <div
                   key={chat.id}
                   onClick={() => handleSelectChat(chat.id)}
-                  className={`w-full text-left px-3 py-2 text-[10px] transition-colors truncate border-b border-neutral-900/50 last:border-0
+                  className={`flex items-center justify-between px-3 py-2 text-[10px] transition-colors border-b border-neutral-900/50 last:border-0 cursor-pointer
                     ${chat.id === activeChatId ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-white'}`}
                 >
-                  <span className="mr-2">💬</span>{chat.title}
-                </button>
+                  <span className="truncate flex-1"><span className="mr-2">💬</span>{chat.title}</span>
+                  <button
+                    onClick={(e) => handleDeleteChat(e, chat.id)}
+                    title="Eliminar chat"
+                    className="ml-2 shrink-0 text-neutral-600 hover:text-red-400 transition-colors"
+                  >🗑️</button>
+                </div>
               ))}
             </div>
           )}
