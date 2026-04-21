@@ -9,7 +9,7 @@ const SECTIONS = [
     content: [
       {
         heading: '1. Aceptación del Servicio',
-        text: `Bienvenido a Pablito Expo, plataforma de edición y despliegue de presentaciones web interactivas, desarrollada por Samuel Y. Pablo Claudio (Grafiplot). Al registrarte y utilizar nuestras herramientas, aceptas cumplir con las reglas aquí descritas. Este es un entorno educativo y tecnológico en fase de desarrollo activo, diseñado para potenciar la creación de contenido visual dinámico mediante bloques inteligentes, recursos gráficos avanzados y asistencia de Inteligencia Artificial.`,
+        text: `Bienvenido a Pablito Expo, plataforma de edición y despliegue de presentaciones web interactivas, desarrollada por Samuel Y. Pablo Claudio (pablitodp). Al registrarte y utilizar nuestras herramientas, aceptas cumplir con las reglas aquí descritas. Este es un entorno educativo y tecnológico en fase de desarrollo activo, diseñado para potenciar la creación de contenido visual dinámico mediante bloques inteligentes, recursos gráficos avanzados y asistencia de Inteligencia Artificial.`,
       },
       {
         heading: '2. Cuentas, Verificación y Seguridad',
@@ -32,7 +32,7 @@ const SECTIONS = [
       },
       {
         heading: '3.1. Exención de Responsabilidad por Tono y Contenido Generado',
-        text: 'Los modos de entretenimiento (El Brayan, El Renegón) utilizan lenguaje de barrio, sarcasmo e ironía urbana. Estos personajes son simulaciones algorítmicas de parodia cultural y no reflejan la opinión personal del desarrollador ni buscan promover discriminación real. Al activar dichos modos, el usuario acepta interactuar con un personaje satírico de ficción y libera al equipo de Grafiplot de cualquier responsabilidad por el tono de las respuestas generadas.\n\nAdemás, el sistema de IA puede cometer errores, producir "alucinaciones" o respuestas imprecisas. La plataforma no garantiza la exactitud de las respuestas generadas por ninguna de las personalidades.',
+        text: 'Los modos de entretenimiento (El Brayan, El Renegón) utilizan lenguaje de barrio, sarcasmo e ironía urbana. Estos personajes son simulaciones algorítmicas de parodia cultural y no reflejan la opinión personal del desarrollador ni buscan promover discriminación real. Al activar dichos modos, el usuario acepta interactuar con un personaje satírico de ficción y libera a Samuel Y. Pablo Claudio (pablitodp) de cualquier responsabilidad por el tono de las respuestas generadas.\n\nAdemás, el sistema de IA puede cometer errores, producir "alucinaciones" o respuestas imprecisas. La plataforma no garantiza la exactitud de las respuestas generadas por ninguna de las personalidades.',
       },
       {
         heading: '3.2. Contexto de Conversación y Privacidad de Chats',
@@ -71,8 +71,8 @@ const SECTIONS = [
         text: 'Pablito Expo es un proyecto independiente desarrollado con recursos propios. No vendemos, alquilamos ni comercializamos los datos de los usuarios con terceros. Nuestra única fuente de ingresos son las recargas directas de créditos y el apoyo voluntario de la comunidad. Cualquier donación se destina íntegramente al mantenimiento de la infraestructura (servidores, APIs y desarrollo continuo).',
       },
       {
-        heading: '7. Edad Mínima y Responsabilidad Legal',
-        text: 'El usuario debe ser mayor de 18 años para realizar recargas de créditos. En caso de ser menor, deberá contar con la autorización y supervisión de un padre o tutor legal para cualquier transacción o uso avanzado de la plataforma.',
+        heading: '7. Política de Menores',
+        text: 'El uso gratuito de la plataforma está permitido bajo supervisión. Sin embargo, las transacciones (como la recarga de créditos) son exclusivas para mayores de 18 años para asegurar un uso responsable.',
       },
     ],
   },
@@ -117,8 +117,27 @@ const SECTIONS = [
         ],
       },
       {
-        heading: '5. Derechos del Usuario',
-        text: 'Puedes solicitar la eliminación permanente de tu cuenta y todos tus datos asociados en cualquier momento contactando directamente con el administrador del sistema. Esta solicitud se procesará en un plazo máximo de 72 horas hábiles.',
+        heading: '5. Derechos del Usuario (ARCO)',
+        text: 'Puedes ejercer tus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición), o solicitar la eliminación permanente de tus datos (como tu Nigma o presentaciones) escribiendo a: pabloclsa87@gmail.com. Esta solicitud se procesará en un plazo máximo de 72 horas hábiles.',
+      },
+    ],
+  },
+  {
+    title: 'Disposiciones Finales',
+    icon: '🛡️',
+    accent: '#10b981',
+    content: [
+      {
+        heading: '1. Jurisdicción y Modificaciones',
+        text: 'Este contrato se rige por las leyes de la República del Perú. Cualquier controversia será resuelta en los juzgados de Huánuco. Samuel Y. Pablo Claudio se reserva el derecho de modificar estos términos para adaptarlos a nuevas funciones o cambios legales, notificando a los usuarios a través de la plataforma. El uso continuado del servicio implica la aceptación de los nuevos términos.',
+      },
+      {
+        heading: '2. Soporte y Contacto',
+        text: 'Para reportar fallos técnicos o ejercer tus derechos de rectificación y eliminación de datos, puedes contactar al administrador en: pabloclsa87@gmail.com',
+      },
+      {
+        heading: '3. Limitación de Responsabilidad Técnica',
+        text: 'Pablito Expo no garantiza disponibilidad del 100% y no se hace responsable por pérdidas de información debidas a fallos en proveedores externos (como OpenAI o DeepSeek) o caídas de red.',
       },
     ],
   },
