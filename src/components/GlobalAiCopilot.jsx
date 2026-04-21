@@ -251,14 +251,15 @@ export default function GlobalAiCopilot() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  const handleVerifyOTP = async (autoCode) => {
     if (isGenerating) return;
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.from('profiles').select('otp_code').eq('id', user.id).single();
       if (error) { alert('Fallo al consultar BBDD: ' + error.message); return; }
 
-      const cleanInput = otpInput.replace(/\s/g, '').trim();
+      const inputToUse = typeof autoCode === 'string' ? autoCode : otpInput;
+      const cleanInput = inputToUse.replace(/\s/g, '').trim();
       if (data?.otp_code === cleanInput) {
         await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
         setAiVerified(true);
@@ -277,8 +278,8 @@ export default function GlobalAiCopilot() {
     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
     setOtpInput(val);
     if (val.length === 6) {
-      // Disparar verificación automáticamente
-      setTimeout(() => handleVerifyOTP(), 200);
+      // Disparar verificación automáticamente pasándole el valor al instante
+      setTimeout(() => handleVerifyOTP(val), 200);
     }
   };
 
