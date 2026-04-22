@@ -20,7 +20,8 @@ export default function AdminPanel() {
   const [emailConfig, setEmailConfig] = useState({ smtp_email: '', smtp_app_password: '' });
   const [blastData, setBlastData] = useState({ target: 'ALL', subject: '', message: '' });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('users'); // users, logs, boveda, emails
+  const [activeTab, setActiveTab] = useState('users');
+  const [editingCredits, setEditingCredits] = useState({}); // { [userId]: valorTemporal }
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,23 +57,23 @@ export default function AdminPanel() {
   };
 
   // Acciones Administrativas
-  const handleModifyCredits = async (userId, currentCredits) => {
-    const amount = parseInt(prompt(`Créditos de IA actuales: ${currentCredits || 0}\n\nIngresa la cantidad a SUMAR (usa números negativos para restar):`), 10);
-    if (isNaN(amount)) return;
-    
-    // Sumativa y relativa
-    const newTotal = Math.max(0, (currentCredits || 0) + amount);
-
-    const { error } = await supabase.from('profiles').update({ ai_credits: newTotal }).eq('id', userId);
-    
+  const handleSaveCredits = async (userId, newValue) => {
+    const parsed = parseInt(newValue, 10);
+    if (isNaN(parsed) || parsed < 0) {
+      alert('Valor inválido. Ingresa un número entero positivo.');
+      return;
+    }
+    const { error } = await supabase.from('profiles').update({ ai_credits: parsed }).eq('id', userId);
     if (!error) {
-      // Registrar en Logs
       await supabase.from('security_logs').insert([{
-        action: 'CREDITS_MODIFIED', details: `Créditos actualizados: ${amount > 0 ? '+' : ''}${amount}. Total ahora: ${newTotal}.`, user_id: userId
+        action: 'CREDITS_MODIFIED',
+        details: `Créditos IA actualizados a ${parsed}.`,
+        user_id: userId
       }]);
-      fetchData(); // Refrescar vista
+      setEditingCredits(prev => { const n = {...prev}; delete n[userId]; return n; });
+      fetchData();
     } else {
-      alert("Error actualizando créditos: " + error.message);
+      alert('Error actualizando créditos: ' + error.message);
     }
   };
 
@@ -182,7 +183,30 @@ export default function AdminPanel() {
                           {u.role || 'user'}
                         </span>
                       </td>
-                      <td style={{ padding: '15px 10px', color: '#00f0ff', fontWeight: 'bold' }}>{u.ai_credits || 0}</td>
+                      <td style={{ padding: '15px 10px', color: '#00f0ff', fontWeight: 'bold' }}>
+                        {editingCredits[u.id] !== undefined ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input
+                              type="number" min="0"
+                              value={editingCredits[u.id]}
+                              onChange={e => setEditingCredits(prev => ({ ...prev, [u.id]: e.target.value }))}
+                              onKeyDown={e => { if (e.key === 'Enter') handleSaveCredits(u.id, editingCredits[u.id]); if (e.key === 'Escape') setEditingCredits(prev => { const n={...prev}; delete n[u.id]; return n; }); }}
+                              autoFocus
+                              style={{ width: '70px', padding: '4px 8px', background: 'rgba(0,240,255,0.1)', border: '1px solid rgba(0,240,255,0.4)', color: '#00f0ff', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}
+                            />
+                            <ActionBtn color="cyan" onClick={() => handleSaveCredits(u.id, editingCredits[u.id])}>✓</ActionBtn>
+                            <ActionBtn color="red" onClick={() => setEditingCredits(prev => { const n={...prev}; delete n[u.id]; return n; })}>✕</ActionBtn>
+                          </div>
+                        ) : (
+                          <span
+                            title="Click para editar"
+                            onClick={() => setEditingCredits(prev => ({ ...prev, [u.id]: u.ai_credits ?? 0 }))}
+                            style={{ cursor: 'pointer', borderBottom: '1px dashed rgba(0,240,255,0.4)', paddingBottom: '1px' }}
+                          >
+                            {u.ai_credits ?? 0}
+                          </span>
+                        )}
+                      </td>
                       <td style={{ padding: '15px 10px' }}>
                         <StatusBadge status={u.account_status || 'active'} />
                       </td>

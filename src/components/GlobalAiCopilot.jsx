@@ -357,11 +357,8 @@ export default function GlobalAiCopilot() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {/* Badge de Créditos IA */}
-              <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border mr-2 flex items-center gap-1 ${userCredits > 20 ? 'text-green-400 border-green-400/30 bg-green-400/10' : userCredits > 0 ? 'text-amber-400 border-amber-400/30 bg-amber-400/10' : 'text-red-400 border-red-400/30 bg-red-400/10'}`}>
-                ⚡ {userCredits} crd
-              </div>
               
+
               {/* Botón Historial de Chats */}
               <button
                 onClick={() => setShowChatList(!showChatList)}
