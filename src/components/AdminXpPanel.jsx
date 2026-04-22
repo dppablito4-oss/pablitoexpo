@@ -96,24 +96,32 @@ export default function AdminXpPanel() {
   const handleSaveCredits = async (userId, val) => {
     const parsed = parseInt(val, 10);
     if (isNaN(parsed) || parsed < 0) return alert('Valor inválido.');
-    const { error } = await supabase.from('profiles').update({ ai_credits: parsed }).eq('id', userId);
-    if (!error) {
-      await logAction('CREDITS_MODIFIED', `Créditos IA → ${parsed}`);
-      setEditingCredits(p => { const n={...p}; delete n[userId]; return n; });
-      loadData();
-    } else alert('Error: ' + error.message);
+    const { data, error } = await supabase.from('profiles').update({ ai_credits: parsed }).eq('id', userId).select('ai_credits');
+    if (error) return alert('Error BD: ' + error.message);
+    if (!data || data.length === 0) {
+      alert('⚠️ No se pudo actualizar. Verifica que la política RLS permita al admin editar perfiles ajenos.');
+      return;
+    }
+    await logAction('CREDITS_MODIFIED', `Créditos IA → ${parsed} para ${userId}`);
+    setEditingCredits(p => { const n={...p}; delete n[userId]; return n; });
+    // Actualizar localmente sin recargar la página
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ai_credits: parsed } : u));
   };
 
   const handleSaveXP = async (userId, val) => {
     const parsed = parseInt(val, 10);
     if (isNaN(parsed) || parsed < 0) return alert('Valor inválido.');
     const newLevel = getLevelFromXP(parsed, editThresholds.map(Number));
-    const { error } = await supabase.from('profiles').update({ xp: parsed, level: newLevel }).eq('id', userId);
-    if (!error) {
-      await logAction('XP_MODIFIED', `XP → ${parsed}, Nivel → ${newLevel}`);
-      setEditingXP(p => { const n={...p}; delete n[userId]; return n; });
-      loadData();
-    } else alert('Error: ' + error.message);
+    const { data, error } = await supabase.from('profiles').update({ xp: parsed, level: newLevel }).eq('id', userId).select('xp, level');
+    if (error) return alert('Error BD: ' + error.message);
+    if (!data || data.length === 0) {
+      alert('⚠️ No se pudo actualizar el XP. Verifica la política RLS en la tabla profiles.');
+      return;
+    }
+    await logAction('XP_MODIFIED', `XP → ${parsed}, Nivel → ${newLevel} para ${userId}`);
+    setEditingXP(p => { const n={...p}; delete n[userId]; return n; });
+    // Actualizar localmente sin recargar la página
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, xp: parsed, level: newLevel } : u));
   };
 
   const handleUpdateStatus = async (userId, email, currentStatus) => {
