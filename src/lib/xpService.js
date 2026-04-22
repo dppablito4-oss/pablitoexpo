@@ -245,31 +245,31 @@ export async function deductHP(supabase, userId, personality) {
       return { success: true, remainingHP: null }; // Acción sin costo definido, dejar pasar
     }
 
-    // 2. Leer HP actual
+    // 2. Leer créditos actuales (ai_credits)
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('hp')
+      .select('ai_credits')
       .eq('id', userId)
       .single();
 
     if (profileErr || !profile) {
-      return { success: false, error: 'No se pudo verificar tu HP.' };
+      return { success: false, error: 'No se pudo verificar tus créditos.' };
     }
 
-    const currentHP = profile.hp ?? 0;
+    const currentHP = profile.ai_credits ?? 0;
 
     if (currentHP < cost) {
       return {
         success: false,
-        error: `HP insuficiente. Necesitas ${cost} HP pero solo tienes ${currentHP}. Contacta al admin para recargar.`,
+        error: `Créditos insuficientes. Necesitas ${cost} pero solo tienes ${currentHP}. Pide al admin que te recargue.`,
       };
     }
 
-    // 3. Descontar
+    // 3. Descontar créditos
     const newHP = currentHP - cost;
     const { error: updateErr } = await supabase
       .from('profiles')
-      .update({ hp: newHP })
+      .update({ ai_credits: newHP })
       .eq('id', userId);
 
     if (updateErr) {

@@ -44,8 +44,9 @@ export default function GlobalAiCopilot() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   
-  // HP state
-  const [userHP, setUserHP] = useState(0);
+  
+  // Créditos IA state
+  const [userCredits, setUserCredits] = useState(0);
 
   // OTP state
   const [aiVerified, setAiVerified] = useState(false);
@@ -105,11 +106,11 @@ export default function GlobalAiCopilot() {
 
     // Cargar estado de la BD
     const loadProfileState = async () => {
-      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified, hp').eq('id', user.id).single();
+      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified, ai_credits').eq('id', user.id).single();
       if (data) {
         if (data.ai_personality) setPersonality(data.ai_personality);
         setAiVerified(!!data.ai_verified);
-        if (data.hp !== undefined) setUserHP(data.hp);
+        if (data.ai_credits !== undefined) setUserCredits(data.ai_credits);
       }
     };
     loadProfileState();
@@ -207,15 +208,15 @@ export default function GlobalAiCopilot() {
     setIsGenerating(true);
 
     try {
-      // ⚡ Verificar y descontar HP antes de llamar a la IA
+      // ⚡ Verificar y descontar créditos antes de llamar a la IA
       if (user?.id) {
         const hpResult = await deductHP(supabase, user.id, personality);
         if (!hpResult.success) {
-          addMessage({ role: 'assistant', text: `⚡ Sin energía: ${hpResult.error}` });
+          addMessage({ role: 'assistant', text: `⚡ ${hpResult.error}` });
           setIsGenerating(false);
           return;
         } else {
-          setUserHP(hpResult.remainingHP);
+          setUserCredits(hpResult.remainingHP);
         }
       }
 
@@ -343,7 +344,16 @@ export default function GlobalAiCopilot() {
                   </h3>
                   <span className="text-[8px] bg-indigo-950 text-indigo-400 border border-indigo-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">GLOBAL</span>
                 </div>
-                <p className="text-[9px] text-neutral-600 mt-0.5 italic">Tu asistente virtual</p>
+                <p className="text-[9px] text-neutral-600 mt-0.5 italic flex items-center gap-1.5">
+                  Tu asistente virtual
+                  <span className={`font-bold not-italic px-1.5 py-0.5 rounded text-[8px] ${
+                    userCredits <= 0 ? 'bg-red-900/50 text-red-400 border border-red-700/40' :
+                    userCredits <= 20 ? 'bg-amber-900/50 text-amber-400 border border-amber-700/40' :
+                    'bg-emerald-900/40 text-emerald-400 border border-emerald-700/30'
+                  }`}>
+                    ⚡ {userCredits} créditos
+                  </span>
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
