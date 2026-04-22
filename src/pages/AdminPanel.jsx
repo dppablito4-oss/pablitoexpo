@@ -14,14 +14,12 @@ const C = {
 };
 
 export default function AdminPanel() {
-  const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
   const [presentations, setPresentations] = useState([]);
   const [emailConfig, setEmailConfig] = useState({ smtp_email: '', smtp_app_password: '' });
   const [blastData, setBlastData] = useState({ target: 'ALL', subject: '', message: '' });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('users');
-  const [editingCredits, setEditingCredits] = useState({}); // { [userId]: valorTemporal }
+  const [activeTab, setActiveTab] = useState('xp');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,12 +29,7 @@ export default function AdminPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'users') {
-        // En un entorno de Producción estricto, consultar auth.users directamente requiría Admin API de Supabase, 
-        // pero gracias al trigger tenemos un espejo en public.profiles que podemos consultar todos.
-        const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-        if (!error && data) setUsers(data);
-      } else if (activeTab === 'logs') {
+      if (activeTab === 'logs') {
         const { data, error } = await supabase.from('security_logs').select('*').order('created_at', { ascending: false }).limit(50);
         if (!error && data) setLogs(data);
       } else if (activeTab === 'boveda') {
@@ -56,46 +49,6 @@ export default function AdminPanel() {
     }
   };
 
-  // Acciones Administrativas
-  const handleSaveCredits = async (userId, newValue) => {
-    const parsed = parseInt(newValue, 10);
-    if (isNaN(parsed) || parsed < 0) {
-      alert('Valor inválido. Ingresa un número entero positivo.');
-      return;
-    }
-    const { error } = await supabase.from('profiles').update({ ai_credits: parsed }).eq('id', userId);
-    if (!error) {
-      await supabase.from('security_logs').insert([{
-        action: 'CREDITS_MODIFIED',
-        details: `Créditos IA actualizados a ${parsed}.`,
-        user_id: userId
-      }]);
-      setEditingCredits(prev => { const n = {...prev}; delete n[userId]; return n; });
-      fetchData();
-    } else {
-      alert('Error actualizando créditos: ' + error.message);
-    }
-  };
-
-  const handleUpdateStatus = async (userId, userEmail, currentStatus) => {
-    const validStatuses = ['active', 'suspended', 'banned'];
-    const newStatus = prompt(`Usuario: ${userEmail}\nEstado Actual: ${currentStatus || 'active'}\n\nEscribe el nuevo estado (active, suspended, banned):`, currentStatus || 'active');
-    
-    if (!newStatus || !validStatuses.includes(newStatus)) {
-      alert("Estado no válido. Operación cancelada.");
-      return;
-    }
-
-    if (newStatus === currentStatus) return;
-
-    if (window.confirm(`¿Seguro que deseas cambiar el estado de este creador a ${newStatus.toUpperCase()}?`)) {
-      const { error } = await supabase.from('profiles').update({ account_status: newStatus }).eq('id', userId);
-      if (!error) {
-        await supabase.from('security_logs').insert([{ action: 'STATUS_CHANGED', details: `Estado cambiado a ${newStatus}`, user_id: userId }]);
-        fetchData();
-      }
-    }
-  };
 
   const handleSaveEmailConfig = async () => {
     if (!emailConfig.smtp_email || !emailConfig.smtp_app_password) return alert('No dejes los campos vacíos.');
@@ -145,13 +98,11 @@ export default function AdminPanel() {
         </button>
       </div>
 
-      {/* Navegación Interna */}
       <div style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
-        <TabBtn active={activeTab === 'users'} onClick={() => setActiveTab('users')}>👥 Habitantes</TabBtn>
+        <TabBtn active={activeTab === 'xp'} onClick={() => setActiveTab('xp')}>👥 Habitantes & XP</TabBtn>
         <TabBtn active={activeTab === 'logs'} onClick={() => setActiveTab('logs')}>⚠️ Security Logs</TabBtn>
         <TabBtn active={activeTab === 'boveda'} onClick={() => setActiveTab('boveda')}>👁️ Bóveda Global</TabBtn>
         <TabBtn active={activeTab === 'emails'} onClick={() => setActiveTab('emails')}>📧 Emisor Corporativo</TabBtn>
-        <TabBtn active={activeTab === 'xp'} onClick={() => setActiveTab('xp')}>⭐ XP System</TabBtn>
       </div>
 
       {/* Contenido Principal */}
@@ -161,68 +112,7 @@ export default function AdminPanel() {
           <div style={{ textAlign: 'center', color: C.gold, marginTop: '100px', fontSize: '1.2rem', animation: 'pulse 2s infinite' }}>Accediendo a la matriz...</div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-            
-            {/* VIEW: USUARIOS */}
-            {activeTab === 'users' && (
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${C.border}`, color: C.gold, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                    <th style={{ padding: '15px 10px' }}>Email</th>
-                    <th style={{ padding: '15px 10px' }}>Rol</th>
-                    <th style={{ padding: '15px 10px' }}>Créditos IA</th>
-                    <th style={{ padding: '15px 10px' }}>Estado</th>
-                    <th style={{ padding: '15px 10px', textAlign: 'right' }}>Acciones Ejecutivas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,215,0,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <td style={{ padding: '15px 10px', fontWeight: '500' }}>{u.email}</td>
-                      <td style={{ padding: '15px 10px' }}>
-                        <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '11px', background: u.role === 'superadmin' ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)', color: u.role === 'superadmin' ? C.gold : '#aaa' }}>
-                          {u.role || 'user'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '15px 10px', color: '#00f0ff', fontWeight: 'bold' }}>
-                        {editingCredits[u.id] !== undefined ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <input
-                              type="number" min="0"
-                              value={editingCredits[u.id]}
-                              onChange={e => setEditingCredits(prev => ({ ...prev, [u.id]: e.target.value }))}
-                              onKeyDown={e => { if (e.key === 'Enter') handleSaveCredits(u.id, editingCredits[u.id]); if (e.key === 'Escape') setEditingCredits(prev => { const n={...prev}; delete n[u.id]; return n; }); }}
-                              autoFocus
-                              style={{ width: '70px', padding: '4px 8px', background: 'rgba(0,240,255,0.1)', border: '1px solid rgba(0,240,255,0.4)', color: '#00f0ff', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold' }}
-                            />
-                            <ActionBtn color="cyan" onClick={() => handleSaveCredits(u.id, editingCredits[u.id])}>✓</ActionBtn>
-                            <ActionBtn color="red" onClick={() => setEditingCredits(prev => { const n={...prev}; delete n[u.id]; return n; })}>✕</ActionBtn>
-                          </div>
-                        ) : (
-                          <span
-                            title="Click para editar"
-                            onClick={() => setEditingCredits(prev => ({ ...prev, [u.id]: u.ai_credits ?? 0 }))}
-                            style={{ cursor: 'pointer', borderBottom: '1px dashed rgba(0,240,255,0.4)', paddingBottom: '1px' }}
-                          >
-                            {u.ai_credits ?? 0}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '15px 10px' }}>
-                        <StatusBadge status={u.account_status || 'active'} />
-                      </td>
-                      <td style={{ padding: '15px 10px', textAlign: 'right' }}>
-                        {u.role !== 'superadmin' && (
-                          <div style={{ display: 'inline-flex', gap: '8px' }}>
-                            <ActionBtn color="cyan" onClick={() => handleModifyCredits(u.id, u.ai_credits)}>+ / - IA</ActionBtn>
-                            <ActionBtn color="red" onClick={() => handleUpdateStatus(u.id, u.email, u.account_status)}>Castigar</ActionBtn>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+
 
             {/* VIEW: LOGS DE SEGURIDAD */}
             {activeTab === 'logs' && (
