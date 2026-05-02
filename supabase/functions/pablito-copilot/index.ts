@@ -153,7 +153,7 @@ REGLAS STRICTAS:
     let vendor = 'OpenAI';
 
     if (['brayan', 'renegon', 'toxica', 'pituca'].includes(personality)) {
-        aiModel = 'deepseek-reasoner'; // Usando el modelo R1 de razonamiento
+        aiModel = 'deepseek-chat'; // Usando el modelo de chat rápido (V3)
         apiUrl = 'https://api.deepseek.com/v1/chat/completions';
         apiKey = DEEPSEEK_API_KEY;
         vendor = 'DeepSeek';
@@ -167,17 +167,14 @@ REGLAS STRICTAS:
 
     const payload: any = {
         model: aiModel,
+        response_format: { type: "json_object" },
         messages: messages,
+        temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
     };
 
     if (vendor === 'OpenAI') {
-        payload.response_format = { type: "json_object" };
-        payload.temperature = 0.85;
         payload.max_completion_tokens = 1500;
     } else {
-        // DeepSeek R1 (deepseek-reasoner) NO soporta response_format json_object 
-        // y requiere que el output se controle vía prompt. 
-        // Su temperatura ideal la maneja el modelo internamente.
         payload.max_tokens = 2000;
     }
 
