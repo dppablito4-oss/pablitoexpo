@@ -24,14 +24,21 @@ function SectionBlock({ section }) {
   const height = section.height || 100;
   const elements = section.elements || [];
 
+  // El editor asume una pantalla de PC estándar (16:9).
+  // Si height es 100 (100vh), el aspect-ratio es 16/9.
+  // Si el usuario modificó height a 200, el aspect-ratio es 16/18.
+  // De esta forma respetamos la deformación/tamaño exacto que hizo en el editor.
+  const verticalRatio = 9 * (height / 100);
+
   return (
     <div
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: `${height}vh`,
+        aspectRatio: `16 / ${verticalRatio}`,
         overflow: 'hidden',
         backgroundColor: '#0a0a0f',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
       }}
     >
       {/* Background image */}
