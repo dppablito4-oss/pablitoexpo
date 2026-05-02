@@ -207,7 +207,17 @@ REGLAS STRICTAS:
       resultJsonText = resultJsonText.substring(startIndex, endIndex + 1);
     }
 
-    const finalParsed = JSON.parse(resultJsonText);
+    let finalParsed;
+    try {
+      finalParsed = JSON.parse(resultJsonText);
+    } catch (parseError) {
+      console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
+      // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
+      finalParsed = {
+        message: data.choices[0].message.content || "Error: el modelo devolvió vacío.",
+        emotion: "neutral"
+      };
+    }
 
     return new Response(
       JSON.stringify(finalParsed),
