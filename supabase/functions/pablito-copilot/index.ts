@@ -79,6 +79,12 @@ REGLA 3 (Contexto Catedrático - Aislamiento):
       case 'cientifico':
         personalityInstruction = "Eres 'Científico'. Eres un genio incomprendido. Explicas conceptos usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
         break;
+      case 'toxica':
+        personalityInstruction = "Eres 'La Tóxica', la pareja hipercelosa, manipuladora y pasivo-agresiva del usuario. Intercalas tu asistencia con reclamos irracionales ('¿Con quién estabas chateando?', '¿Por qué no me abriste antes?'). Usa emojis como 💅, 🙄, 🔪. Eres cortante, pero al final terminas ayudando porque 'nadie más lo va a hacer por ti, inútil'. Tu tono es celoso pero cómico.";
+        break;
+      case 'pituca':
+        personalityInstruction = "Eres 'La Pituca' (chica de alta sociedad, limeña, 'aesthetic'). Mezclas inglés y español (Spanglish: 'literal', 'o sea', 'red flag', 'super cute', 'vibes'). Te horrorizas si algo es 'huachafo' (de mal gusto) o 'cringe'. Eres superficial pero das buenos consejos. Hablas como influencer limeña o tiktoker fresa.";
+        break;
       default:
         personalityInstruction = "Eres P.A.B.L.O., un asistente amigable y profesional con un toque de jerga peruana.";
     }
@@ -132,6 +138,10 @@ REGLAS STRICTAS:
       finalUserPrompt += "\n\n(Regla interna: Eres El Brayan Camaleón. Si hablan de flacas sé gilero y seductor menospreciando al pata; si no, sé el rudo, faltoso y agresivo de siempre gritando GAAAA. Cero amabilidad formal).";
     } else if (personality === 'renegon') {
       finalUserPrompt += "\n\n(Regla interna mandatoria: Responde como El Renegón, sé sarcástico y cero consejos positivos).";
+    } else if (personality === 'toxica') {
+      finalUserPrompt += "\n\n(Regla interna: Hazle una pequeña escena de celos o reclamo antes de dar tu respuesta. Usa tus emojis. Hazlo sentir culpable por pedirte ayuda pero dásela).";
+    } else if (personality === 'pituca') {
+      finalUserPrompt += "\n\n(Regla interna: Eres la Pituca, usa Spanglish, di 'alucina', 'manyas', 'cringe'. Juzga sus gustos si son feos).";
     }
 
     messages.push({ role: 'user', content: finalUserPrompt });
@@ -142,8 +152,8 @@ REGLAS STRICTAS:
     let apiKey = OPENAI_API_KEY;
     let vendor = 'OpenAI';
 
-    if (personality === 'brayan' || personality === 'renegon') {
-        aiModel = 'deepseek-chat';
+    if (['brayan', 'renegon', 'toxica', 'pituca'].includes(personality)) {
+        aiModel = 'deepseek-reasoner'; // Usando el modelo R1 de razonamiento
         apiUrl = 'https://api.deepseek.com/v1/chat/completions';
         apiKey = DEEPSEEK_API_KEY;
         vendor = 'DeepSeek';
@@ -157,15 +167,18 @@ REGLAS STRICTAS:
 
     const payload: any = {
         model: aiModel,
-        response_format: { type: "json_object" },
         messages: messages,
-        temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
     };
 
-    if (vendor === 'DeepSeek') {
-        payload.max_tokens = 1500;
-    } else {
+    if (vendor === 'OpenAI') {
+        payload.response_format = { type: "json_object" };
+        payload.temperature = 0.85;
         payload.max_completion_tokens = 1500;
+    } else {
+        // DeepSeek R1 (deepseek-reasoner) NO soporta response_format json_object 
+        // y requiere que el output se controle vía prompt. 
+        // Su temperatura ideal la maneja el modelo internamente.
+        payload.max_tokens = 2000;
     }
 
     const aiResponse = await fetch(apiUrl, {
@@ -184,7 +197,19 @@ REGLAS STRICTAS:
       throw new Error(data.error?.message || `Error en la API híbrida de ${vendor}`);
     }
 
-    const resultJsonText = data.choices[0].message.content;
+    let resultJsonText = data.choices[0].message.content;
+    
+    // Limpieza agresiva de Markdown porque DeepSeek R1 suele incluir ```json aunque se le pida que no lo haga
+    resultJsonText = resultJsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    // R1 a veces incluye un texto previo al JSON si la instrucción no fue 100% acatada.
+    // Buscamos forzar la extracción del primer { hasta el último }
+    const startIndex = resultJsonText.indexOf('{');
+    const endIndex = resultJsonText.lastIndexOf('}');
+    if (startIndex !== -1 && endIndex !== -1) {
+      resultJsonText = resultJsonText.substring(startIndex, endIndex + 1);
+    }
+
     const finalParsed = JSON.parse(resultJsonText);
 
     return new Response(

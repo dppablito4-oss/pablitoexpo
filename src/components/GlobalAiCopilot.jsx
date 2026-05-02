@@ -9,7 +9,9 @@ const PERSONALITIES = {
   renegon: { id: 'renegon', emoji: '⚡', name: 'El Renegón', color: 'linear-gradient(135deg, #ef4444, #b91c1c)', tooltip: 'Está estresado porque no ha dormido. Te va a trolear si tu diapo está tela. Úsalo si aguantas el sarcasmo.' },
   catedratico: { id: 'catedratico', emoji: '🎓', name: 'Catedrático', color: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', tooltip: 'Tu asesor de tesis personal. Se enfoca en la ortografía y la jerarquía visual impecable.' },
   motivador: { id: 'motivador', emoji: '🚀', name: 'Motivador', color: 'linear-gradient(135deg, #f59e0b, #d97706)', tooltip: 'Tu fan número uno. Para él, todo lo que haces es arte. Te va a dar ánimos constantes.' },
-  cientifico: { id: 'cientifico', emoji: '⚛️', name: 'Científico', color: 'linear-gradient(135deg, #10b981, #047857)', tooltip: 'Un genio incomprendido que explicará el diseño usando la mecánica cuántica y física.' }
+  cientifico: { id: 'cientifico', emoji: '⚛️', name: 'Científico', color: 'linear-gradient(135deg, #10b981, #047857)', tooltip: 'Un genio incomprendido que explicará el diseño usando la mecánica cuántica y física.' },
+  toxica: { id: 'toxica', emoji: '💅', name: 'La Tóxica', color: 'linear-gradient(135deg, #ec4899, #be185d)', tooltip: 'Tu asistente celosa y dramática. Te ayudará, pero primero te hará una escena de celos por no escribirle.' },
+  pituca: { id: 'pituca', emoji: '💁‍♀️', name: 'La Pituca', color: 'linear-gradient(135deg, #f472b6, #db2777)', tooltip: 'Habla Spanglish, todo es aesthetic. Te ayudará si tu diseño no da cringe o es muy huachafo.' }
 };
 
 const MAX_CHATS = 5;
@@ -367,6 +369,18 @@ export default function GlobalAiCopilot() {
               >
                 🗂️
               </button>
+              {/* Botón Limpiar Chat Actual */}
+              <button
+                onClick={() => {
+                  if (window.confirm('¿Estás seguro de limpiar los mensajes de este chat?')) {
+                    updateActiveChat(c => ({ ...c, messages: [{ role: 'assistant', text: `🧹 Chat reiniciado. Cuéntame, ¿qué necesitas ahora, ${displayName}?` }] }));
+                  }
+                }}
+                title="Limpiar Chat Actual"
+                className="text-neutral-500 hover:text-amber-400 transition-colors p-1 text-sm"
+              >
+                🧹
+              </button>
               {/* Botón Nuevo Chat */}
               <button
                 onClick={handleNewChat}
@@ -426,14 +440,28 @@ export default function GlobalAiCopilot() {
           </div>
 
           {chatHistory.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[88%] rounded-xl p-3 text-xs leading-relaxed whitespace-pre-line
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group relative`}>
+              <div className={`max-w-[88%] rounded-xl p-3 text-xs leading-relaxed whitespace-pre-line relative
                 ${msg.role === 'user'
                   ? 'text-white rounded-tr-sm'
                   : 'bg-neutral-800/80 text-neutral-300 border border-neutral-700/40 rounded-tl-sm'}`}
                 style={msg.role === 'user' ? { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' } : {}}
               >
                 {msg.text}
+                {msg.role === 'assistant' && (
+                  <button
+                    onClick={(e) => {
+                      navigator.clipboard.writeText(msg.text);
+                      const btn = e.currentTarget;
+                      btn.innerText = '✅';
+                      setTimeout(() => btn.innerText = '📋', 2000);
+                    }}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-neutral-900/80 hover:bg-neutral-950 text-white p-1 rounded backdrop-blur-sm text-[10px] shadow-lg border border-neutral-700/50"
+                    title="Copiar mensaje"
+                  >
+                    📋
+                  </button>
+                )}
               </div>
             </div>
           ))}
