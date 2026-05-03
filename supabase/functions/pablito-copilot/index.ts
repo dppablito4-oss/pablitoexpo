@@ -129,7 +129,15 @@ REGLAS STRICTAS:
     ];
 
     if (chatHistory && Array.isArray(chatHistory)) {
-      messages.push(...chatHistory);
+      const formattedHistory = chatHistory.map(msg => {
+        // Para que DeepSeek no se confunda al tener 'response_format: json_object',
+        // el historial del asistente también debe verse como JSON puro.
+        if (msg.role === 'assistant') {
+          return { role: 'assistant', content: JSON.stringify({ message: msg.content }) };
+        }
+        return msg;
+      });
+      messages.push(...formattedHistory);
     }
 
     // TÉCNICA: Inyección de personalidad al final del último mensaje del usuario para evitar que el LLM se "suavice"
@@ -216,9 +224,11 @@ REGLAS STRICTAS:
       }
     } catch (parseError) {
       console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
+      let fallbackText = data.choices[0].message.content || "Error: el modelo devolvió vacío.";
+      if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄)";
       // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
       finalParsed = {
-        message: data.choices[0].message.content || "Error: el modelo devolvió vacío.",
+        message: fallbackText,
         emotion: "neutral"
       };
     }
