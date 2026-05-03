@@ -210,6 +210,10 @@ REGLAS STRICTAS:
     let finalParsed;
     try {
       finalParsed = JSON.parse(resultJsonText);
+      // Validar si el JSON fue válido pero el modelo se hizo el gracioso devolviendo texto vacío o solo espacios
+      if (!finalParsed.message || finalParsed.message.trim() === '') {
+        finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). Intenta decirme otra cosa.";
+      }
     } catch (parseError) {
       console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
       // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
