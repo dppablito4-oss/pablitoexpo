@@ -208,12 +208,12 @@ REGLAS STRICTAS:
       finalParsed = JSON.parse(resultJsonText);
       // Validar si el JSON fue válido pero el modelo se hizo el gracioso devolviendo texto vacío o solo espacios
       if (!finalParsed.message || finalParsed.message.trim() === '') {
-        finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). reporta el error al dev.";
+        finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). reporta el error al dev, (ERROR 101).";
       }
     } catch (parseError) {
       console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
       let fallbackText = data.choices[0].message.content || "Error: el modelo devolvió vacío.";
-      if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄) reporta el error como (error 101)";
+      if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄) reporta el error como (ERROR 101)";
       // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
       finalParsed = {
         message: fallbackText,
