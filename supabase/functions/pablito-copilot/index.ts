@@ -21,7 +21,6 @@ serve(async (req) => {
 
   try {
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || Deno.env.get('open ai key') || Deno.env.get('OPENAI_KEY');
 
     const { prompt, currentSections, verbosity, personality, username, chatHistory, mode } = JSON.parse(body);
 
@@ -154,23 +153,14 @@ REGLAS STRICTAS:
 
     messages.push({ role: 'user', content: finalUserPrompt });
 
-    // Enrutador Bi-Motor Analítico (OpenAI vs DeepSeek)
-    let aiModel = 'gpt-5.4-mini';
-    let apiUrl = 'https://api.openai.com/v1/chat/completions';
-    let apiKey = OPENAI_API_KEY;
-    let vendor = 'OpenAI';
-
-    if (['brayan', 'renegon', 'toxica', 'pituca'].includes(personality)) {
-        aiModel = 'deepseek-chat'; // Usando el modelo de chat rápido (V3)
-        apiUrl = 'https://api.deepseek.com/v1/chat/completions';
-        apiKey = DEEPSEEK_API_KEY;
-        vendor = 'DeepSeek';
-    } else if (personality === 'motivador') {
-        aiModel = 'gpt-5.4-nano';
-    }
+    // ── Motor único: DeepSeek para todas las personalidades ──────────────────
+    const aiModel = 'deepseek-chat'; // DeepSeek V3 — rápido y barato
+    const apiUrl  = 'https://api.deepseek.com/v1/chat/completions';
+    const apiKey  = DEEPSEEK_API_KEY;
+    const vendor  = 'DeepSeek';
 
     if (!apiKey) {
-        throw new Error(`Error Fatal Administrativo: No se encontró la API Key para el proveedor asignado (${vendor}). Verifica tus secretos en Supabase.`);
+        throw new Error(`Error Fatal Administrativo: No se encontró la API Key de DeepSeek. Verifica el secreto DEEPSEEK_API_KEY en Supabase.`);
     }
 
     const payload: any = {
