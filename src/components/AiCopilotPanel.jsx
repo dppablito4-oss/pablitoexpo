@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../config/supabase';
+import { useAuth } from '../context/AuthContext';
 import { deductHP } from '../lib/xpService';
+
 const PERSONALITIES = {
   brayan: { id: 'brayan', emoji: '🧢', name: 'El Brayan', color: 'linear-gradient(135deg, #a855f7, #6366f1)', tooltip: 'Habla como tu pata de la pichanga. Te ayuda con confianza, mucha jerga peruana y cero filtros.' },
   renegon: { id: 'renegon', emoji: '⚡', name: 'El Renegón', color: 'linear-gradient(135deg, #ef4444, #b91c1c)', tooltip: 'Está estresado porque no ha dormido. Te va a trolear si tu diapo está tela. Úsalo si aguantas el sarcasmo.' },
