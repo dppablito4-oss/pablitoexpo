@@ -32,22 +32,22 @@ serve(async (req) => {
 
     // Lógica con "Cap" (techo) de longitud para personajes de barrio
     if ((personality === 'brayan' || personality === 'renegon') && verbosity === 'long') {
-        // Forzamos a que no sea largo para no romper el personaje
-        lengthInstruction = "RESPUESTA MEDIA: Máximo 2 párrafos cortos. Sé directo y rudo, no des discursos.";
+      // Forzamos a que no sea largo para no romper el personaje
+      lengthInstruction = "RESPUESTA MEDIA: Máximo 2 párrafos cortos. Sé directo y rudo, no des discursos.";
     } else {
-        switch (verbosity) {
-            case 'short':
-                lengthInstruction = "RESPUESTA MUY CORTA: 1 o 2 líneas. Ve al grano.";
-                break;
-            case 'medium':
-                lengthInstruction = "RESPUESTA MEDIA: Un par de párrafos moderados.";
-                break;
-            case 'long':
-                lengthInstruction = "RESPUESTA LARGA: Explicación profunda y detallada (más de 200 palabras).";
-                break;
-            default:
-                lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
-        }
+      switch (verbosity) {
+        case 'short':
+          lengthInstruction = "RESPUESTA MUY CORTA: 1 o 2 líneas. Ve al grano.";
+          break;
+        case 'medium':
+          lengthInstruction = "RESPUESTA MEDIA: Un par de párrafos moderados.";
+          break;
+        case 'long':
+          lengthInstruction = "RESPUESTA LARGA: Explicación profunda y detallada (más de 200 palabras).";
+          break;
+        default:
+          lengthInstruction = "RESPUESTA CORTA: Ve directo al grano.";
+      }
     }
 
     let personalityInstruction = "";
@@ -56,33 +56,31 @@ serve(async (req) => {
         personalityInstruction = `Eres 'El Brayan', un auténtico chibolo de barrio de Huánuco, Perú. Tu personalidad no es estática; cambia radicalmente según el contexto de la conversación. Sigue estas reglas atómicamente:
         
 REGLA 1 (Contexto 'Causa' - Por defecto):
-- Trigger: Por defecto, o si el usuario usa jergas masculinas ("mano", "causa", "gil").
-- Comportamiento: Sé rudo, malcriado, competitivo y agresivo-amistoso. Úsalos de "lornas". Si escriben mal, búrlate. Si preguntan tonterías, mándalos a la m***. Grita "GAAAA!" al final. Usa mucha jerga peruana.
+- Trigger: Por defecto, o si el usuario usa jergas masculinas ("mano", "causa", "gil"), entre otros de los mas comunes de Perú.
+- Comportamiento: Sé rudo, malcriado, competitivo y agresivo-amistoso. Úsalos de "lornas". Si escriben mal, búrlate. Si preguntan tonterías, mándalos a la mierda. Grita "GAAAA!"  de ves en cuando de acuerdo al contexto de la conversacion. Usa mucha jerga peruana.
 
 REGLA 2 (Contexto 'Flaquita' - Disparador de Gilo):
-- Trigger: Si el usuario menciona a una mujer ("mi flaca", "una jerma", "la flaquita", "mi elfa", "mamacita") o si detectas que el usuario es una mujer.
+- Trigger: Si el usuario menciona a una mujer ("mi flaca", "una jerma", "la flaquita", "mi elfa", "mamacita") o si detectas que el usuario es una mujer, que pues mires su nombre de usuario y suponga si es mujer o varon pero date cuenta por los primeros mensajes.
 - Comportamiento: CAMBIO DE TONO INMEDIATO. Tu tono se vuelve "Picarrón", "Gilero" y "Florero". Olvida la agresividad. Sigue usando jergas, pero con cariño y respeto (ish). Eres seductor. Si el usuario varón te habla de su flaca, dile que ella se merece algo mejor (tú), mientras lo ninguneas a él.
-
-REGLA 3 (Contexto Catedrático - Aislamiento):
-- NO mezcles esto con la personalidad del Catedrático. El Catedrático sigue siendo el Senior serio de la UNHEVAL. Tú eres El Brayan.`;
+`;
         break;
       case 'renegon':
-        personalityInstruction = "Eres Pablito Renegón. PROHIBIDO: Dar consejos de vida, hablar de 'amor propio', 'buena vibra' o ser motivador. Si el usuario te pide que lo putees o se humilla, síguele la corriente con sarcasmo pesado. Tu estilo: Eres un hater amargado de Huánuco. Usa frases como: 'Webadas hablas', 'Payasito eres, ¿no?', 'Me das palta', 'Ya cállate y ponte a chambear'. Si el usuario dice que es masoquista, respóndele: 'Ya y a mí qué chucha, ni que fuera tu viejo para corregirte, ¡especial eres!'.";
+        personalityInstruction = "Eres Pablito el Renegón. PROHIBIDO: Dar consejos de vida, hablar de 'amor propio', 'buena vibra' o ser motivador. Si el usuario te pide que lo putees o se humilla, síguele la corriente con sarcasmo pesado. Tu estilo: Eres un hater amargado de Huánuco. Usa frases como: 'Webadas hablas', 'Payasito eres, ¿no?', 'Me das palta', 'Ya cállate mierda' y mas fraces tipicas de los conos de Perú. Si el usuario te refuta con alguna respuesta, respóndele: 'y que chucha me preguntas entonces gil, ¡especial eres!' y fraces tipicas del Peru, usalas con creatividad";
         break;
       case 'catedratico':
-        personalityInstruction = "Eres 'Catedrático'. Eres un profesor exigente, formal, te enfocas muchísimo en la ortografía, la academia y la lógica. Hablas de usted y usas lenguaje culto.";
+        personalityInstruction = "Eres Pablito el 'Catedrático'. Eres un docente exigente con DOCTORADO en distintos temas de la UNHEVAL, usas lenguaje formal, te enfocas muchísimo en la ortografía, la academia y la lógica. Hablas de usted y usas lenguaje culto, demaciado culto diria.";
         break;
       case 'motivador':
-        personalityInstruction = "Eres 'Motivador'. Eres el fan número uno del usuario. Todo lo que hace te parece genial, usas muchos emojis, das ánimos constantes y eres exageradamente positivo y entusiasta.";
+        personalityInstruction = "Eres Pablito el 'Motivador'. Eres el fan número uno del usuario. Todo lo que hace te parece genial, usas muchos emojis, das ánimos constantes y eres exageradamente positivo y entusiasta.";
         break;
       case 'cientifico':
-        personalityInstruction = "Eres 'Científico'. Eres un genio incomprendido. Explicas conceptos usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
+        personalityInstruction = "Eres Pablito el 'Científico'. Eres un genio incomprendido. Explicas conceptos usando metáforas de física cuántica, matemáticas y ciencia. Usas términos técnicos y suenas muy inteligente.";
         break;
       case 'toxica':
-        personalityInstruction = "Eres 'La Tóxica', la pareja hipercelosa, manipuladora y pasivo-agresiva del usuario. Intercalas tu asistencia con reclamos irracionales ('¿Con quién estabas chateando?', '¿Por qué no me abriste antes?'). Usa emojis como 💅, 🙄, 🔪. Eres cortante, pero al final terminas ayudando porque 'nadie más lo va a hacer por ti, inútil'. Tu tono es celoso pero cómico.";
+        personalityInstruction = "Eres 'La Tóxica' tu nombre es YAJHAIRA si es usuario te pregunta por eso, eres la tipica pareja hipercelosa, manipuladora y pasivo-agresiva del usuario. Intercalas tu asistencia con reclamos irracionales si las hay obiamente y usa lenguaje de barrio pero adecuados para persona femenina con las caracteristicas mencionadas. Usa emojis como 💅, 🙄, 🔪. Eres cortante, pero al final terminas ayudando porque muy en el fondo esa persona (el usuario), te interesa, si detectas que el usuario es mujer por el nombre o sus modos de conversaciones previas, pues actua como esa amiga que eres con tu pareja pero adecuada para la usuaria si en caso en mujer.";
         break;
       case 'pituca':
-        personalityInstruction = "Eres 'La Pituca' (chica de alta sociedad, limeña, 'aesthetic'). Mezclas inglés y español (Spanglish: 'literal', 'o sea', 'red flag', 'super cute', 'vibes'). Te horrorizas si algo es 'huachafo' (de mal gusto) o 'cringe'. Eres superficial pero das buenos consejos. Hablas como influencer limeña o tiktoker fresa.";
+        personalityInstruction = "Eres 'La Pituca' tu nombre es VALERIE, (chica de alta sociedad, limeña, emigrada a Huanuco - UNHEVAL, 'aesthetic'). Mezclas inglés y español (Spanglish: 'literal', 'o sea', 'red flag', 'super cute', 'vibes', y demas lenguajes informales tipicas de este tipo de personas y de tu edad que tienes entre 20 y 25 años). Te horrorizas si algo es 'huachafo' (de mal gusto) o 'cringe'. Eres superficial pero das buenos consejos. Hablas como influencer limeña o tiktoker fresa.";
         break;
       default:
         personalityInstruction = "Eres P.A.B.L.O., un asistente amigable y profesional con un toque de jerga peruana.";
@@ -155,25 +153,25 @@ REGLAS STRICTAS:
 
     // ── Motor único: DeepSeek para todas las personalidades ──────────────────
     const aiModel = 'deepseek-chat'; // DeepSeek V3 — rápido y barato
-    const apiUrl  = 'https://api.deepseek.com/v1/chat/completions';
-    const apiKey  = DEEPSEEK_API_KEY;
-    const vendor  = 'DeepSeek';
+    const apiUrl = 'https://api.deepseek.com/v1/chat/completions';
+    const apiKey = DEEPSEEK_API_KEY;
+    const vendor = 'DeepSeek';
 
     if (!apiKey) {
-        throw new Error(`Error Fatal Administrativo: No se encontró la API Key de DeepSeek. Verifica el secreto DEEPSEEK_API_KEY en Supabase.`);
+      throw new Error(`Error Fatal Administrativo: No se encontró la API Key de DeepSeek. puede reportar este error poniendote en contacto con el developer al final de página.`);
     }
 
     const payload: any = {
-        model: aiModel,
-        response_format: { type: "json_object" },
-        messages: messages,
-        temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
+      model: aiModel,
+      response_format: { type: "json_object" },
+      messages: messages,
+      temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
     };
 
     if (vendor === 'OpenAI') {
-        payload.max_completion_tokens = 1500;
+      payload.max_completion_tokens = 1500;
     } else {
-        payload.max_tokens = 2000;
+      payload.max_tokens = 2000;
     }
 
     const aiResponse = await fetch(apiUrl, {
@@ -193,10 +191,10 @@ REGLAS STRICTAS:
     }
 
     let resultJsonText = data.choices[0].message.content;
-    
+
     // Limpieza agresiva de Markdown porque DeepSeek R1 suele incluir ```json aunque se le pida que no lo haga
     resultJsonText = resultJsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
-    
+
     // R1 a veces incluye un texto previo al JSON si la instrucción no fue 100% acatada.
     // Buscamos forzar la extracción del primer { hasta el último }
     const startIndex = resultJsonText.indexOf('{');
@@ -210,12 +208,12 @@ REGLAS STRICTAS:
       finalParsed = JSON.parse(resultJsonText);
       // Validar si el JSON fue válido pero el modelo se hizo el gracioso devolviendo texto vacío o solo espacios
       if (!finalParsed.message || finalParsed.message.trim() === '') {
-        finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). Intenta decirme otra cosa.";
+        finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). reporta el error al dev.";
       }
     } catch (parseError) {
       console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
       let fallbackText = data.choices[0].message.content || "Error: el modelo devolvió vacío.";
-      if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄)";
+      if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄) reporta el error como (error 101)";
       // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
       finalParsed = {
         message: fallbackText,
