@@ -41,6 +41,7 @@ export const DEFAULT_HP_COSTS = {
   motivador: 5,
   image_mini: 10,
   image_pro: 25,
+  quiz: 5,
 };
 
 // ─── FUNCIONES PURAS ─────────────────────────────────────────────────────────

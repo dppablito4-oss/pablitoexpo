@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../config/supabase';
+import { deductHP } from '../lib/xpService';
 
 const EDGE_FN_URL = 'https://wraogfketbdpfmrpfwfb.supabase.co/functions/v1/bright-responder';
 const SUPABASE_ANON_KEY = 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
@@ -14,6 +15,17 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
   const [isOpen,        setIsOpen]        = useState(false);
   const [error,         setError]         = useState('');
   const [questionCount, setQuestionCount] = useState(0);
+  const [userCredits,   setUserCredits]   = useState(0);
+
+  // Load credits on mount or when user changes
+  useEffect(() => {
+    const loadCredits = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase.from('profiles').select('ai_credits').eq('id', user.id).single();
+      if (data && data.ai_credits !== undefined) setUserCredits(data.ai_credits);
+    };
+    loadCredits();
+  }, [user?.id]);
 
   const generateQuestion = useCallback(async () => {
     setLoading(true);
@@ -24,6 +36,18 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
     setZoomed(false);
 
     try {
+      // ⚡ Verificar y descontar créditos antes de llamar a la IA
+      if (user?.id) {
+        const hpResult = await deductHP(supabase, user.id, 'quiz');
+        if (!hpResult.success) {
+          setError(`⚡ ${hpResult.error}`);
+          setLoading(false);
+          return;
+        } else {
+          setUserCredits(hpResult.remainingHP);
+        }
+      }
+
       // Get the current session token (required for JWT-verified Edge Functions)
       const { data: { session } } = await supabase.auth.getSession();
       const authToken = session?.access_token || SUPABASE_ANON_KEY;
@@ -157,6 +181,15 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
                   <span style={{ fontSize: '0.875rem' }}>🧠</span>
                   <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#67e8f9', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     Pregunta IA #{questionCount}
+                  </span>
+                  <span style={{
+                    fontSize: '9px', fontWeight: 'bold',
+                    background: userCredits <= 5 ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)',
+                    color: userCredits <= 5 ? '#f87171' : '#34d399',
+                    padding: '2px 6px', borderRadius: '4px',
+                    marginLeft: '8px', border: '1px solid currentColor', opacity: 0.8
+                  }}>
+                    ⚡ {userCredits}
                   </span>
                 </div>
                 <button
