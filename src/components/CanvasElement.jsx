@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { TextContent, ImageContent, MetricContent } from './ElementRenderer';
+import {
+  TextContent, ImageContent, MetricContent,
+  TimelineContent, ComparisonContent, FormulaContent,
+  CodeContent, BentoContent, CounterContent, BlockquoteContent,
+} from './ElementRenderer';
 
 const HANDLE = {
   width: 10, height: 10,
@@ -13,7 +17,6 @@ export default function CanvasElement({
   el, isSelected, onSelect, onUpdate, onDelete, containerRef,
 }) {
   const [editing, setEditing] = useState(false);
-
   const [cSize, setCSize] = useState({ w: 800, h: 500 });
 
   useEffect(() => {
@@ -42,6 +45,33 @@ export default function CanvasElement({
     if (el.type === 'text') setEditing(true);
   };
 
+  // Map element type to the matching renderer component
+  function renderContent() {
+    switch (el.type) {
+      case 'text':
+        return (
+          <TextContent
+            el={el}
+            editing={editing}
+            onContentChange={(txt) => {
+              onUpdate(el.id, { content: txt });
+              setEditing(false);
+            }}
+          />
+        );
+      case 'image':      return <ImageContent      el={el} />;
+      case 'metric':     return <MetricContent     el={el} />;
+      case 'timeline':   return <TimelineContent   el={el} />;
+      case 'comparison': return <ComparisonContent el={el} />;
+      case 'formula':    return <FormulaContent    el={el} />;
+      case 'code':       return <CodeContent       el={el} />;
+      case 'bento':      return <BentoContent      el={el} />;
+      case 'counter':    return <CounterContent    el={el} />;
+      case 'blockquote': return <BlockquoteContent el={el} />;
+      default:           return null;
+    }
+  }
+
   return (
     <Rnd
       size={{ width: toPx(el.w, cW()), height: toPx(el.h, cH()) }}
@@ -58,7 +88,7 @@ export default function CanvasElement({
         x: Math.max(0,  toPct(pos.x, cW())),
         y: Math.max(0,  toPct(pos.y, cH())),
       })}
-      onClick={(e) => { e.stopPropagation(); }} // prevent double selection if pointerdown handled it
+      onClick={(e) => { e.stopPropagation(); }}
       onPointerDown={handleClick}
       onDoubleClick={handleDblClick}
       bounds="parent"
@@ -86,21 +116,10 @@ export default function CanvasElement({
           position: 'relative',
           background: isSelected ? 'rgba(34,211,238,0.03)' : 'transparent',
           boxShadow: isSelected ? '0 0 0 3px rgba(34,211,238,0.07)' : 'none',
+          overflow: 'hidden',
         }}
       >
-        {/* Content */}
-        {el.type === 'text' && (
-          <TextContent
-            el={el}
-            editing={editing}
-            onContentChange={(txt) => {
-              onUpdate(el.id, { content: txt });
-              setEditing(false);
-            }}
-          />
-        )}
-        {el.type === 'image'  && <ImageContent  el={el} />}
-        {el.type === 'metric' && <MetricContent el={el} />}
+        {renderContent()}
 
         {/* Type badge */}
         {isSelected && (
@@ -110,6 +129,7 @@ export default function CanvasElement({
             padding: '1px 6px', borderRadius: '3px 3px 0 0',
             fontWeight: 'bold', letterSpacing: '0.05em',
             textTransform: 'uppercase', whiteSpace: 'nowrap',
+            zIndex: 410,
           }}>
             {el.type}{el.type === 'text' ? ' · dbl clic para editar' : ''}
           </div>
@@ -124,7 +144,7 @@ export default function CanvasElement({
               width: 20, height: 20,
               background: '#ef4444', border: '2px solid #7f1d1d',
               borderRadius: '50%', color: 'white',
-              fontSize: 11, cursor: 'pointer', zIndex: 400,
+              fontSize: 11, cursor: 'pointer', zIndex: 410,
               display: 'flex', alignItems: 'center',
               justifyContent: 'center', lineHeight: 1, padding: 0,
             }}

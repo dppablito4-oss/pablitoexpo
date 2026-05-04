@@ -45,8 +45,8 @@ export default function GlobalAiCopilot() {
   // Multi-Chat state
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
-  
-  
+
+
   // Créditos IA state
   const [userCredits, setUserCredits] = useState(0);
 
@@ -283,7 +283,7 @@ export default function GlobalAiCopilot() {
       if (data?.otp_code === codeToVerify) {
         await supabase.from('profiles').update({ ai_verified: true, otp_code: null }).eq('id', user.id);
         setAiVerified(true);
-        addMessage({ role: 'assistant', text: `🚀 ¡Candado deshabilitado! Permisos de IA otorgados con éxito.` });
+        addMessage({ role: 'assistant', text: `🚀 ¡VERIFICASTE TU CUENTA! Permisos de IA otorgados con éxito.` });
       } else {
         alert(`Código denegado.\nEn BD: ${data?.otp_code || 'nulo'}\nTu intento: ${codeToVerify}`);
         setOtpInput('');
@@ -348,18 +348,17 @@ export default function GlobalAiCopilot() {
                 </div>
                 <p className="text-[9px] text-neutral-600 mt-0.5 italic flex items-center gap-1.5">
                   Tu asistente virtual
-                  <span className={`font-bold not-italic px-1.5 py-0.5 rounded text-[8px] ${
-                    userCredits <= 0 ? 'bg-red-900/50 text-red-400 border border-red-700/40' :
+                  <span className={`font-bold not-italic px-1.5 py-0.5 rounded text-[8px] ${userCredits <= 0 ? 'bg-red-900/50 text-red-400 border border-red-700/40' :
                     userCredits <= 20 ? 'bg-amber-900/50 text-amber-400 border border-amber-700/40' :
-                    'bg-emerald-900/40 text-emerald-400 border border-emerald-700/30'
-                  }`}>
+                      'bg-emerald-900/40 text-emerald-400 border border-emerald-700/30'
+                    }`}>
                     ⚡ {userCredits} créditos
                   </span>
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              
+
 
               {/* Botón Historial de Chats */}
               <button
@@ -562,7 +561,7 @@ export default function GlobalAiCopilot() {
                   </button>
                 </div>
               )}
-              <p className="text-[9px] text-neutral-500 text-center leading-tight">Debido a nuestras políticas anti-spam, debes verificar tu correo antes de usar P.A.B.L.O.</p>
+              <p className="text-[9px] text-neutral-500 text-center leading-tight">Debido a nuestras políticas anti-spam, debes verificar tu correo antes de usar al asistente P.A.B.L.O.</p>
             </div>
           )}
         </div>

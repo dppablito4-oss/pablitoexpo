@@ -169,6 +169,12 @@ function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch }) {
               onChange={e => upd({ opacity: +e.target.value })}
               className="w-full accent-cyan-500" />
           </div>
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
+            <input type="checkbox" checked={s.autoFit !== false}
+              onChange={e => upd({ autoFit: e.target.checked })}
+              className="accent-cyan-500" />
+            Auto-fit: llenar el recuadro
+          </label>
         </div>
       )}
 
@@ -867,6 +873,7 @@ export default function Editor() {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundColor: '#0a0a0f',
+                    containerType: 'inline-size',
                   }}
                 >
 

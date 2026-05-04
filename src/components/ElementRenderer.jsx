@@ -1,20 +1,83 @@
 import { motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import UnsplashBadge from './UnsplashBadge';
 
+// ── Scale helper ───────────────────────────────────────────────────────────────
+// Reference canvas: 1600px wide = 100cqw → 1cqw = 16px
+// Stored fontSize (px at 1600px ref) → cqw for any container size
+const toCqw = (px) => `${((px || 16) / 16).toFixed(3)}cqw`;
+
+// ── useFitText hook ────────────────────────────────────────────────────────────
+// Binary-searches the largest fontSize (in cqw) that fits inside the element.
+// Returns a CSS fontSize string. Only active when enabled=true.
+function useFitText(ref, content, maxFontPx, enabled) {
+  const [fontSize, setFontSize] = useState(toCqw(maxFontPx));
+
+  const compute = useCallback(() => {
+    if (!enabled || !ref.current) return;
+    const el = ref.current;
+    const H = el.clientHeight;
+    const W = el.clientWidth;
+    if (!H || !W) return;
+
+    let lo = 4, hi = maxFontPx;
+    // binary search in px, then convert result to cqw
+    for (let i = 0; i < 18; i++) {
+      const mid = (lo + hi) / 2;
+      el.style.fontSize = `${mid}px`;
+      const overflows = el.scrollHeight > H + 2 || el.scrollWidth > W + 2;
+      if (overflows) hi = mid;
+      else lo = mid;
+    }
+    el.style.fontSize = ''; // clear inline — we'll apply via state
+
+    // Convert fitted px to cqw relative to the section container
+    // cqw = px / containerWidth * 100
+    // We walk up to find the container (the one with container-type)
+    let containerW = W; // fallback: element's own width
+    let node = el.parentElement;
+    while (node) {
+      const ct = getComputedStyle(node).containerType;
+      if (ct && ct !== 'normal') { containerW = node.clientWidth; break; }
+      node = node.parentElement;
+    }
+    const fitCqw = containerW > 0 ? (lo / containerW) * 100 : lo / 16;
+    setFontSize(`${fitCqw.toFixed(3)}cqw`);
+  }, [content, maxFontPx, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !ref.current) {
+      setFontSize(toCqw(maxFontPx));
+      return;
+    }
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, [compute, enabled, maxFontPx]);
+
+  return fontSize;
+}
+
 // ── Text ─────────────────────────────────────────────────────────────────────
 export function TextContent({ el, editing = false, onContentChange }) {
   const s = el.style || {};
+  const ref = useRef(null);
+  const autoFit = s.autoFit !== false; // default ON
+  const maxFontPx = s.fontSize || 28;
+  const fittedSize = useFitText(ref, el.content, maxFontPx, autoFit && !editing);
+
   return (
     <div
+      ref={ref}
       contentEditable={editing}
       suppressContentEditableWarning
       onBlur={editing ? (e) => onContentChange?.(e.currentTarget.innerText) : undefined}
       style={{
         width: '100%', height: '100%',
-        fontSize: s.fontSize ? `${s.fontSize}px` : '28px',
+        fontSize: autoFit && !editing ? fittedSize : toCqw(maxFontPx),
         fontWeight: s.fontWeight || 'normal',
         color: s.color || '#ffffff',
         textAlign: s.textAlign || 'left',
@@ -22,7 +85,7 @@ export function TextContent({ el, editing = false, onContentChange }) {
         lineHeight: 1.25,
         cursor: editing ? 'text' : 'default',
         outline: 'none',
-        overflow: 'visible',
+        overflow: autoFit ? 'hidden' : 'visible',
         textShadow: '0 2px 20px rgba(0,0,0,0.9)',
         userSelect: editing ? 'text' : 'none',
         fontFamily: s.fontFamily || 'inherit',
@@ -46,7 +109,7 @@ export function ImageContent({ el }) {
       <div style={{
         width: '100%', height: '100%', display: 'flex', alignItems: 'center',
         justifyContent: 'center', border: '2px dashed #444', borderRadius: '8px',
-        color: '#555', fontSize: '11px', textAlign: 'center', padding: '8px',
+        color: '#555', fontSize: toCqw(11), textAlign: 'center', padding: '8px',
       }}>
         🖼️ Pega URL en el inspector →
       </div>
@@ -78,7 +141,7 @@ export function MetricContent({ el }) {
       paddingTop: '14px', borderTop: '2px solid rgba(255,255,255,0.15)',
     }}>
       <div style={{
-        fontSize: `${s.fontSize || 64}px`,
+        fontSize: toCqw(s.fontSize || 64),
         fontWeight: '900', lineHeight: 1, letterSpacing: '-0.02em',
         background: 'linear-gradient(to bottom, #ffffff, #888888)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -86,14 +149,14 @@ export function MetricContent({ el }) {
         {el.val || '?'}
       </div>
       <div style={{
-        fontSize: '13px', fontWeight: '700', color: '#22d3ee',
-        marginTop: '8px', letterSpacing: '0.15em', textTransform: 'uppercase',
+        fontSize: toCqw(13), fontWeight: '700', color: '#22d3ee',
+        marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase',
       }}>
         {el.title || 'MÉTRICA'}
       </div>
       <div style={{
-        fontSize: '11px', color: '#6b7280', fontFamily: 'monospace',
-        textTransform: 'uppercase', marginTop: '4px', letterSpacing: '0.05em',
+        fontSize: toCqw(11), color: '#6b7280', fontFamily: 'monospace',
+        textTransform: 'uppercase', marginTop: '0.25cqw', letterSpacing: '0.05em',
       }}>
         {el.desc || ''}
       </div>
@@ -106,13 +169,13 @@ export function TimelineContent({ el }) {
   const items = el.items || [];
   const accentColor = el.style?.color || '#22d3ee';
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '8px 0' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0.5cqw 0', overflow: 'hidden' }}>
       {el.title && (
-        <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginBottom: '16px', letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: toCqw(18), fontWeight: '800', color: '#fff', marginBottom: '1cqw', letterSpacing: '-0.02em' }}>
           {el.title}
         </div>
       )}
-      <div style={{ position: 'relative', paddingLeft: '28px' }}>
+      <div style={{ position: 'relative', paddingLeft: '1.75cqw', flex: 1, overflow: 'hidden' }}>
         {/* Vertical line */}
         <motion.div
           initial={{ height: 0 }}
@@ -120,7 +183,7 @@ export function TimelineContent({ el }) {
           transition={{ duration: 1.2, ease: 'easeOut' }}
           viewport={{ once: false }}
           style={{
-            position: 'absolute', left: '8px', top: 0,
+            position: 'absolute', left: '0.5cqw', top: 0,
             width: '2px', background: `linear-gradient(to bottom, ${accentColor}, transparent)`,
           }}
         />
@@ -131,24 +194,24 @@ export function TimelineContent({ el }) {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.15, duration: 0.5 }}
             viewport={{ once: false, amount: 0.3 }}
-            style={{ marginBottom: i < items.length - 1 ? '20px' : 0, position: 'relative' }}
+            style={{ marginBottom: i < items.length - 1 ? '1.25cqw' : 0, position: 'relative' }}
           >
             {/* Node dot */}
             <div style={{
-              position: 'absolute', left: '-24px', top: '4px',
-              width: '12px', height: '12px', borderRadius: '50%',
-              background: accentColor,
-              boxShadow: `0 0 12px ${accentColor}`,
+              position: 'absolute', left: '-1.5cqw', top: '0.25cqw',
+              width: '0.75cqw', height: '0.75cqw', borderRadius: '50%',
+              background: accentColor, boxShadow: `0 0 12px ${accentColor}`,
               border: '2px solid rgba(0,0,0,0.6)',
+              minWidth: '8px', minHeight: '8px',
             }} />
-            <div style={{ fontSize: '11px', fontWeight: '800', color: accentColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: toCqw(11), fontWeight: '800', color: accentColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {item.year || item.date || ''}
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginTop: '2px' }}>
+            <div style={{ fontSize: toCqw(15), fontWeight: '700', color: '#fff', marginTop: '0.1cqw' }}>
               {item.title || ''}
             </div>
             {item.desc && (
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px', lineHeight: 1.4 }}>
+              <div style={{ fontSize: toCqw(12), color: 'rgba(255,255,255,0.5)', marginTop: '0.1cqw', lineHeight: 1.4 }}>
                 {item.desc}
               </div>
             )}
@@ -159,11 +222,11 @@ export function TimelineContent({ el }) {
   );
 }
 
-// ── Comparison (Tech Grid) ────────────────────────────────────────────────────
+// ── Comparison ────────────────────────────────────────────────────────────────
 export function ComparisonContent({ el }) {
   const columns = el.columns || [];
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', gap: '0.75cqw', alignItems: 'stretch', overflow: 'hidden' }}>
       {columns.map((col, i) => (
         <motion.div
           key={i}
@@ -176,21 +239,21 @@ export function ComparisonContent({ el }) {
             background: 'rgba(255,255,255,0.04)',
             backdropFilter: 'blur(12px)',
             border: `1px solid ${col.color || 'rgba(255,255,255,0.1)'}33`,
-            borderRadius: '14px', padding: '18px', overflow: 'hidden',
+            borderRadius: '0.875cqw', padding: '1.125cqw', overflow: 'hidden',
           }}
         >
           <div style={{
-            fontSize: '16px', fontWeight: '800', color: col.color || '#fff',
-            marginBottom: '12px', letterSpacing: '-0.02em',
+            fontSize: toCqw(16), fontWeight: '800', color: col.color || '#fff',
+            marginBottom: '0.75cqw', letterSpacing: '-0.02em',
             borderBottom: `2px solid ${col.color || 'rgba(255,255,255,0.15)'}`,
-            paddingBottom: '8px',
+            paddingBottom: '0.5cqw',
           }}>
             {col.title || `Opción ${i + 1}`}
           </div>
           {(col.items || []).map((item, j) => (
             <div key={j} style={{
-              fontSize: '13px', color: 'rgba(255,255,255,0.7)',
-              padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+              fontSize: toCqw(13), color: 'rgba(255,255,255,0.7)',
+              padding: '0.375cqw 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
               lineHeight: 1.4,
             }}>
               {item}
@@ -211,10 +274,7 @@ export function FormulaContent({ el }) {
   useEffect(() => {
     if (ref.current) {
       try {
-        katex.render(formula, ref.current, {
-          displayMode: true, throwOnError: false,
-          output: 'html',
-        });
+        katex.render(formula, ref.current, { displayMode: true, throwOnError: false, output: 'html' });
       } catch {
         ref.current.textContent = formula;
       }
@@ -229,15 +289,15 @@ export function FormulaContent({ el }) {
       <div
         ref={ref}
         style={{
-          fontSize: `${el.style?.fontSize || 32}px`,
+          fontSize: toCqw(el.style?.fontSize || 32),
           color: el.style?.color || '#ffffff',
           filter: 'drop-shadow(0 0 20px rgba(34,211,238,0.3))',
         }}
       />
       {label && (
         <div style={{
-          fontSize: '12px', color: 'rgba(255,255,255,0.4)',
-          marginTop: '10px', fontStyle: 'italic', letterSpacing: '0.04em',
+          fontSize: toCqw(12), color: 'rgba(255,255,255,0.4)',
+          marginTop: '0.625cqw', fontStyle: 'italic', letterSpacing: '0.04em',
         }}>
           {label}
         </div>
@@ -253,28 +313,28 @@ export function CodeContent({ el }) {
   return (
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      background: '#0d1117', borderRadius: '12px', overflow: 'hidden',
+      background: '#0d1117', borderRadius: '0.75cqw', overflow: 'hidden',
       border: '1px solid rgba(255,255,255,0.08)',
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
     }}>
       {/* macOS titlebar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '6px',
-        padding: '10px 14px', background: 'rgba(255,255,255,0.03)',
+        padding: '0.625cqw 0.875cqw', background: 'rgba(255,255,255,0.03)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f57' }} />
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#febc2e' }} />
-        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
-        <span style={{ marginLeft: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+        <div style={{ width: '0.625cqw', height: '0.625cqw', minWidth: '8px', minHeight: '8px', borderRadius: '50%', background: '#ff5f57' }} />
+        <div style={{ width: '0.625cqw', height: '0.625cqw', minWidth: '8px', minHeight: '8px', borderRadius: '50%', background: '#febc2e' }} />
+        <div style={{ width: '0.625cqw', height: '0.625cqw', minWidth: '8px', minHeight: '8px', borderRadius: '50%', background: '#28c840' }} />
+        <span style={{ marginLeft: '0.625cqw', fontSize: toCqw(11), color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
           {lang}
         </span>
       </div>
       {/* Code body */}
       <pre style={{
-        flex: 1, margin: 0, padding: '16px',
+        flex: 1, margin: 0, padding: '1cqw',
         fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace",
-        fontSize: `${el.style?.fontSize || 14}px`,
+        fontSize: toCqw(el.style?.fontSize || 14),
         color: '#e6edf3', lineHeight: 1.6,
         overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
         tabSize: 4,
@@ -293,8 +353,8 @@ export function BentoContent({ el }) {
       width: '100%', height: '100%',
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
-      gridAutoRows: 'minmax(80px, auto)',
-      gap: '10px',
+      gridAutoRows: 'minmax(5cqw, auto)',
+      gap: '0.625cqw',
     }}>
       {items.map((item, i) => {
         const isLarge = item.size === 'large';
@@ -311,20 +371,19 @@ export function BentoContent({ el }) {
               background: 'rgba(255,255,255,0.03)',
               backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: '14px', padding: '18px',
+              borderRadius: '0.875cqw', padding: '1.125cqw',
               display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
               position: 'relative', overflow: 'hidden',
-              transition: 'box-shadow 0.3s',
             }}
           >
             {item.icon && (
-              <div style={{ fontSize: '28px', marginBottom: '10px' }}>{item.icon}</div>
+              <div style={{ fontSize: toCqw(28), marginBottom: '0.625cqw' }}>{item.icon}</div>
             )}
-            <div style={{ fontSize: isLarge ? '16px' : '13px', fontWeight: '700', color: '#fff', marginBottom: '4px' }}>
+            <div style={{ fontSize: toCqw(isLarge ? 16 : 13), fontWeight: '700', color: '#fff', marginBottom: '0.25cqw' }}>
               {item.title || `Item ${i + 1}`}
             </div>
             {item.desc && (
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
+              <div style={{ fontSize: toCqw(11), color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
                 {item.desc}
               </div>
             )}
@@ -354,7 +413,7 @@ export function CounterContent({ el }) {
           const animate = (now) => {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.floor(eased * targetVal));
             if (progress < 1) requestAnimationFrame(animate);
           };
@@ -374,21 +433,20 @@ export function CounterContent({ el }) {
       alignItems: 'center', justifyContent: 'center', textAlign: 'center',
     }}>
       <div style={{
-        fontSize: `${el.style?.fontSize || 96}px`,
+        fontSize: toCqw(el.style?.fontSize || 96),
         fontWeight: '900', lineHeight: 1, letterSpacing: '-0.04em',
         background: 'linear-gradient(135deg, #ffffff, #22d3ee)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        textShadow: 'none',
       }}>
         {count}{suffix}
       </div>
       {el.title && (
-        <div style={{ fontSize: '14px', fontWeight: '700', color: '#22d3ee', marginTop: '8px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: toCqw(14), fontWeight: '700', color: '#22d3ee', marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
           {el.title}
         </div>
       )}
       {el.desc && (
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>
+        <div style={{ fontSize: toCqw(12), color: 'rgba(255,255,255,0.4)', marginTop: '0.25cqw' }}>
           {el.desc}
         </div>
       )}
@@ -402,19 +460,19 @@ export function BlockquoteContent({ el }) {
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-      position: 'relative', padding: '16px',
+      position: 'relative', padding: '1cqw', overflow: 'hidden',
     }}>
       {/* Giant watermark quotes */}
       <div style={{
-        position: 'absolute', top: '-10px', left: '0',
-        fontSize: '140px', fontWeight: '900', color: 'rgba(255,255,255,0.04)',
+        position: 'absolute', top: '-0.625cqw', left: '0',
+        fontSize: toCqw(140), fontWeight: '900', color: 'rgba(255,255,255,0.04)',
         lineHeight: 1, fontFamily: 'Georgia, serif', pointerEvents: 'none',
       }}>
         "
       </div>
       <div style={{
-        position: 'absolute', bottom: '-40px', right: '0',
-        fontSize: '140px', fontWeight: '900', color: 'rgba(255,255,255,0.04)',
+        position: 'absolute', bottom: '-2.5cqw', right: '0',
+        fontSize: toCqw(140), fontWeight: '900', color: 'rgba(255,255,255,0.04)',
         lineHeight: 1, fontFamily: 'Georgia, serif', pointerEvents: 'none',
         transform: 'rotate(180deg)',
       }}>
@@ -427,7 +485,7 @@ export function BlockquoteContent({ el }) {
         transition={{ duration: 0.8 }}
         viewport={{ once: false }}
         style={{
-          fontSize: `${el.style?.fontSize || 28}px`,
+          fontSize: toCqw(el.style?.fontSize || 28),
           fontStyle: 'italic', color: el.style?.color || '#ffffff',
           fontWeight: '400', lineHeight: 1.5, maxWidth: '90%',
           margin: 0, position: 'relative', zIndex: 1,
@@ -442,8 +500,8 @@ export function BlockquoteContent({ el }) {
           transition={{ delay: 0.3, duration: 0.5 }}
           viewport={{ once: false }}
           style={{
-            fontSize: '13px', color: '#22d3ee', fontWeight: '600',
-            marginTop: '14px', letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontSize: toCqw(13), color: '#22d3ee', fontWeight: '600',
+            marginTop: '0.875cqw', letterSpacing: '0.1em', textTransform: 'uppercase',
             position: 'relative', zIndex: 1,
           }}
         >
@@ -467,7 +525,7 @@ export function ProjectorElement({ el }) {
         left: `${el.x}%`, top: `${el.y}%`,
         width: `${el.w}%`, height: `${el.h}%`,
         pointerEvents: 'none',
-        overflow: 'visible',
+        overflow: 'hidden',
         zIndex: 20,
       }}
     >

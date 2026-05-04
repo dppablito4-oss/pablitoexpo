@@ -4,16 +4,16 @@ const uid = () => Math.random().toString(36).slice(2, 8);
 
 // All available block types for the prompt configurator
 const BLOCK_TYPES = [
-  { id: 'text',       label: '📝 Texto',       checked: true  },
-  { id: 'image',      label: '🖼️ Imagen',      checked: false },
-  { id: 'metric',     label: '📊 Métrica',      checked: true  },
-  { id: 'timeline',   label: '📅 Timeline',     checked: false },
-  { id: 'comparison', label: '⚖️ Comparación',  checked: false },
-  { id: 'formula',    label: '🧮 Fórmula',      checked: false },
-  { id: 'code',       label: '💻 Código',       checked: false },
-  { id: 'bento',      label: '🧩 Bento Grid',   checked: false },
-  { id: 'counter',    label: '🔢 Contador',     checked: false },
-  { id: 'blockquote', label: '💬 Cita',         checked: false },
+  { id: 'text', label: '📝 Texto', checked: true },
+  { id: 'image', label: '🖼️ Imagen', checked: false },
+  { id: 'metric', label: '📊 Métrica', checked: true },
+  { id: 'timeline', label: '📅 Timeline', checked: false },
+  { id: 'comparison', label: '⚖️ Comparación', checked: false },
+  { id: 'formula', label: '🧮 Fórmula', checked: false },
+  { id: 'code', label: '💻 Código', checked: false },
+  { id: 'bento', label: '🧩 Bento Grid', checked: false },
+  { id: 'counter', label: '🔢 Contador', checked: false },
+  { id: 'blockquote', label: '💬 Cita', checked: false },
 ];
 
 function buildPrompt(topic, sectionCount, selectedTypes) {
@@ -43,7 +43,7 @@ ${typesList}
 
 REGLAS ESTRICTAS:
 1. Escribe el JSON dentro de un bloque de código Markdown: \`\`\`json ... \`\`\`
-2. Para bgImage usa imágenes REALES de Unsplash: https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070
+2. Para bgImage usa imágenes REALES de la web o usar directamente de Unsplash: https://images.unsplash.com/photo-XXXXXXXXXX?q=80&w=2070
 3. Cada sección debe tener al menos 2 elementos.
 4. Alterna tipos de bloques entre secciones para variedad visual.
 5. El contenido debe ser REAL y educativo, no placeholder.
@@ -61,20 +61,20 @@ ESTRUCTURA:
   ]
 }
 
-GENERA ${sectionCount} SECCIONES COMPLETAS con contenido real sobre "${topic}".`;
+GENERA ${sectionCount} SECCIONES COMPLETAS con contenido real o usando su fente si el usuario subio previamente (prodias interactuar con EL USUARIO si el tema es diferente a de la fuente previa, nada mas apra confirmar) sobre "${topic}".`;
 }
 
 export default function AiImportPanel({ onApply, currentSections = [] }) {
-  const [open,    setOpen]    = useState(false);
-  const [step,    setStep]    = useState('config'); // 'config' | 'paste'
-  const [json,    setJson]    = useState('');
-  const [status,  setStatus]  = useState('');
-  const [copied,  setCopied]  = useState(false);
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState('config'); // 'config' | 'paste'
+  const [json, setJson] = useState('');
+  const [status, setStatus] = useState('');
+  const [copied, setCopied] = useState(false);
 
   // Config state
-  const [topic,        setTopic]        = useState('');
+  const [topic, setTopic] = useState('');
   const [sectionCount, setSectionCount] = useState(6);
-  const [blockTypes,   setBlockTypes]   = useState(
+  const [blockTypes, setBlockTypes] = useState(
     BLOCK_TYPES.map(bt => ({ ...bt }))
   );
 
@@ -137,7 +137,7 @@ export default function AiImportPanel({ onApply, currentSections = [] }) {
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
         <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
-          🤖 Importar desde IA
+          🤖 Importar desde IA EXTERNA (CHATGPT, GEMINI ...)
         </span>
         <span className="text-neutral-500 text-xs">{open ? '▲' : '▼'}</span>
       </button>
@@ -199,8 +199,8 @@ export default function AiImportPanel({ onApply, currentSections = [] }) {
                   ${copied
                     ? 'bg-green-600 text-white'
                     : topic.trim()
-                    ? 'bg-cyan-500 hover:bg-cyan-400 text-black'
-                    : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'}`}
+                      ? 'bg-cyan-500 hover:bg-cyan-400 text-black'
+                      : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'}`}
               >
                 {copied ? '✅ ¡Prompt copiado! Pégalo en ChatGPT o Gemini' : '📋 Generar y Copiar Prompt'}
               </button>
@@ -261,7 +261,7 @@ export default function AiImportPanel({ onApply, currentSections = [] }) {
                 {copied ? '✅ Copiado' : '📋 Copiar prompt de nuevo'}
               </button>
 
-              {status === 'ok'    && <p className="text-green-400 text-xs text-center">✅ ¡Aplicado correctamente!</p>}
+              {status === 'ok' && <p className="text-green-400 text-xs text-center">✅ ¡Aplicado correctamente!</p>}
               {status === 'error' && <p className="text-red-400 text-xs text-center">❌ JSON inválido. Revisa el formato.</p>}
             </>
           )}

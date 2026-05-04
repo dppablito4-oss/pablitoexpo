@@ -39,6 +39,7 @@ function SectionBlock({ section }) {
         overflow: 'hidden',
         backgroundColor: '#0a0a0f',
         borderBottom: '1px solid rgba(255,255,255,0.05)',
+        containerType: 'inline-size',
       }}
     >
       {/* Background image */}
