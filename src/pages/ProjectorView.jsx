@@ -89,6 +89,19 @@ export default function ProjectorView() {
         laserY.set(payload.payload.y * window.innerHeight);
         setLaserActive(true); // show laser only when phone sends signal
       })
+      .on('broadcast', { event: 'laser-move' }, (payload) => {
+        const sensitivity = 2.0; // Velocidad del trackpad
+        let newX = laserX.get() + (payload.payload.dx * window.innerWidth * sensitivity);
+        let newY = laserY.get() + (payload.payload.dy * window.innerHeight * sensitivity);
+        
+        // Mantener dentro de los bordes de la pantalla
+        newX = Math.max(0, Math.min(newX, window.innerWidth));
+        newY = Math.max(0, Math.min(newY, window.innerHeight));
+
+        laserX.set(newX);
+        laserY.set(newY);
+        setLaserActive(true);
+      })
       .on('broadcast', { event: 'remote-scroll' }, (payload) => {
         window.scrollBy({ top: payload.payload.deltaY, behavior: 'auto' });
       })

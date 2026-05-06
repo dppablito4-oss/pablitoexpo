@@ -8,6 +8,7 @@ export default function RemoteControl() {
   const channelRef = useRef(null);
   const lastEventRef = useRef(0);
   const lastScrollYRef = useRef(null);
+  const lastLaserRef = useRef({ x: null, y: null });
   const [presentation, setPresentation] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -64,6 +65,14 @@ export default function RemoteControl() {
     }
   };
 
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      lastScrollYRef.current = touch.clientY;
+      lastLaserRef.current = { x: touch.clientX, y: touch.clientY };
+    }
+  };
+
   const handleTouchMove = (e) => {
     if (e.cancelable) e.preventDefault();
 
@@ -84,18 +93,25 @@ export default function RemoteControl() {
       }
       lastScrollYRef.current = touch.clientY;
     } else {
-      // Modo Laser
-      const x = touch.clientX / window.innerWidth;
-      const y = touch.clientY / window.innerHeight;
+      // Modo Laser (trackpad relativo libre)
+      if (lastLaserRef.current.x !== null && lastLaserRef.current.y !== null) {
+        const dx = touch.clientX - lastLaserRef.current.x;
+        const dy = touch.clientY - lastLaserRef.current.y;
+        
+        const deltaX = dx / window.innerWidth;
+        const deltaY = dy / window.innerHeight;
 
-      if (channelRef.current) {
-        channelRef.current.send({ type: 'broadcast', event: 'laser', payload: { x, y } });
+        if (channelRef.current) {
+          channelRef.current.send({ type: 'broadcast', event: 'laser-move', payload: { dx: deltaX, dy: deltaY } });
+        }
       }
+      lastLaserRef.current = { x: touch.clientX, y: touch.clientY };
     }
   };
 
   const handleTouchEnd = () => {
       lastScrollYRef.current = null;
+      lastLaserRef.current = { x: null, y: null };
   };
 
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems:'center', justifyContent:'center', color: 'white' }}>Enlazando Remoto...</div>;
@@ -136,6 +152,7 @@ export default function RemoteControl() {
 
       {/* Trackpad Principal */}
       <div
+        onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="glass-panel"

@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import AdminXpPanel from '../components/AdminXpPanel';
 
 const C = {
-  bg:       '#06060d',
-  cardBg:   'rgba(255, 215, 0, 0.03)',
-  border:   'rgba(255, 215, 0, 0.15)',
-  gold:     '#ffd700',
+  bg: '#06060d',
+  cardBg: 'rgba(255, 215, 0, 0.03)',
+  border: 'rgba(255, 215, 0, 0.15)',
+  gold: '#ffd700',
   textPrimary: '#e2e8f0',
-  textMuted:   'rgba(255,255,255,0.4)',
+  textMuted: 'rgba(255,255,255,0.4)',
 };
 
 export default function AdminPanel() {
@@ -54,19 +54,19 @@ export default function AdminPanel() {
     if (!emailConfig.smtp_email || !emailConfig.smtp_app_password) return alert('No dejes los campos vacíos.');
     const { error } = await supabase.from('corporate_email_settings').upsert({ id: 1, smtp_email: emailConfig.smtp_email, smtp_app_password: emailConfig.smtp_app_password });
     if (!error) {
-      alert('Credenciales blindadas en la bóveda de la BD.');
+      alert('Credenciales blindadas en el servidor de la BD.');
     } else alert('Error: ' + error.message);
   };
 
   const handleFireBlast = async () => {
     if (!blastData.subject || !blastData.message) return alert('Redacta tu mensaje comandante.');
     if (!window.confirm(`¿LISTO PARA DESPACHAR LA OLEADA DE CORREOS?`)) return;
-    
+
     setLoading(true);
-    
+
     try {
       const { data, error } = await supabase.functions.invoke('pablito-mailer', {
-         body: { action: 'MANUAL_BLAST', payload: { target: blastData.target, subject: blastData.subject, customHtml: blastData.message } }
+        body: { action: 'MANUAL_BLAST', payload: { target: blastData.target, subject: blastData.subject, customHtml: blastData.message } }
       });
       if (error) throw error;
       alert(data?.message || 'Correos enviados exitosamente');
@@ -79,7 +79,7 @@ export default function AdminPanel() {
 
   return (
     <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "'Inter', sans-serif", color: C.textPrimary, padding: '40px' }}>
-      
+
       {/* Header Admin */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', borderBottom: `1px solid ${C.border}`, paddingBottom: '20px' }}>
         <div>
@@ -90,7 +90,7 @@ export default function AdminPanel() {
             Consola administrativa. Un gran poder conlleva una gran responsabilidad.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => navigate('/dashboard')}
           style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
         >
@@ -107,7 +107,7 @@ export default function AdminPanel() {
 
       {/* Contenido Principal */}
       <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '30px', minHeight: '600px', backdropFilter: 'blur(10px)' }}>
-        
+
         {loading ? (
           <div style={{ textAlign: 'center', color: C.gold, marginTop: '100px', fontSize: '1.2rem', animation: 'pulse 2s infinite' }}>Accediendo a la matriz...</div>
         ) : (
@@ -143,7 +143,7 @@ export default function AdminPanel() {
                     <div key={pres.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
                       <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem' }}>{pres.title}</h3>
                       <p style={{ fontSize: '0.8rem', color: C.textMuted, margin: '0 0 15px' }}>Propiedad de ID: {pres.user_id.split('-')[0]}...</p>
-                      
+
                       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                         <ActionBtn color="cyan" onClick={() => navigate(`/projector/${pres.slug || pres.id}`)}>📺 Proyectar</ActionBtn>
                         <ActionBtn color="red" onClick={() => navigate(`/remote/${pres.slug || pres.id}`)}>📱 Láser</ActionBtn>
@@ -159,52 +159,52 @@ export default function AdminPanel() {
         )}
 
         {!loading && activeTab === 'emails' && (
-           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
-             
-             {/* CONFIG SECTION */}
-             <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '25px', borderRadius: '15px' }}>
-                <h3 style={{ color: C.gold, marginTop: 0 }}>⚙️ Credenciales SMTP Seguras</h3>
-                <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Por seguridad del sistema, ingresa una "Contraseña de Aplicaciones" oficial de Google (16 dígitos sin espacios), NUNCA tu pass global de la nube.</p>
-                
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Gmail Originador:</label>
-                <input 
-                  type="email" value={emailConfig.smtp_email} onChange={e => setEmailConfig(p => ({...p, smtp_email: e.target.value}))}
-                  style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }} 
-                  placeholder="pabloclsa87@gmail.com"
-                />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
 
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Token de Aplicación SMTP:</label>
-                <input 
-                  type="password" value={emailConfig.smtp_app_password} onChange={e => setEmailConfig(p => ({...p, smtp_app_password: e.target.value}))}
-                  style={{ width: '100%', padding: '12px', marginBottom: '25px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', letterSpacing: '3px' }} 
-                  placeholder="••••••••••••••••"
-                />
+            {/* CONFIG SECTION */}
+            <div style={{ flex: '1 1 300px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '25px', borderRadius: '15px' }}>
+              <h3 style={{ color: C.gold, marginTop: 0 }}>⚙️ Credenciales SMTP Seguras</h3>
+              <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Por seguridad del sistema, ingresa una "Contraseña de Aplicaciones" oficial de Google (16 dígitos sin espacios), NUNCA tu pass global de la nube.</p>
 
-                <button onClick={handleSaveEmailConfig} style={{ width: '100%', background: 'var(--accent-primary)', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 0 20px rgba(0,240,255,0.2)' }}>
-                  Blindar Credenciales
-                </button>
-             </div>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Gmail Originador:</label>
+              <input
+                type="email" value={emailConfig.smtp_email} onChange={e => setEmailConfig(p => ({ ...p, smtp_email: e.target.value }))}
+                style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }}
+                placeholder="pabloclsa87@gmail.com"
+              />
 
-             {/* BLAST SECTION */}
-             <div style={{ flex: '2 1 400px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${C.border}`, padding: '25px', borderRadius: '15px' }}>
-                <h3 style={{ color: C.gold, marginTop: 0 }}>🚀 Transmisor Personalizado</h3>
-                <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Usa código HTML simple para redactar tu mensaje de evento o aniversario. Cuentas con etiqueta inyectable genérica `{"{"}{"{"}NICKNAME{"}"}{"}"}`.</p>
-                
-                <select value={blastData.target} onChange={e => setBlastData(p=>({...p, target: e.target.value}))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }}>
-                   <option value="ALL">Para toda la lista de suscripción 🌍 (Todos Pablito Expo)</option>
-                   <option value="TEST">Sólo Mí mismo (Modo Piloto)</option>
-                </select>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '5px', color: '#aaa' }}>Token de Aplicación SMTP:</label>
+              <input
+                type="password" value={emailConfig.smtp_app_password} onChange={e => setEmailConfig(p => ({ ...p, smtp_app_password: e.target.value }))}
+                style={{ width: '100%', padding: '12px', marginBottom: '25px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', letterSpacing: '3px' }}
+                placeholder="••••••••••••••••"
+              />
 
-                <input placeholder="Asunto (Ej: 🔥 Nuevo Editor ya disponible)" value={blastData.subject} onChange={e => setBlastData(p=>({...p, subject: e.target.value}))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }} />
+              <button onClick={handleSaveEmailConfig} style={{ width: '100%', background: 'var(--accent-primary)', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 0 20px rgba(0,240,255,0.2)' }}>
+                Blindar Credenciales
+              </button>
+            </div>
 
-                <textarea placeholder="<h1>Amigos!</h1><p>Les deseo feliz navidad.</p>" value={blastData.message} onChange={e => setBlastData(p=>({...p, message: e.target.value}))} style={{ width: '100%', height: '200px', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', fontFamily: 'monospace', resize: 'vertical' }} />
+            {/* BLAST SECTION */}
+            <div style={{ flex: '2 1 400px', background: 'rgba(0,0,0,0.2)', border: `1px solid ${C.border}`, padding: '25px', borderRadius: '15px' }}>
+              <h3 style={{ color: C.gold, marginTop: 0 }}>🚀 Transmisor Personalizado</h3>
+              <p style={{ fontSize: '0.8rem', color: C.textMuted, marginBottom: '20px' }}>Usa código HTML simple para redactar tu mensaje de evento o aniversario. Cuentas con etiqueta inyectable genérica `{"{"}{"{"}NICKNAME{"}"}{"}"}`.</p>
 
-                <button onClick={handleFireBlast} style={{ width: '100%', background: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(255,255,255,0.2)' }}>
-                  ☄️ Iniciar Despliegue SMTP Masivo
-                </button>
-             </div>
+              <select value={blastData.target} onChange={e => setBlastData(p => ({ ...p, target: e.target.value }))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }}>
+                <option value="ALL">Para toda la lista de suscripción 🌍 (Todos Pablito Expo)</option>
+                <option value="TEST">Sólo Mí mismo (Modo Piloto)</option>
+              </select>
 
-           </motion.div>
+              <input placeholder="Asunto (Ej: 🔥 Nuevo Editor ya disponible)" value={blastData.subject} onChange={e => setBlastData(p => ({ ...p, subject: e.target.value }))} style={{ width: '100%', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px' }} />
+
+              <textarea placeholder="<h1>Amigos!</h1><p>Les deseo feliz navidad.</p>" value={blastData.message} onChange={e => setBlastData(p => ({ ...p, message: e.target.value }))} style={{ width: '100%', height: '200px', padding: '12px', marginBottom: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid #444', color: '#fff', borderRadius: '8px', fontFamily: 'monospace', resize: 'vertical' }} />
+
+              <button onClick={handleFireBlast} style={{ width: '100%', background: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(255,255,255,0.2)' }}>
+                ☄️ Iniciar Despliegue SMTP Masivo
+              </button>
+            </div>
+
+          </motion.div>
         )}
 
         {!loading && activeTab === 'xp' && (
@@ -241,9 +241,9 @@ function TabBtn({ active, onClick, children }) {
 
 function StatusBadge({ status }) {
   const configs = {
-    active:    { bg: 'rgba(0, 255, 128, 0.1)', color: '#00ff80', label: 'Activo' },
+    active: { bg: 'rgba(0, 255, 128, 0.1)', color: '#00ff80', label: 'Activo' },
     suspended: { bg: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', label: 'Suspendido' },
-    banned:    { bg: 'rgba(255, 80, 80, 0.1)', color: '#ff5050', label: 'Baneado' },
+    banned: { bg: 'rgba(255, 80, 80, 0.1)', color: '#ff5050', label: 'Baneado' },
   };
   const c = configs[status] || configs.active;
   return (
@@ -256,17 +256,17 @@ function StatusBadge({ status }) {
 function ActionBtn({ color, onClick, children }) {
   const themes = {
     cyan: 'rgba(0, 240, 255, 0.15)',
-    red:  'rgba(255, 80, 80, 0.15)',
+    red: 'rgba(255, 80, 80, 0.15)',
     gold: 'rgba(255, 215, 0, 0.15)'
   };
   const borderThemes = {
     cyan: 'rgba(0, 240, 255, 0.3)',
-    red:  'rgba(255, 80, 80, 0.3)',
+    red: 'rgba(255, 80, 80, 0.3)',
     gold: 'rgba(255, 215, 0, 0.3)'
   };
   const textThemes = {
     cyan: '#00f0ff',
-    red:  '#ff8888',
+    red: '#ff8888',
     gold: '#ffd700'
   };
 
