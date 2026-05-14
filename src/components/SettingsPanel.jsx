@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
 import PERSONALITIES from '../config/personalities';
+import { C } from '../config/theme';
 
-// ─── PALETTE (matches Dashboard) ──────────────────────────────────────────────
-const C = {
-  glass:     'rgba(255,255,255,0.028)',
-  border:    'rgba(255,255,255,0.07)',
-  borderCyan:'rgba(0,240,255,0.18)',
-  cyan:      '#00f0ff',
-  textPrimary: '#e2e8f0',
-  textMuted:   'rgba(255,255,255,0.35)',
-};
 
 // ─── Helper: Setting Card ────────────────────────────────────────────────────
 function SettingCard({ title, description, children }) {

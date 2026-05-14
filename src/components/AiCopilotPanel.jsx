@@ -1,119 +1,25 @@
-import { useState, useRef, useEffect } from 'react';
-import { supabase } from '../config/supabase';
-import { useAuth } from '../context/AuthContext';
-import { deductHP } from '../lib/xpService';
+/**
+ * AiCopilotPanel.jsx — Panel de chat IA para el Editor.
+ *
+ * La lógica de chat, créditos, personalidad y submit vive en useAiChat.
+ * Este componente solo maneja el layout y la UI del panel lateral.
+ */
 import PERSONALITIES from '../config/personalities';
 import PersonalitySelector from './PersonalitySelector';
+import useAiChat from '../hooks/useAiChat';
 
 export default function AiCopilotPanel({ currentSections }) {
-  const { user } = useAuth();
-  const displayName = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Usuario';
-  const [prompt, setPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [verbosity, setVerbosity] = useState('short'); // 'short' | 'medium' | 'long'
-  const [personality, setPersonality] = useState('brayan');
-  const [aiVerified, setAiVerified] = useState(false);
-  const [userCredits, setUserCredits] = useState(0);
+  const chat = useAiChat({
+    mode: 'editor',
+    currentSections,
+    initialMessage: '¡Habla! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.',
+  });
 
-  const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: `¡Habla, ${displayName.toUpperCase()}! Soy P.A.B.L.O., tu co-piloto de confianza. Selecciona una personalidad arriba y charlemos sobre tus diapositivas.` }
-  ]);
-
-  const endOfMessagesRef = useRef(null);
-  const messageCountRef = useRef(0);
-
-  // Load personality and credits from Supabase
-  useEffect(() => {
-    const loadState = async () => {
-      if (!user?.id) return;
-      const { data } = await supabase.from('profiles').select('ai_personality, ai_verified, ai_credits').eq('id', user.id).single();
-      if (data?.ai_personality) {
-        setPersonality(data.ai_personality);
-      }
-      if (data) {
-        setAiVerified(!!data.ai_verified);
-        if (data.ai_credits !== undefined) setUserCredits(data.ai_credits);
-      }
-    };
-    loadState();
-  }, [user?.id]);
-
-  const handlePersonalityChange = async (newPersonality) => {
-    setPersonality(newPersonality);
-    if (user?.id) {
-      await supabase.from('profiles').update({ ai_personality: newPersonality }).eq('id', user.id);
-    }
-    // Añadir mensaje de sistema indicando el cambio
-    setChatHistory(prev => [...prev, { role: 'assistant', text: `*Personalidad cambiada a ${PERSONALITIES[newPersonality].name} ${PERSONALITIES[newPersonality].emoji}*` }]);
-  };
-
-  useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory, isGenerating]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!prompt.trim() || isGenerating) return;
-
-    const userText = prompt.trim();
-    setPrompt('');
-    setChatHistory(prev => [...prev, { role: 'user', text: userText }]);
-    setIsGenerating(true);
-    
-    messageCountRef.current += 1;
-    const shouldProfile = (messageCountRef.current % 5 === 0);
-
-    try {
-      // ⚡ Verificar y descontar créditos antes de llamar a la IA
-      if (user?.id) {
-        const hpResult = await deductHP(supabase, user.id, personality);
-        if (!hpResult.success) {
-          setChatHistory(prev => [...prev, { role: 'assistant', text: `⚡ ${hpResult.error}` }]);
-          setIsGenerating(false);
-          return;
-        } else {
-          setUserCredits(hpResult.remainingHP);
-        }
-      }
-
-      const historyPayload = chatHistory.slice(-10).map(m => ({
-        role: m.role,
-        content: m.text
-      }));
-
-      const { data, error } = await supabase.functions.invoke('pablito-copilot', {
-        body: {
-          prompt: userText,
-          currentSections: currentSections,
-          verbosity,
-          personality,
-          username: displayName,
-          shouldProfile,
-          chatHistory: historyPayload
-        }
-      });
-
-      if (error) throw new Error(error.message);
-
-      if (data && data.message) {
-        setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-          { role: 'assistant', text: data.message }
-        ));
-      } else if (data && data.error) {
-        throw new Error(data.error);
-      } else {
-        throw new Error('Respuesta inválida de la IA');
-      }
-
-    } catch (err) {
-      console.error(err);
-      setChatHistory(prev => prev.filter(m => m.role !== 'thinking').concat(
-        { role: 'assistant', text: `❌ P.A.B.L.O. tuvo un error: ${err.message}.\n\nInténtalo de nuevo.` }
-      ));
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const {
+    prompt, setPrompt, isGenerating, verbosity, setVerbosity,
+    personality, aiVerified, userCredits, chatHistory,
+    endOfMessagesRef, handlePersonalityChange, handleSubmit,
+  } = chat;
 
   return (
     <div className="flex flex-col h-full bg-neutral-900 border-l border-neutral-800">
@@ -121,39 +27,37 @@ export default function AiCopilotPanel({ currentSections }) {
       {/* Header */}
       <div className="p-4 border-b border-neutral-800 shrink-0 relative"
         style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0d2e 100%)' }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black transition-all"
-                style={{ background: PERSONALITIES[personality].color, boxShadow: '0 0 16px rgba(0,0,0,0.5)' }}>
-                {PERSONALITIES[personality].emoji}
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black transition-all"
+              style={{ background: PERSONALITIES[personality].color, boxShadow: '0 0 16px rgba(0,0,0,0.5)' }}>
+              {PERSONALITIES[personality].emoji}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black tracking-wider text-white transition-colors">
-                  P.A.B.L.O. <span className="text-neutral-400 font-normal text-xs">| {PERSONALITIES[personality].name}</span>
-                </h3>
-                <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
-                  ASESOR
-                </span>
-              </div>
-              <p className="text-[9px] text-neutral-600 mt-0.5 italic flex items-center gap-1.5">
-                Tu copiloto creativo
-                <span className={`font-bold not-italic px-1.5 py-0.5 rounded text-[8px] ${userCredits <= 0 ? 'bg-red-900/50 text-red-400 border border-red-700/40' :
-                  userCredits <= 20 ? 'bg-amber-900/50 text-amber-400 border border-amber-700/40' :
-                    'bg-emerald-900/40 text-emerald-400 border border-emerald-700/30'
-                  }`}>
-                  ⚡ {userCredits} créditos
-                </span>
-              </p>
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-neutral-900"></div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black tracking-wider text-white transition-colors">
+                P.A.B.L.O. <span className="text-neutral-400 font-normal text-xs">| {PERSONALITIES[personality].name}</span>
+              </h3>
+              <span className="text-[8px] bg-fuchsia-950 text-fuchsia-400 border border-fuchsia-700/50 px-1.5 py-0.5 rounded-full font-bold tracking-widest">
+                ASESOR
+              </span>
             </div>
+            <p className="text-[9px] text-neutral-600 mt-0.5 italic flex items-center gap-1.5">
+              Tu copiloto creativo
+              <span className={`font-bold not-italic px-1.5 py-0.5 rounded text-[8px] ${userCredits <= 0 ? 'bg-red-900/50 text-red-400 border border-red-700/40' :
+                userCredits <= 20 ? 'bg-amber-900/50 text-amber-400 border border-amber-700/40' :
+                  'bg-emerald-900/40 text-emerald-400 border border-emerald-700/30'
+                }`}>
+                ⚡ {userCredits} créditos
+              </span>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Personality Selector — ahora un componente compartido */}
+      {/* Personality Selector — componente compartido */}
       <PersonalitySelector current={personality} onChange={handlePersonalityChange} />
 
       {/* Chat history */}
@@ -192,27 +96,12 @@ export default function AiCopilotPanel({ currentSections }) {
         <div className="flex items-center justify-between bg-black border border-neutral-800 rounded-lg p-1.5">
           <span className="text-[9px] text-neutral-500 font-bold ml-2 uppercase tracking-widest">Largo de Respuestas:</span>
           <div className="flex gap-1 bg-neutral-900 rounded-md p-1 border border-neutral-800">
-            <button
-              type="button"
-              onClick={() => setVerbosity('short')}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'short' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
-            >
-              Corta
-            </button>
-            <button
-              type="button"
-              onClick={() => setVerbosity('medium')}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'medium' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
-            >
-              Media
-            </button>
-            <button
-              type="button"
-              onClick={() => setVerbosity('long')}
-              className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === 'long' ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
-            >
-              Larga
-            </button>
+            {['short', 'medium', 'long'].map(v => (
+              <button key={v} type="button" onClick={() => setVerbosity(v)}
+                className={`px-3 py-1 rounded text-[10px] font-bold transition-colors ${verbosity === v ? 'bg-neutral-700 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                {v === 'short' ? 'Corta' : v === 'medium' ? 'Media' : 'Larga'}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -221,12 +110,7 @@ export default function AiCopilotPanel({ currentSections }) {
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); } }}
               placeholder="Ej: ¿Qué secciones me faltan añadir para hablar sobre Galaxias?..."
               disabled={isGenerating}
               rows={3}
@@ -235,13 +119,10 @@ export default function AiCopilotPanel({ currentSections }) {
                          focus:border-fuchsia-500/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-500/30
                          disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             />
-            <button
-              type="submit"
-              disabled={!prompt.trim() || isGenerating}
+            <button type="submit" disabled={!prompt.trim() || isGenerating}
               className="absolute bottom-2 right-2 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider
                          text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}
-            >
+              style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
               Preguntar
             </button>
           </form>
@@ -250,7 +131,7 @@ export default function AiCopilotPanel({ currentSections }) {
             <div className="text-xl mb-1 mt-2">🔒</div>
             <p className="text-xs text-neutral-300 font-bold tracking-wide uppercase">Cerebro de P.A.B.L.O. Asegurado</p>
             <p className="text-[10px] text-neutral-500 mb-2 px-2 pb-2 leading-relaxed">
-              El motor cognitivo está bloqueado. Por favor, abre tu <span className="text-fuchsia-400">Asistente Global</span> (el botón flotante inferior derecho) e introduce tu código sagrado OTP para sincronizar ambos núcleos.
+              El motor cognitivo está bloqueado. Abre tu <span className="text-fuchsia-400">Asistente Global</span> (botón flotante inferior derecho) e introduce tu código OTP.
             </p>
           </div>
         )}

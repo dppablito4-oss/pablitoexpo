@@ -5,12 +5,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { getLevelInfo, getLevelFromXP, DEFAULT_LEVEL_THRESHOLDS, DEFAULT_RANK_NAMES, DEFAULT_HP_COSTS } from '../lib/xpService';
 import { motion } from 'framer-motion';
+import { C as baseC } from '../config/theme';
 
-const C = {
-  gold: '#ffd700', cyan: '#00f0ff', green: '#10b981',
-  red: '#ef4444', purple: '#a855f7', textMuted: 'rgba(255,255,255,0.4)',
-  card: 'rgba(255,255,255,0.02)', border: 'rgba(255,255,255,0.07)',
-};
+const C = { ...baseC, gold: '#ffd700', green: '#10b981', red: '#ef4444', card: 'rgba(255,255,255,0.02)' };
+
 
 const HP_LABELS = {
   brayan: '🧢 El Brayan', renegon: '⚡ El Renegón', catedratico: '🎓 Catedrático',

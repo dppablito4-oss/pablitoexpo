@@ -3,15 +3,10 @@ import { supabase } from '../config/supabase';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AdminXpPanel from '../components/AdminXpPanel';
+import { C as baseC } from '../config/theme';
 
-const C = {
-  bg: '#06060d',
-  cardBg: 'rgba(255, 215, 0, 0.03)',
-  border: 'rgba(255, 215, 0, 0.15)',
-  gold: '#ffd700',
-  textPrimary: '#e2e8f0',
-  textMuted: 'rgba(255,255,255,0.4)',
-};
+const C = { ...baseC, cardBg: 'rgba(255, 215, 0, 0.03)', gold: '#ffd700' };
+
 
 export default function AdminPanel() {
   const [logs, setLogs] = useState([]);
@@ -239,19 +234,7 @@ function TabBtn({ active, onClick, children }) {
   );
 }
 
-function StatusBadge({ status }) {
-  const configs = {
-    active: { bg: 'rgba(0, 255, 128, 0.1)', color: '#00ff80', label: 'Activo' },
-    suspended: { bg: 'rgba(255, 215, 0, 0.1)', color: '#ffd700', label: 'Suspendido' },
-    banned: { bg: 'rgba(255, 80, 80, 0.1)', color: '#ff5050', label: 'Baneado' },
-  };
-  const c = configs[status] || configs.active;
-  return (
-    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', background: c.bg, color: c.color, border: `1px solid ${c.color}40` }}>
-      {c.label}
-    </span>
-  );
-}
+
 
 function ActionBtn({ color, onClick, children }) {
   const themes = {

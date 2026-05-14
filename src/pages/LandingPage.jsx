@@ -4,24 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../context/AuthContext';
 
-// ── Paleta ────────────────────────────────────────────────────────────────────
-const C = {
-  bg: '#06060d',
-  borderCyan: 'rgba(0,240,255,0.25)',
-  cyan: '#00f0ff',
-  purple: '#a78bfa',
-};
-
-// ── Hook responsive ───────────────────────────────────────────────────────────
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  return isMobile;
-}
+import { C } from '../config/theme';
+import useIsMobile from '../hooks/useIsMobile';
 
 // ── Frases del asistente ──────────────────────────────────────────────────────
 const PABLO_MSGS = [

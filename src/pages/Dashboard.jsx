@@ -8,19 +8,7 @@ import XpWidget from '../components/XpWidget';
 import SettingsPanel from '../components/SettingsPanel';
 import useIsAdmin from '../hooks/useIsAdmin';
 import { awardXP, fetchXpConfig } from '../lib/xpService';
-
-// ─── PALETTE ─────────────────────────────────────────────────────────────────
-const C = {
-  bg:       '#06060d',
-  sidebar:  'rgba(10,10,20,0.97)',
-  glass:    'rgba(255,255,255,0.028)',
-  border:   'rgba(255,255,255,0.07)',
-  borderCyan:'rgba(0,240,255,0.18)',
-  cyan:     '#00f0ff',
-  purple:   '#7c3aed',
-  textPrimary: '#e2e8f0',
-  textMuted:   'rgba(255,255,255,0.35)',
-};
+import { C } from '../config/theme';
 
 // ─── NAV ITEMS ────────────────────────────────────────────────────────────────
 const NAV = [

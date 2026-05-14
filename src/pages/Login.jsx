@@ -3,14 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const C = {
-  bg:      '#06060d',
-  glass:   'rgba(255,255,255,0.03)',
-  border:  'rgba(255,255,255,0.08)',
-  borderCyan: 'rgba(0,240,255,0.25)',
-  cyan:    '#00f0ff',
-  textMuted: 'rgba(255,255,255,0.45)',
-};
+import { C } from '../config/theme';
+
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
