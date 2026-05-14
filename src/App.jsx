@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import SiteFooter from './components/SiteFooter';
 import GlobalAiCopilot from './components/GlobalAiCopilot';
 import AdminRoute from './components/AdminRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // La Landing siempre se importa normal para proteger el LCP inicial
 import LandingPage from './pages/LandingPage';
@@ -33,34 +34,38 @@ function AppLayout() {
 
   return (
     <>
-      <Suspense fallback={<div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,240,255,0.5)', background: '#06060d'}}>Cargando módulo...</div>}>
-        <Routes>
-          {/* Pública — vitrina principal */}
-          <Route path="/" element={<LandingPage />} />
+      <ErrorBoundary>
+        <Suspense fallback={<div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(0,240,255,0.5)', background: '#06060d'}}>Cargando módulo...</div>}>
+          <Routes>
+            {/* Pública — vitrina principal */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Login standalone (por si alguien va directo a /login) */}
-          <Route path="/login" element={<Login />} />
+            {/* Login standalone (por si alguien va directo a /login) */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Protegidas */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/editor/:slug" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
-          <Route path="/remote/:slug" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
+            {/* Protegidas */}
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/editor/:slug" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+            <Route path="/remote/:slug" element={<ProtectedRoute><RemoteControl /></ProtectedRoute>} />
 
-          {/* Súper Admin Route */}
-          <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+            {/* Súper Admin Route */}
+            <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
 
-          {/* Completamente públicas */}
-          <Route path="/projector/:slug" element={<ProjectorView />} />
-          <Route path="/terms" element={<TermsPage />} />
+            {/* Completamente públicas */}
+            <Route path="/projector/:slug" element={<ProjectorView />} />
+            <Route path="/terms" element={<TermsPage />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
       {!hideFooter && <SiteFooter />}
       
-      {/* Asistente Flotante Global */}
-      <GlobalAiCopilot />
+      {/* Asistente Flotante Global — protegido para que un error en la IA no mate la app */}
+      <ErrorBoundary>
+        <GlobalAiCopilot />
+      </ErrorBoundary>
     </>
   );
 }
