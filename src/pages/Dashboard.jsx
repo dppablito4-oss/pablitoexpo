@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { generateSlug } from '../lib/slugify';
 import XpWidget from '../components/XpWidget';
+import SettingsPanel from '../components/SettingsPanel';
+import useIsAdmin from '../hooks/useIsAdmin';
 import { awardXP, fetchXpConfig } from '../lib/xpService';
 
 // ─── PALETTE ─────────────────────────────────────────────────────────────────
@@ -37,6 +39,7 @@ export default function Dashboard() {
   const [xpData, setXpData] = useState({ xp: 0, level: 0, hp: 0 });
   const [xpConfig, setXpConfig] = useState(null);
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     fetchPresentations();
@@ -209,7 +212,7 @@ export default function Dashboard() {
           ))}
 
           {/* ADMIN ACTION */}
-          {user?.email === 'pabloclsa87@gmail.com' && (
+          {isAdmin && (
             <NavItem
               key="admin"
               item={{ id: 'admin', icon: '👑', label: 'Panel Admin' }}
@@ -359,13 +362,7 @@ export default function Dashboard() {
         )}
 
         {/* ── SETTINGS VIEW ── */}
-        {activeNav === 'settings' && (
-          <div style={{ background: C.glass, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '32px' }}>
-            <p style={{ color: C.textMuted, fontSize: '0.9rem' }}>
-              Esta sección está en construcción. Próximamente: cambio de nombre de usuario, tema visual y exportación de proyectos.
-            </p>
-          </div>
-        )}
+        {activeNav === 'settings' && <SettingsPanel />}
       </main>
     </div>
   );
