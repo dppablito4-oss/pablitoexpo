@@ -56,10 +56,35 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
       {/* TEXT controls */}
       {el.type === 'text' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+
+          {/* ── Content ── */}
           <label className="text-[10px] text-neutral-500">Contenido</label>
           <textarea rows={3} value={el.content || ''}
             onChange={e => onUpdate({ content: e.target.value })}
             className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs resize-none focus:outline-none focus:border-cyan-700" />
+
+          {/* ── Typography ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Tipografía</label>
+
+          {/* Font Family */}
+          <div>
+            <label className="text-[10px] text-neutral-500">Fuente</label>
+            <select value={s.fontFamily || 'inherit'}
+              onChange={e => upd({ fontFamily: e.target.value })}
+              className="w-full bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none"
+              style={{ fontFamily: s.fontFamily || 'inherit' }}>
+              <option value="inherit">Predeterminada</option>
+              <option value="'Inter', sans-serif" style={{ fontFamily: 'Inter' }}>Inter</option>
+              <option value="'Montserrat', sans-serif" style={{ fontFamily: 'Montserrat' }}>Montserrat</option>
+              <option value="'Poppins', sans-serif" style={{ fontFamily: 'Poppins' }}>Poppins</option>
+              <option value="'Outfit', sans-serif" style={{ fontFamily: 'Outfit' }}>Outfit</option>
+              <option value="'Space Grotesk', sans-serif" style={{ fontFamily: 'Space Grotesk' }}>Space Grotesk</option>
+              <option value="'Playfair Display', serif" style={{ fontFamily: 'Playfair Display' }}>Playfair Display</option>
+              <option value="'Roboto', sans-serif" style={{ fontFamily: 'Roboto' }}>Roboto</option>
+              <option value="'Source Code Pro', monospace" style={{ fontFamily: 'Source Code Pro' }}>Source Code Pro</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
             <InspectorInput label="Tamaño (px)" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="8" max="220" />
             <div>
@@ -69,6 +94,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
                 className="w-full h-8 rounded border border-neutral-700 bg-black cursor-pointer" />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] text-neutral-500">Grosor</label>
@@ -93,6 +119,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               </select>
             </div>
           </div>
+
           <div>
             <label className="text-[10px] text-neutral-500">Mayúsculas</label>
             <select value={s.textTransform || 'none'}
@@ -104,18 +131,95 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               <option value="capitalize">Primera Letra</option>
             </select>
           </div>
+
+          {/* ── Spacing ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Espaciado</label>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Interlineado: {(s.lineHeight || 1.25).toFixed(2)}</label>
+            <input type="range" min="0.8" max="3" step="0.05" value={s.lineHeight || 1.25}
+              onChange={e => upd({ lineHeight: +e.target.value })}
+              className="w-full accent-cyan-500" />
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Espaciado letras: {(s.letterSpacing || 0).toFixed(2)}em</label>
+            <input type="range" min="-0.05" max="0.5" step="0.01" value={s.letterSpacing || 0}
+              onChange={e => upd({ letterSpacing: +e.target.value })}
+              className="w-full accent-cyan-500" />
+          </div>
+
+          {/* ── Style toggles ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Estilo</label>
+
+          <div className="grid grid-cols-3 gap-1">
+            <button type="button" onClick={() => upd({ italic: !s.italic })}
+              className={`py-1.5 rounded text-xs font-bold border transition-colors ${s.italic ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+              <i>I</i>
+            </button>
+            <button type="button" onClick={() => upd({ underline: !s.underline })}
+              className={`py-1.5 rounded text-xs font-bold border transition-colors ${s.underline ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+              <u>U</u>
+            </button>
+            <button type="button" onClick={() => upd({ strikethrough: !s.strikethrough })}
+              className={`py-1.5 rounded text-xs font-bold border transition-colors ${s.strikethrough ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+              <s>S</s>
+            </button>
+          </div>
+
           <div>
             <label className="text-[10px] text-neutral-500">Opacidad: {(s.opacity ?? 1).toFixed(2)}</label>
             <input type="range" min="0.05" max="1" step="0.05" value={s.opacity ?? 1}
               onChange={e => upd({ opacity: +e.target.value })}
               className="w-full accent-cyan-500" />
           </div>
+
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
+            <input type="checkbox" checked={s.textShadow !== false}
+              onChange={e => upd({ textShadow: e.target.checked })}
+              className="accent-cyan-500" />
+            Sombra del texto
+          </label>
+
           <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
             <input type="checkbox" checked={s.autoFit !== false}
               onChange={e => upd({ autoFit: e.target.checked })}
               className="accent-cyan-500" />
             Auto-fit: llenar el recuadro
           </label>
+
+          {/* ── Background ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Fondo del bloque</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color fondo</label>
+              <div className="flex gap-1 items-center">
+                <input type="color" value={s.bgColor || '#000000'}
+                  onChange={e => upd({ bgColor: e.target.value })}
+                  className="w-8 h-8 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
+                {s.bgColor && (
+                  <button onClick={() => upd({ bgColor: '', bgOpacity: undefined })}
+                    className="text-[9px] text-red-400 hover:text-red-300 px-1">Quitar</button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Opacidad fondo: {((s.bgOpacity ?? 0.5) * 100).toFixed(0)}%</label>
+              <input type="range" min="0.05" max="1" step="0.05" value={s.bgOpacity ?? 0.5}
+                onChange={e => upd({ bgOpacity: +e.target.value })}
+                className="w-full accent-purple-500" disabled={!s.bgColor} />
+            </div>
+          </div>
+
+          {s.bgColor && (
+            <div>
+              <label className="text-[10px] text-neutral-500">Radio borde fondo: {s.bgRadius || 0}px</label>
+              <input type="range" min="0" max="24" value={s.bgRadius || 0}
+                onChange={e => upd({ bgRadius: +e.target.value })}
+                className="w-full accent-purple-500" />
+            </div>
+          )}
         </div>
       )}
 

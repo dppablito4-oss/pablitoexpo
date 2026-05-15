@@ -13,6 +13,8 @@ const HANDLE = {
   position: 'absolute', zIndex: 400,
 };
 
+const CORNERS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
+
 export default function CanvasElement({
   el, isSelected, onSelect, onUpdate, onDelete, containerRef,
 }) {
@@ -72,6 +74,30 @@ export default function CanvasElement({
     }
   }
 
+  // ── Smart resize: corners = proportional, sides = container only ────────
+  const handleResizeStop = (_, direction, ref, _delta, pos) => {
+    const newW = Math.max(5, toPct(ref.offsetWidth, cW()));
+    const newH = Math.max(2, toPct(ref.offsetHeight, cH()));
+
+    const updates = {
+      w: newW, h: newH,
+      x: Math.max(0, toPct(pos.x, cW())),
+      y: Math.max(0, toPct(pos.y, cH())),
+    };
+
+    // Side resize: compensate fontSize so text stays same visual size
+    const isCorner = CORNERS.includes(direction);
+    if (!isCorner && el.style?.fontSize && el.w > 0) {
+      const widthRatio = el.w / newW;
+      updates.style = { ...(el.style || {}), fontSize: Math.max(8, Math.round((el.style.fontSize || 16) * widthRatio)) };
+    }
+
+    onUpdate(el.id, updates);
+  };
+
+  // Font size badge
+  const fontSizeLabel = el.style?.fontSize ? `${el.style.fontSize}px` : null;
+
   return (
     <Rnd
       size={{ width: toPx(el.w, cW()), height: toPx(el.h, cH()) }}
@@ -82,12 +108,7 @@ export default function CanvasElement({
         x: Math.max(0, Math.min(95, toPct(d.x, cW()))),
         y: Math.max(0, Math.min(95, toPct(d.y, cH()))),
       })}
-      onResizeStop={(_, __, ref, ___, pos) => onUpdate(el.id, {
-        w: Math.max(5,  toPct(ref.offsetWidth,  cW())),
-        h: Math.max(2,  toPct(ref.offsetHeight, cH())),
-        x: Math.max(0,  toPct(pos.x, cW())),
-        y: Math.max(0,  toPct(pos.y, cH())),
-      })}
+      onResizeStop={handleResizeStop}
       onClick={(e) => { e.stopPropagation(); }}
       onPointerDown={handleClick}
       onDoubleClick={handleDblClick}
@@ -122,17 +143,29 @@ export default function CanvasElement({
       >
         {renderContent()}
 
-        {/* Type badge */}
+        {/* Type badge + font size indicator */}
         {isSelected && (
           <div style={{
             position: 'absolute', top: -18, left: 0,
-            fontSize: '9px', background: '#22d3ee', color: '#000',
-            padding: '1px 6px', borderRadius: '3px 3px 0 0',
-            fontWeight: 'bold', letterSpacing: '0.05em',
-            textTransform: 'uppercase', whiteSpace: 'nowrap',
-            zIndex: 410,
+            display: 'flex', gap: '2px', zIndex: 410,
           }}>
-            {el.type}{el.type === 'text' ? ' · dbl clic para editar' : ''}
+            <div style={{
+              fontSize: '9px', background: '#22d3ee', color: '#000',
+              padding: '1px 6px', borderRadius: '3px 3px 0 0',
+              fontWeight: 'bold', letterSpacing: '0.05em',
+              textTransform: 'uppercase', whiteSpace: 'nowrap',
+            }}>
+              {el.type}{el.type === 'text' ? ' · dbl clic para editar' : ''}
+            </div>
+            {fontSizeLabel && (
+              <div style={{
+                fontSize: '9px', background: 'rgba(168,85,250,0.9)', color: '#fff',
+                padding: '1px 5px', borderRadius: '3px 3px 0 0',
+                fontWeight: 'bold', whiteSpace: 'nowrap',
+              }}>
+                {fontSizeLabel}
+              </div>
+            )}
           </div>
         )}
 

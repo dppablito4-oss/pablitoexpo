@@ -69,6 +69,17 @@ export function TextContent({ el, editing = false, onContentChange }) {
   const maxFontPx = s.fontSize || 28;
   const fittedSize = useFitText(ref, el.content, maxFontPx, autoFit && !editing);
 
+  // Build text-decoration
+  const decorations = [
+    s.underline ? 'underline' : '',
+    s.strikethrough ? 'line-through' : '',
+  ].filter(Boolean).join(' ') || 'none';
+
+  // Build background (supports bgColor + bgOpacity)
+  const bgStyle = s.bgColor
+    ? `${s.bgColor}${Math.round((s.bgOpacity ?? 0.5) * 255).toString(16).padStart(2, '0')}`
+    : 'transparent';
+
   return (
     <div
       ref={ref}
@@ -82,18 +93,22 @@ export function TextContent({ el, editing = false, onContentChange }) {
         color: s.color || '#ffffff',
         textAlign: s.textAlign || 'left',
         opacity: s.opacity ?? 1,
-        lineHeight: 1.25,
+        lineHeight: s.lineHeight || 1.25,
         cursor: editing ? 'text' : 'default',
         outline: 'none',
         overflow: autoFit ? 'hidden' : 'visible',
-        textShadow: '0 2px 20px rgba(0,0,0,0.9)',
+        textShadow: s.textShadow === false ? 'none' : '0 2px 20px rgba(0,0,0,0.9)',
         userSelect: editing ? 'text' : 'none',
         fontFamily: s.fontFamily || 'inherit',
         textTransform: s.textTransform || 'none',
-        letterSpacing: s.letterSpacing || 'normal',
+        letterSpacing: s.letterSpacing ? `${s.letterSpacing}em` : 'normal',
         fontStyle: s.italic ? 'italic' : 'normal',
+        textDecoration: decorations,
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
+        background: bgStyle,
+        borderRadius: s.bgRadius ? `${s.bgRadius}px` : '0',
+        padding: s.bgColor ? '0.5cqw 0.75cqw' : '0',
       }}
     >
       {el.content || 'Texto'}

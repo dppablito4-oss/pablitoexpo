@@ -12,8 +12,7 @@
 -- CREATE EXTENSION IF NOT EXISTS pg_net;
 
 -- 3. Crear el job de Warm-Up que pinga la función cada 15 minutos
---    REEMPLAZA 'wraogfketbdpfmrpfwfb' con tu project-ref de Supabase
---    REEMPLAZA 'tu-anon-key-aqui' con tu SUPABASE_ANON_KEY
+--   
 
 SELECT cron.schedule(
     'warmup-pablito-copilot',        -- nombre del job (único)
