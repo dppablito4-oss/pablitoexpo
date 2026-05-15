@@ -567,14 +567,15 @@ export function CounterContent({ el }) {
         background: `linear-gradient(135deg, ${gradColor1}, ${gradColor2})`,
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
       }}>
+        {prefix}{count}{suffix}
       </div>
       {el.title && (
-        <div style={{ fontSize: toCqw(14), fontWeight: '700', color: '#22d3ee', marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: toCqw(14), fontWeight: '700', color: titleColor, marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
           {el.title}
         </div>
       )}
       {el.desc && (
-        <div style={{ fontSize: toCqw(12), color: 'rgba(255,255,255,0.4)', marginTop: '0.25cqw' }}>
+        <div style={{ fontSize: toCqw(12), color: descColor, marginTop: '0.25cqw' }}>
           {el.desc}
         </div>
       )}

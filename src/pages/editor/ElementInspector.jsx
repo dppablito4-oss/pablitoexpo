@@ -684,10 +684,52 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
       {/* BENTO controls */}
       {el.type === 'bento' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <label className="text-[10px] text-neutral-500">Items ({(el.items||[]).length})</label>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Diseño</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Columnas</label>
+              <select value={s.columns || 3}
+                onChange={e => upd({ columns: +e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
+                <option value="2">2 columnas</option>
+                <option value="3">3 columnas</option>
+                <option value="4">4 columnas</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color borde</label>
+              <input type="color" value={s.borderColor || '#1a1a1a'}
+                onChange={e => upd({ borderColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Opacidad fondo celdas: {((s.bgOpacity ?? 0.03) * 100).toFixed(0)}%</label>
+            <input type="range" min="0" max="0.2" step="0.01" value={s.bgOpacity ?? 0.03}
+              onChange={e => upd({ bgOpacity: +e.target.value })}
+              className="w-full accent-cyan-500" />
+          </div>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Items ({(el.items||[]).length})</label>
+
           {(el.items || []).map((item, i) => (
             <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
+                {/* Move up/down */}
+                <div className="flex flex-col gap-0.5">
+                  <button disabled={i === 0} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i-1], arr[i]] = [arr[i], arr[i-1]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === 0 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▲</button>
+                  <button disabled={i === (el.items||[]).length - 1} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === (el.items||[]).length - 1 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▼</button>
+                </div>
+
                 <input value={item.icon||''} placeholder="🚀" onChange={e => updateItem('items', i, { icon: e.target.value })}
                   className="w-10 bg-black border border-neutral-700 rounded p-1 text-center text-sm focus:outline-none" />
                 <input value={item.title||''} placeholder="Título" onChange={e => updateItem('items', i, { title: e.target.value })}
@@ -697,41 +739,179 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
                   <option value="small">S</option>
                   <option value="large">L</option>
                 </select>
-                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1">×</button>
+                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1 hover:text-red-300">×</button>
               </div>
               <input value={item.desc||''} placeholder="Descripción" onChange={e => updateItem('items', i, { desc: e.target.value })}
                 className="w-full bg-black border border-neutral-700 rounded p-1 text-neutral-400 text-[10px] focus:outline-none" />
             </div>
           ))}
-          <button onClick={() => addItem('items', { title: 'Nuevo', desc: '', icon: '⚡', size: 'small' })}
-            className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar item</button>
+          {(el.items||[]).length < 9 ? (
+            <button onClick={() => addItem('items', { title: 'Nuevo', desc: '', icon: '⚡', size: 'small' })}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar item</button>
+          ) : (
+            <span className="text-[9px] text-neutral-600 text-center">Máximo 9 items</span>
+          )}
         </div>
       )}
 
       {/* COUNTER controls */}
       {el.type === 'counter' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <InspectorInput label="Valor numérico" value={el.val || '0'} onChange={v => onUpdate({ val: v })} />
-          <InspectorInput label="Sufijo (+, %, K, etc)" value={el.suffix || ''} onChange={v => onUpdate({ suffix: v })} />
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Contenido</label>
+
+          <div className="grid grid-cols-3 gap-1">
+            <InspectorInput label="Prefijo" value={el.prefix || ''} onChange={v => onUpdate({ prefix: v })} placeholder="$" />
+            <InspectorInput label="Valor" value={el.val || '0'} onChange={v => onUpdate({ val: v })} placeholder="100" />
+            <InspectorInput label="Sufijo" value={el.suffix || ''} onChange={v => onUpdate({ suffix: v })} placeholder="%" />
+          </div>
+
           <InspectorInput label="Título" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
           <InspectorInput label="Descripción" value={el.desc || ''} onChange={v => onUpdate({ desc: v })} />
           <InspectorInput label="Tamaño número" value={s.fontSize || 96} onChange={v => upd({ fontSize: v })} type="number" min="32" max="200" />
+
+          {/* ── Colores ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Gradiente (inicio)</label>
+              <input type="color" value={s.gradColor1 || '#ffffff'}
+                onChange={e => upd({ gradColor1: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Gradiente (fin)</label>
+              <input type="color" value={s.gradColor2 || '#22d3ee'}
+                onChange={e => upd({ gradColor2: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color título</label>
+              <input type="color" value={s.titleColor || '#22d3ee'}
+                onChange={e => upd({ titleColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color descripción</label>
+              <input type="color" value={s.descColor || '#666666'}
+                onChange={e => upd({ descColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
         </div>
       )}
 
       {/* BLOCKQUOTE controls */}
       {el.type === 'blockquote' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Contenido</label>
+
           <label className="text-[10px] text-neutral-500">Cita</label>
           <textarea rows={3} value={el.content || ''}
             onChange={e => onUpdate({ content: e.target.value })}
             className="w-full bg-black border border-neutral-700 rounded p-2 text-white text-xs resize-none focus:outline-none italic" />
           <InspectorInput label="Autor" value={el.author || ''} onChange={v => onUpdate({ author: v })} />
+
+          {/* ── Tipografía ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Tipografía</label>
+
           <InspectorInput label="Tamaño texto" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="16" max="72" />
+
           <div>
-            <label className="text-[10px] text-neutral-500">Color</label>
-            <input type="color" value={s.color || '#ffffff'}
-              onChange={e => upd({ color: e.target.value })}
+            <label className="text-[10px] text-neutral-500">Fuente</label>
+            <select value={s.fontFamily || 'inherit'}
+              onChange={e => upd({ fontFamily: e.target.value })}
+              className="w-full bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none"
+              style={{ fontFamily: s.fontFamily || 'inherit' }}>
+              <option value="inherit">Predeterminada</option>
+              <option value="'Playfair Display', serif" style={{ fontFamily: 'Playfair Display' }}>Playfair Display</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Inter', sans-serif" style={{ fontFamily: 'Inter' }}>Inter</option>
+              <option value="'Montserrat', sans-serif" style={{ fontFamily: 'Montserrat' }}>Montserrat</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Grosor</label>
+              <select value={s.fontWeight || '400'}
+                onChange={e => upd({ fontWeight: e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
+                <option value="300">Light</option>
+                <option value="400">Normal</option>
+                <option value="600">Semibold</option>
+                <option value="700">Bold</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Interlineado: {(s.lineHeight || 1.5).toFixed(2)}</label>
+              <input type="range" min="1" max="2.5" step="0.1" value={s.lineHeight || 1.5}
+                onChange={e => upd({ lineHeight: +e.target.value })}
+                className="w-full accent-cyan-500" />
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
+            <input type="checkbox" checked={!!s.noItalic}
+              onChange={e => upd({ noItalic: e.target.checked })}
+              className="accent-cyan-500" />
+            Sin cursiva
+          </label>
+
+          {/* ── Colores ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color cita</label>
+              <input type="color" value={s.color || '#ffffff'}
+                onChange={e => upd({ color: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color autor</label>
+              <input type="color" value={s.authorColor || '#22d3ee'}
+                onChange={e => upd({ authorColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Borde acento</label>
+              <div className="flex gap-1 items-center">
+                <input type="color" value={s.accentColor || '#22d3ee'}
+                  onChange={e => upd({ accentColor: e.target.value })}
+                  className="w-8 h-7 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
+                {s.accentColor && s.accentColor !== 'transparent' && (
+                  <button onClick={() => upd({ accentColor: 'transparent' })}
+                    className="text-[9px] text-red-400 hover:text-red-300 px-1">Quitar</button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Fondo</label>
+              <div className="flex gap-1 items-center">
+                <input type="color" value={s.bgColor || '#111111'}
+                  onChange={e => upd({ bgColor: e.target.value })}
+                  className="w-8 h-7 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
+                {s.bgColor && s.bgColor !== 'transparent' && (
+                  <button onClick={() => upd({ bgColor: 'transparent' })}
+                    className="text-[9px] text-red-400 hover:text-red-300 px-1">Quitar</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Color marca de agua ("")</label>
+            <input type="color" value={s.watermarkColor || '#111111'}
+              onChange={e => upd({ watermarkColor: e.target.value })}
               className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
           </div>
         </div>
