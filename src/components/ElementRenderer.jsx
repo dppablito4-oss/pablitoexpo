@@ -361,8 +361,13 @@ export function ComparisonContent({ el }) {
 // ── Formula (KaTeX) ───────────────────────────────────────────────────────────
 export function FormulaContent({ el }) {
   const ref = useRef(null);
+  const s = el.style || {};
   const formula = el.content || 'E = mc^2';
   const label = el.label || '';
+  const glowColor = s.glowColor || 'rgba(34,211,238,0.3)';
+  const labelColor = s.labelColor || 'rgba(255,255,255,0.4)';
+  const bgColor = s.bgColor || 'transparent';
+  const padding = s.padding || '1cqw';
 
   useEffect(() => {
     if (ref.current) {
@@ -378,18 +383,21 @@ export function FormulaContent({ el }) {
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
+      background: bgColor,
+      borderRadius: bgColor !== 'transparent' ? '0.5cqw' : '0',
+      padding: padding,
     }}>
       <div
         ref={ref}
         style={{
-          fontSize: toCqw(el.style?.fontSize || 32),
-          color: el.style?.color || '#ffffff',
-          filter: 'drop-shadow(0 0 20px rgba(34,211,238,0.3))',
+          fontSize: toCqw(s.fontSize || 32),
+          color: s.color || '#ffffff',
+          filter: `drop-shadow(0 0 20px ${glowColor})`,
         }}
       />
       {label && (
         <div style={{
-          fontSize: toCqw(12), color: 'rgba(255,255,255,0.4)',
+          fontSize: toCqw(12), color: labelColor,
           marginTop: '0.625cqw', fontStyle: 'italic', letterSpacing: '0.04em',
         }}>
           {label}
@@ -401,12 +409,18 @@ export function FormulaContent({ el }) {
 
 // ── Code Terminal ─────────────────────────────────────────────────────────────
 export function CodeContent({ el }) {
+  const s = el.style || {};
   const lang = el.language || 'python';
   const code = el.content || '# Tu código aquí';
+  const filename = el.filename || '';
+  const showLineNumbers = el.showLines !== false;
+  const bgColor = s.bgColor || '#0d1117';
+  const lines = code.split('\n');
+
   return (
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
-      background: '#0d1117', borderRadius: '0.75cqw', overflow: 'hidden',
+      background: bgColor, borderRadius: '0.75cqw', overflow: 'hidden',
       border: '1px solid rgba(255,255,255,0.08)',
       boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
     }}>
@@ -420,19 +434,29 @@ export function CodeContent({ el }) {
         <div style={{ width: '0.625cqw', height: '0.625cqw', minWidth: '8px', minHeight: '8px', borderRadius: '50%', background: '#febc2e' }} />
         <div style={{ width: '0.625cqw', height: '0.625cqw', minWidth: '8px', minHeight: '8px', borderRadius: '50%', background: '#28c840' }} />
         <span style={{ marginLeft: '0.625cqw', fontSize: toCqw(11), color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
-          {lang}
+          {filename || lang}
         </span>
       </div>
       {/* Code body */}
       <pre style={{
         flex: 1, margin: 0, padding: '1cqw',
         fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace",
-        fontSize: toCqw(el.style?.fontSize || 14),
+        fontSize: toCqw(s.fontSize || 14),
         color: '#e6edf3', lineHeight: 1.6,
-        overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-        tabSize: 4,
+        overflow: 'auto', whiteSpace: 'pre',
+        tabSize: 4, display: 'flex',
       }}>
-        {code}
+        {showLineNumbers && (
+          <span style={{
+            color: 'rgba(255,255,255,0.15)', userSelect: 'none',
+            textAlign: 'right', paddingRight: '1cqw', marginRight: '1cqw',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            display: 'inline-block', minWidth: '2.5cqw',
+          }}>
+            {lines.map((_, i) => `${i + 1}\n`).join('')}
+          </span>
+        )}
+        <code style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{code}</code>
       </pre>
     </div>
   );
@@ -440,17 +464,22 @@ export function CodeContent({ el }) {
 
 // ── Bento Grid ────────────────────────────────────────────────────────────────
 export function BentoContent({ el }) {
+  const s = el.style || {};
   const items = el.items || [];
+  const cols = s.columns || 3;
+  const borderColor = s.borderColor || 'rgba(255,255,255,0.07)';
+  const bgOpacity = s.bgOpacity ?? 0.03;
   return (
     <div style={{
       width: '100%', height: '100%',
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateColumns: `repeat(${cols}, 1fr)`,
       gridAutoRows: 'minmax(5cqw, auto)',
       gap: '0.625cqw',
     }}>
       {items.map((item, i) => {
         const isLarge = item.size === 'large';
+        const itemColor = item.color || borderColor;
         return (
           <motion.div
             key={i}
@@ -461,9 +490,9 @@ export function BentoContent({ el }) {
             style={{
               gridColumn: isLarge ? 'span 2' : 'span 1',
               gridRow: isLarge ? 'span 2' : 'span 1',
-              background: 'rgba(255,255,255,0.03)',
+              background: `rgba(255,255,255,${bgOpacity})`,
               backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              border: `1px solid ${itemColor}`,
               borderRadius: '0.875cqw', padding: '1.125cqw',
               display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
               position: 'relative', overflow: 'hidden',
@@ -489,11 +518,18 @@ export function BentoContent({ el }) {
 
 // ── Counter (Animated Number) ─────────────────────────────────────────────────
 export function CounterContent({ el }) {
+  const s = el.style || {};
   const targetVal = parseInt(el.val) || 0;
+  const prefix = el.prefix || '';
   const suffix = el.suffix || '';
   const [count, setCount] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef(null);
+
+  const gradColor1 = s.gradColor1 || '#ffffff';
+  const gradColor2 = s.gradColor2 || '#22d3ee';
+  const titleColor = s.titleColor || '#22d3ee';
+  const descColor = s.descColor || 'rgba(255,255,255,0.4)';
 
   useEffect(() => {
     if (!ref.current) return;
@@ -526,12 +562,11 @@ export function CounterContent({ el }) {
       alignItems: 'center', justifyContent: 'center', textAlign: 'center',
     }}>
       <div style={{
-        fontSize: toCqw(el.style?.fontSize || 96),
+        fontSize: toCqw(s.fontSize || 96),
         fontWeight: '900', lineHeight: 1, letterSpacing: '-0.04em',
-        background: 'linear-gradient(135deg, #ffffff, #22d3ee)',
+        background: `linear-gradient(135deg, ${gradColor1}, ${gradColor2})`,
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
       }}>
-        {count}{suffix}
       </div>
       {el.title && (
         <div style={{ fontSize: toCqw(14), fontWeight: '700', color: '#22d3ee', marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
@@ -549,23 +584,33 @@ export function CounterContent({ el }) {
 
 // ── Blockquote ────────────────────────────────────────────────────────────────
 export function BlockquoteContent({ el }) {
+  const s = el.style || {};
+  const authorColor = s.authorColor || '#22d3ee';
+  const quoteColor = s.color || '#ffffff';
+  const watermarkColor = s.watermarkColor || 'rgba(255,255,255,0.04)';
+  const accentColor = s.accentColor || 'transparent';
+  const bgColor = s.bgColor || 'transparent';
+
   return (
     <div style={{
       width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center', textAlign: 'center',
       position: 'relative', padding: '1cqw', overflow: 'hidden',
+      background: bgColor,
+      borderLeft: accentColor !== 'transparent' ? `4px solid ${accentColor}` : 'none',
+      borderRadius: bgColor !== 'transparent' ? '0.5cqw' : '0',
     }}>
       {/* Giant watermark quotes */}
       <div style={{
         position: 'absolute', top: '-0.625cqw', left: '0',
-        fontSize: toCqw(140), fontWeight: '900', color: 'rgba(255,255,255,0.04)',
+        fontSize: toCqw(140), fontWeight: '900', color: watermarkColor,
         lineHeight: 1, fontFamily: 'Georgia, serif', pointerEvents: 'none',
       }}>
         "
       </div>
       <div style={{
         position: 'absolute', bottom: '-2.5cqw', right: '0',
-        fontSize: toCqw(140), fontWeight: '900', color: 'rgba(255,255,255,0.04)',
+        fontSize: toCqw(140), fontWeight: '900', color: watermarkColor,
         lineHeight: 1, fontFamily: 'Georgia, serif', pointerEvents: 'none',
         transform: 'rotate(180deg)',
       }}>
@@ -578,10 +623,14 @@ export function BlockquoteContent({ el }) {
         transition={{ duration: 0.8 }}
         viewport={{ once: false }}
         style={{
-          fontSize: toCqw(el.style?.fontSize || 28),
-          fontStyle: 'italic', color: el.style?.color || '#ffffff',
-          fontWeight: '400', lineHeight: 1.5, maxWidth: '90%',
+          fontSize: toCqw(s.fontSize || 28),
+          fontStyle: s.noItalic ? 'normal' : 'italic',
+          color: quoteColor,
+          fontWeight: s.fontWeight || '400',
+          lineHeight: s.lineHeight || 1.5,
+          maxWidth: '90%',
           margin: 0, position: 'relative', zIndex: 1,
+          fontFamily: s.fontFamily || 'inherit',
         }}
       >
         {el.content || '"Una cita inspiradora aquí."'}
@@ -593,7 +642,7 @@ export function BlockquoteContent({ el }) {
           transition={{ delay: 0.3, duration: 0.5 }}
           viewport={{ once: false }}
           style={{
-            fontSize: toCqw(13), color: '#22d3ee', fontWeight: '600',
+            fontSize: toCqw(13), color: authorColor, fontWeight: '600',
             marginTop: '0.875cqw', letterSpacing: '0.1em', textTransform: 'uppercase',
             position: 'relative', zIndex: 1,
           }}

@@ -559,34 +559,125 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
       {/* FORMULA controls */}
       {el.type === 'formula' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <label className="text-[10px] text-neutral-500">Fórmula LaTeX</label>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Fórmula LaTeX</label>
           <textarea rows={2} value={el.content || ''}
             onChange={e => onUpdate({ content: e.target.value })}
             placeholder="E = mc^2"
             className="w-full bg-black border border-neutral-700 rounded p-2 text-green-300 text-xs font-mono resize-none focus:outline-none" />
-          <InspectorInput label="Etiqueta" value={el.label || ''} onChange={v => onUpdate({ label: v })} />
+          
+          {/* Quick templates */}
+          <label className="text-[9px] text-neutral-500 uppercase tracking-widest">Insertar plantilla</label>
+          <div className="grid grid-cols-3 gap-1">
+            {[
+              { label: '∫', latex: '\\int_{a}^{b} f(x)\\, dx' },
+              { label: '∑', latex: '\\sum_{i=1}^{n} x_i' },
+              { label: 'a/b', latex: '\\frac{a}{b}' },
+              { label: '√', latex: '\\sqrt{x^2 + y^2}' },
+              { label: 'lím', latex: '\\lim_{x \\to \\infty} f(x)' },
+              { label: '[ ]', latex: '\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}' },
+            ].map((tpl) => (
+              <button key={tpl.label} type="button"
+                onClick={() => onUpdate({ content: tpl.latex })}
+                className="py-1 rounded text-[10px] font-bold bg-neutral-900 border border-neutral-700 text-neutral-400 hover:text-white hover:border-cyan-700 transition-colors">
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+
+          <InspectorInput label="Etiqueta" value={el.label || ''} onChange={v => onUpdate({ label: v })} placeholder="Ej: Ecuación de Einstein" />
           <InspectorInput label="Tamaño (px)" value={s.fontSize || 32} onChange={v => upd({ fontSize: v })} type="number" min="16" max="120" />
+
+          {/* ── Colores ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color fórmula</label>
+              <input type="color" value={s.color || '#ffffff'}
+                onChange={e => upd({ color: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color etiqueta</label>
+              <input type="color" value={s.labelColor || '#666666'}
+                onChange={e => upd({ labelColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Color glow</label>
+            <input type="color" value={s.glowColor || '#22d3ee'}
+              onChange={e => upd({ glowColor: e.target.value })}
+              className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Fondo (opcional)</label>
+            <div className="flex gap-1 items-center">
+              <input type="color" value={s.bgColor || '#111111'}
+                onChange={e => upd({ bgColor: e.target.value })}
+                className="w-8 h-7 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
+              {s.bgColor && s.bgColor !== 'transparent' && (
+                <button onClick={() => upd({ bgColor: 'transparent' })}
+                  className="text-[9px] text-red-400 hover:text-red-300 px-1">Quitar</button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
       {/* CODE controls */}
       {el.type === 'code' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <div>
-            <label className="text-[10px] text-neutral-500">Lenguaje</label>
-            <select value={el.language || 'python'}
-              onChange={e => onUpdate({ language: e.target.value })}
-              className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
-              {['python','javascript','sql','html','css','java','c','bash','json','text'].map(l =>
-                <option key={l} value={l}>{l}</option>
-              )}
-            </select>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Terminal</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Lenguaje</label>
+              <select value={el.language || 'python'}
+                onChange={e => onUpdate({ language: e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
+                {['python','javascript','typescript','sql','html','css','java','c','c++','c#','go','rust','php','ruby','swift','kotlin','bash','json','yaml','text'].map(l =>
+                  <option key={l} value={l}>{l}</option>
+                )}
+              </select>
+            </div>
+            <InspectorInput label="Nombre archivo" value={el.filename || ''} onChange={v => onUpdate({ filename: v })} placeholder="main.py" />
           </div>
+
           <label className="text-[10px] text-neutral-500">Código</label>
           <textarea rows={6} value={el.content || ''}
             onChange={e => onUpdate({ content: e.target.value })}
             className="w-full bg-black border border-neutral-700 rounded p-2 text-green-300 text-xs font-mono resize-none focus:outline-none" />
+          
           <InspectorInput label="Tamaño fuente" value={s.fontSize || 14} onChange={v => upd({ fontSize: v })} type="number" min="10" max="24" />
+
+          <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer select-none">
+            <input type="checkbox" checked={el.showLines !== false}
+              onChange={e => onUpdate({ showLines: e.target.checked })}
+              className="accent-cyan-500" />
+            Mostrar números de línea
+          </label>
+
+          {/* Theme presets */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Tema</label>
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { label: 'GitHub', bg: '#0d1117' },
+              { label: 'Monokai', bg: '#272822' },
+              { label: 'Dracula', bg: '#282a36' },
+              { label: 'Night', bg: '#011627' },
+            ].map(t => (
+              <button key={t.label} type="button"
+                onClick={() => upd({ bgColor: t.bg })}
+                className={`py-1 rounded text-[9px] font-bold border transition-colors ${(s.bgColor || '#0d1117') === t.bg ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
