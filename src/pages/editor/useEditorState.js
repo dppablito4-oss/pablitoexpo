@@ -122,6 +122,15 @@ export default function useEditorState() {
   const canvasRef  = useRef(null);
   const saveTimer  = useRef(null);
 
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  /** Sync the undo/redo button states after any history mutation */
+  const syncHistoryFlags = useCallback(() => {
+    setCanUndo(history.current.length > 0);
+    setCanRedo(future.current.length > 0);
+  }, []);
+
   /** Push a snapshot to the undo history before making changes */
   const pushHistory = useCallback(() => {
     history.current = [{ sections: JSON.parse(JSON.stringify(sections)), activeSectionId, selectedElId }, ...history.current].slice(0, MAX_HISTORY);
@@ -333,14 +342,7 @@ export default function useEditorState() {
     markDirty();
   }, [activeSectionId, pushHistory]);
 
-  const [canUndo, setCanUndo] = useState(false);
-  const [canRedo, setCanRedo] = useState(false);
 
-  /** Sync the undo/redo button states after any history mutation */
-  const syncHistoryFlags = useCallback(() => {
-    setCanUndo(history.current.length > 0);
-    setCanRedo(future.current.length > 0);
-  }, []);
 
   useEffect(() => {
     const handler = (e) => {
