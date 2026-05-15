@@ -120,8 +120,8 @@ export default function RemoteControl() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '20px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'center' }}>
-        <h2 style={{ color: 'var(--accent-primary)', margin: 0, fontSize: '1.2rem' }}>Uplink Remoto</h2>
-        <button onClick={() => navigate('/')} style={{ background: 'none', color: 'var(--text-secondary)', border: 'none' }}>Desconectar</button>
+        <h2 style={{ color: '#22d3ee', margin: 0, fontSize: '1.2rem' }}>Uplink Remoto</h2>
+        <button onClick={() => navigate('/')} style={{ background: 'none', color: '#888', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>Desconectar</button>
       </header>
 
       {/* TOGGLE MODO */}
@@ -165,20 +165,22 @@ export default function RemoteControl() {
           border: mode === 'scroll' ? '2px dashed #00f0ff' : '2px dashed rgba(255,0,85,0.6)',
           marginBottom: '20px',
           position: 'relative',
-          touchAction: 'none'
+          touchAction: 'none',
+          borderRadius: '16px',
+          background: 'rgba(255,255,255,0.03)',
         }}
       >
-        <p style={{ color: 'var(--text-secondary)', pointerEvents: 'none', userSelect: 'none', textAlign: 'center', fontSize: '1.1rem' }}>
+        <p style={{ color: '#888', pointerEvents: 'none', userSelect: 'none', textAlign: 'center', fontSize: '1.1rem' }}>
           {mode === 'laser' ? '👆 Desliza 1 dedo para mover LÁSER' : '👆 Desliza 1 dedo para hacer SCROLL'}
         </p>
       </div>
 
       {/* Botones de navegación de salto */}
       <div style={{ display: 'flex', gap: '15px', height: '80px' }}>
-        <button onClick={() => sendNav('prev')} className="btn-cyber" style={{ flex: 1, fontSize: '1rem', border: '1px solid var(--border-color)' }}>
+        <button onClick={() => sendNav('prev')} style={{ flex: 1, fontSize: '1rem', border: '1px solid #333', background: '#1a1a1a', color: '#ccc', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>
           Bloque ⬆️
         </button>
-        <button onClick={() => sendNav('next')} className="btn-cyber" style={{ flex: 1, fontSize: '1rem', border: '1px solid var(--border-color)' }}>
+        <button onClick={() => sendNav('next')} style={{ flex: 1, fontSize: '1rem', border: '1px solid #333', background: '#1a1a1a', color: '#ccc', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>
           Bloque ⬇️
         </button>
       </div>

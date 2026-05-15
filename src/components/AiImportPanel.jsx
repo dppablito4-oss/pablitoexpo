@@ -61,7 +61,7 @@ ESTRUCTURA:
   ]
 }
 
-GENERA ${sectionCount} SECCIONES COMPLETAS con contenido real o usando su fente si el usuario subio previamente (prodias interactuar con EL USUARIO si el tema es diferente a de la fuente previa, nada mas apra confirmar) sobre "${topic}".`;
+GENERA ${sectionCount} SECCIONES COMPLETAS con contenido real o usando su fuente si el usuario subió previamente (podrías interactuar con EL USUARIO si el tema es diferente al de la fuente previa, nada más para confirmar) sobre "${topic}".`;
 }
 
 export default function AiImportPanel({ onApply, currentSections = [] }) {

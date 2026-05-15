@@ -18,8 +18,16 @@ function InspectorInput({ label, value, onChange, type = 'text', ...rest }) {
   );
 }
 
+// ── Size Presets ─────────────────────────────────────────────────────────────
+const SIZE_PRESETS = [
+  { label: 'Full', x: 2, y: 2, w: 96, h: 96 },
+  { label: 'Mitad', x: 5, y: 10, w: 45, h: 80 },
+  { label: 'Tarjeta', x: 10, y: 15, w: 35, h: 50 },
+  { label: 'Badge', x: 5, y: 5, w: 20, h: 15 },
+];
+
 // ── Main Component ───────────────────────────────────────────────────────────
-export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch }) {
+export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImageSearch, onMoveLayer }) {
   const [localQuery, setLocalQuery] = useState('');
 
   if (!el) return (
@@ -51,6 +59,38 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           className="text-[10px] px-2 py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white">
           Duplicar
         </button>
+      </div>
+
+      {/* ── Layer Controls (Z-Index) ── */}
+      {onMoveLayer && (
+        <div className="flex gap-1">
+          <button onClick={() => onMoveLayer('top')} title="Traer al frente"
+            className="flex-1 text-[9px] py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
+            ⬆⬆ Frente
+          </button>
+          <button onClick={() => onMoveLayer('up')} title="Subir una capa"
+            className="flex-1 text-[9px] py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
+            ⬆ Subir
+          </button>
+          <button onClick={() => onMoveLayer('down')} title="Bajar una capa"
+            className="flex-1 text-[9px] py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
+            ⬇ Bajar
+          </button>
+          <button onClick={() => onMoveLayer('bottom')} title="Enviar al fondo"
+            className="flex-1 text-[9px] py-1 rounded bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
+            ⬇⬇ Fondo
+          </button>
+        </div>
+      )}
+
+      {/* ── Size Presets ── */}
+      <div className="flex gap-1">
+        {SIZE_PRESETS.map(p => (
+          <button key={p.label} onClick={() => onUpdate({ x: p.x, y: p.y, w: p.w, h: p.h })}
+            className="flex-1 text-[9px] py-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-500 hover:text-cyan-400 hover:border-cyan-800 transition-colors">
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {/* TEXT controls */}

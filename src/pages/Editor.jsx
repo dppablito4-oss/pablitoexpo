@@ -32,7 +32,7 @@ export default function Editor() {
     isLeftPanelOpen, setIsLeftPanelOpen,
     canvasRef,
     updateElement, deleteElement, duplicateElement, addElement, handleSelectEl,
-    copyElement, pasteElement,
+    copyElement, pasteElement, moveElementLayer,
     addSection, deleteSection, updateSection,
     handleAiApply,
     undo, redo, canUndo, canRedo,
@@ -277,6 +277,7 @@ export default function Editor() {
                 onUpdate={(changes) => selectedEl && updateElement(selectedEl.id, changes)}
                 onDuplicate={duplicateElement}
                 onOpenImageSearch={openImageSearchForElement}
+                onMoveLayer={moveElementLayer}
               />
             </div>
             <div style={{ display: rightTab === 'section' ? 'flex' : 'none', flexDirection: 'column' }}>

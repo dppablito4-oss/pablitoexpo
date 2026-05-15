@@ -344,6 +344,29 @@ export default function useEditorState() {
 
 
 
+  // ── Move element layer (z-index via array order) ────────────────────────────
+  const moveElementLayer = useCallback((direction) => {
+    if (!selectedElId || !activeSectionId) return;
+    pushHistory();
+    setSections(prev => prev.map(sec => {
+      if (sec.id !== activeSectionId) return sec;
+      const els = [...sec.elements];
+      const idx = els.findIndex(e => e.id === selectedElId);
+      if (idx === -1) return sec;
+      if (direction === 'up' && idx < els.length - 1) {
+        [els[idx], els[idx + 1]] = [els[idx + 1], els[idx]];
+      } else if (direction === 'down' && idx > 0) {
+        [els[idx], els[idx - 1]] = [els[idx - 1], els[idx]];
+      } else if (direction === 'top') {
+        els.push(els.splice(idx, 1)[0]);
+      } else if (direction === 'bottom') {
+        els.unshift(els.splice(idx, 1)[0]);
+      }
+      return { ...sec, elements: els };
+    }));
+    markDirty();
+  }, [selectedElId, activeSectionId, pushHistory]);
+
   useEffect(() => {
     const handler = (e) => {
       // Don't intercept when typing in inputs/textareas/contenteditable
@@ -395,6 +418,22 @@ export default function useEditorState() {
         return;
       }
 
+      // Arrow keys — Nudge selected element (1% or 0.25% with Shift)
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedElId) {
+        e.preventDefault();
+        const step = e.shiftKey ? 0.25 : 1;
+        const nudge = {};
+        if (e.key === 'ArrowUp')    nudge.y = -step;
+        if (e.key === 'ArrowDown')  nudge.y = step;
+        if (e.key === 'ArrowLeft')  nudge.x = -step;
+        if (e.key === 'ArrowRight') nudge.x = step;
+        updateElement(selectedElId, {
+          x: Math.max(0, Math.min(95, (activeSection?.elements?.find(el => el.id === selectedElId)?.x ?? 0) + (nudge.x || 0))),
+          y: Math.max(0, Math.min(95, (activeSection?.elements?.find(el => el.id === selectedElId)?.y ?? 0) + (nudge.y || 0))),
+        });
+        return;
+      }
+
       // Escape — Deselect
       if (e.key === 'Escape') {
         setSelectedElId(null);
@@ -404,7 +443,7 @@ export default function useEditorState() {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo, duplicateElement, deleteElement, copyElement, pasteElement, selectedElId]);
+  }, [undo, redo, duplicateElement, deleteElement, copyElement, pasteElement, selectedElId, updateElement, activeSection]);
 
   // ── Auto-switch right tab when element selected ──────────────────────────────
   const handleSelectEl = (elId) => {
@@ -489,6 +528,7 @@ export default function useEditorState() {
     handleSelectEl,
     copyElement,
     pasteElement,
+    moveElementLayer,
 
     // Actions: sections
     addSection,
