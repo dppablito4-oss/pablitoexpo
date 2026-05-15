@@ -4,7 +4,7 @@
  * Toda la lógica de estado del editor vive aquí:
  * carga, guardado, secciones, elementos, undo, image search, paneles móviles.
  */
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -112,11 +112,21 @@ export default function useEditorState() {
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
 
-  // ── Undo stack (for AI changes) ────────────────────────────────────────
-  const undoStack = useRef([]); // up to 10 snapshots
+  // ── Undo/Redo history ──────────────────────────────────────────────────
+  const MAX_HISTORY = 30;
+  const history = useRef([]);     // past snapshots
+  const future = useRef([]);      // redo snapshots
+  const isUndoRedo = useRef(false);
+  const clipboard = useRef(null); // for Ctrl+C/V
 
   const canvasRef  = useRef(null);
   const saveTimer  = useRef(null);
+
+  /** Push a snapshot to the undo history before making changes */
+  const pushHistory = useCallback(() => {
+    history.current = [{ sections: JSON.parse(JSON.stringify(sections)), activeSectionId, selectedElId }, ...history.current].slice(0, MAX_HISTORY);
+    future.current = []; // clear redo stack when new action is taken
+  }, [sections, activeSectionId, selectedElId]);
 
   // ── Load ────────────────────────────────────────────────────────────────────
   const hasLoadedId = useRef(null);
@@ -186,6 +196,7 @@ export default function useEditorState() {
 
   // ── Element actions ──────────────────────────────────────────────────────────
   const updateElement = useCallback((elId, changes) => {
+    if (!isUndoRedo.current) pushHistory();
     setSections(prev => prev.map(sec =>
       sec.id !== activeSectionId ? sec : {
         ...sec,
@@ -193,27 +204,30 @@ export default function useEditorState() {
       }
     ));
     markDirty();
-  }, [activeSectionId]);
+  }, [activeSectionId, pushHistory]);
 
   const deleteElement = useCallback((elId) => {
+    pushHistory();
     setSections(prev => prev.map(sec =>
       sec.id !== activeSectionId ? sec : { ...sec, elements: sec.elements.filter(e => e.id !== elId) }
     ));
     setSelectedElId(null);
     markDirty();
-  }, [activeSectionId]);
+  }, [activeSectionId, pushHistory]);
 
   const duplicateElement = useCallback(() => {
     if (!selectedEl) return;
-    const newEl = { ...selectedEl, id: uid(), x: selectedEl.x + 3, y: selectedEl.y + 3 };
+    pushHistory();
+    const newEl = { ...JSON.parse(JSON.stringify(selectedEl)), id: uid(), x: selectedEl.x + 3, y: selectedEl.y + 3 };
     setSections(prev => prev.map(sec =>
       sec.id !== activeSectionId ? sec : { ...sec, elements: [...sec.elements, newEl] }
     ));
     setSelectedElId(newEl.id);
     markDirty();
-  }, [selectedEl, activeSectionId]);
+  }, [selectedEl, activeSectionId, pushHistory]);
 
   const addElement = useCallback((type) => {
+    pushHistory();
     const newEl = { id: uid(), type, ...ELEMENT_DEFAULTS[type] };
     setSections(prev => prev.map(sec =>
       sec.id !== activeSectionId ? sec : { ...sec, elements: [...sec.elements, newEl] }
@@ -221,7 +235,7 @@ export default function useEditorState() {
     setSelectedElId(newEl.id);
     setRightTab('element');
     markDirty();
-  }, [activeSectionId]);
+  }, [activeSectionId, pushHistory]);
 
   // ── Section actions ──────────────────────────────────────────────────────────
   const addSection = useCallback(() => {
@@ -260,24 +274,127 @@ export default function useEditorState() {
     } else {
       newSections = migrateToSections({ nasa: data });
     }
-    // Save snapshot for undo BEFORE applying
-    undoStack.current = [{ sections: sections.map(s => ({...s})), activeSectionId }, ...undoStack.current].slice(0, 10);
+    pushHistory();
     setSections(newSections);
     setActiveSectionId(newSections[0]?.id || null);
     setSelectedElId(null);
     markDirty();
-  }, [sections, activeSectionId]);
+  }, [pushHistory]);
 
-  // ── Undo last AI change ───────────────────────────────────────────────────────
-  const undoAiChange = useCallback(() => {
-    if (!undoStack.current.length) return false;
-    const last = undoStack.current.shift();
+  // ── Undo / Redo ─────────────────────────────────────────────────────────────
+  const undo = useCallback(() => {
+    if (!history.current.length) return false;
+    // Save current state to future (redo)
+    future.current = [{ sections: JSON.parse(JSON.stringify(sections)), activeSectionId, selectedElId }, ...future.current].slice(0, MAX_HISTORY);
+    const last = history.current.shift();
+    isUndoRedo.current = true;
     setSections(last.sections);
     setActiveSectionId(last.activeSectionId);
-    setSelectedElId(null);
+    setSelectedElId(last.selectedElId || null);
     markDirty();
+    isUndoRedo.current = false;
     return true;
-  }, []);
+  }, [sections, activeSectionId, selectedElId]);
+
+  const redo = useCallback(() => {
+    if (!future.current.length) return false;
+    // Save current state to history
+    history.current = [{ sections: JSON.parse(JSON.stringify(sections)), activeSectionId, selectedElId }, ...history.current].slice(0, MAX_HISTORY);
+    const next = future.current.shift();
+    isUndoRedo.current = true;
+    setSections(next.sections);
+    setActiveSectionId(next.activeSectionId);
+    setSelectedElId(next.selectedElId || null);
+    markDirty();
+    isUndoRedo.current = false;
+    return true;
+  }, [sections, activeSectionId, selectedElId]);
+
+  // Backwards-compatible alias
+  const undoAiChange = undo;
+
+  // ── Copy / Paste ────────────────────────────────────────────────────────────
+  const copyElement = useCallback(() => {
+    if (!selectedEl) return;
+    clipboard.current = JSON.parse(JSON.stringify(selectedEl));
+  }, [selectedEl]);
+
+  const pasteElement = useCallback(() => {
+    if (!clipboard.current) return;
+    pushHistory();
+    const newEl = { ...clipboard.current, id: uid(), x: clipboard.current.x + 3, y: clipboard.current.y + 3 };
+    setSections(prev => prev.map(sec =>
+      sec.id !== activeSectionId ? sec : { ...sec, elements: [...sec.elements, newEl] }
+    ));
+    setSelectedElId(newEl.id);
+    markDirty();
+  }, [activeSectionId, pushHistory]);
+
+  // ── Keyboard shortcuts ──────────────────────────────────────────────────────
+  const canUndo = useMemo(() => history.current.length > 0, [sections]);
+  const canRedo = useMemo(() => future.current.length > 0, [sections]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      // Don't intercept when typing in inputs/textareas/contenteditable
+      const tag = e.target.tagName;
+      const isEditable = e.target.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      // Ctrl+Z — Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+
+      // Ctrl+Y or Ctrl+Shift+Z — Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      // Ctrl+D — Duplicate
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isEditable) {
+        e.preventDefault();
+        duplicateElement();
+        return;
+      }
+
+      // Ctrl+C — Copy element
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isEditable && selectedElId) {
+        e.preventDefault();
+        copyElement();
+        return;
+      }
+
+      // Ctrl+V — Paste element
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isEditable) {
+        e.preventDefault();
+        pasteElement();
+        return;
+      }
+
+      // Skip the rest if we're in an editable field
+      if (isEditable) return;
+
+      // Delete / Backspace — Delete selected element
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElId) {
+        e.preventDefault();
+        deleteElement(selectedElId);
+        return;
+      }
+
+      // Escape — Deselect
+      if (e.key === 'Escape') {
+        setSelectedElId(null);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo, duplicateElement, deleteElement, copyElement, pasteElement, selectedElId]);
 
   // ── Auto-switch right tab when element selected ──────────────────────────────
   const handleSelectEl = (elId) => {
@@ -360,6 +477,8 @@ export default function useEditorState() {
     duplicateElement,
     addElement,
     handleSelectEl,
+    copyElement,
+    pasteElement,
 
     // Actions: sections
     addSection,
@@ -369,5 +488,11 @@ export default function useEditorState() {
     // Actions: AI
     handleAiApply,
     undoAiChange,
+
+    // Actions: history
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   };
 }

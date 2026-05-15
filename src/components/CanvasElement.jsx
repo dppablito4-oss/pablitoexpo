@@ -108,6 +108,7 @@ export default function CanvasElement({
         onBlur={() => { if (editing) setEditing(false); }}
         style={{
           width: '100%', height: '100%',
+          containerType: 'size',
           border: isSelected
             ? '1.5px solid rgba(34,211,238,0.85)'
             : '1px solid rgba(255,255,255,0.04)',

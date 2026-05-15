@@ -32,8 +32,10 @@ export default function Editor() {
     isLeftPanelOpen, setIsLeftPanelOpen,
     canvasRef,
     updateElement, deleteElement, duplicateElement, addElement, handleSelectEl,
+    copyElement, pasteElement,
     addSection, deleteSection, updateSection,
     handleAiApply,
+    undo, redo, canUndo, canRedo,
   } = state;
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -54,6 +56,17 @@ export default function Editor() {
           <span className="text-xs font-bold text-neutral-300 truncate max-w-[200px]">
             {presentation?.title || 'Editor'}
           </span>
+          {/* Undo / Redo */}
+          <div className="flex items-center gap-1 ml-2 border-l border-neutral-800 pl-3">
+            <button onClick={undo} disabled={!canUndo} title="Deshacer (Ctrl+Z)"
+              className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-all ${canUndo ? 'text-neutral-300 hover:text-white hover:bg-neutral-800' : 'text-neutral-700 cursor-not-allowed'}`}>
+              ↩
+            </button>
+            <button onClick={redo} disabled={!canRedo} title="Rehacer (Ctrl+Y)"
+              className={`w-7 h-7 flex items-center justify-center rounded text-sm transition-all ${canRedo ? 'text-neutral-300 hover:text-white hover:bg-neutral-800' : 'text-neutral-700 cursor-not-allowed'}`}>
+              ↪
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-[10px] font-mono transition-colors ${
