@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Las credenciales vienen de variables de entorno (.env.local en desarrollo, Vercel en producción).
-// La anon key es pública por diseño — la seguridad real viene de las políticas RLS.
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Las variables de entorno tienen prioridad, pero incluimos fallbacks
+// porque la anon key de Supabase es PÚBLICA por diseño (publishable).
+// La seguridad real viene de las políticas RLS en la base de datos.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+  || 'https://wraogfketbdpfmrpfwfb.supabase.co';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('⚠️ Faltan las variables de entorno VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY. Revisa tu archivo .env.local');
-}
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+  || 'sb_publishable_vcJNXS9cC2QaRMlLgoXs3g_TqIokq4d';
 
-export const supabase = createClient(SUPABASE_URL || '', SUPABASE_ANON_KEY || '');
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
