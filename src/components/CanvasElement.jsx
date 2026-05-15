@@ -13,8 +13,6 @@ const HANDLE = {
   position: 'absolute', zIndex: 400,
 };
 
-const CORNERS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
-
 export default function CanvasElement({
   el, isSelected, onSelect, onUpdate, onDelete, containerRef,
 }) {
@@ -85,18 +83,11 @@ export default function CanvasElement({
       y: Math.max(0, toPct(pos.y, cH())),
     };
 
-    // Side resize: compensate fontSize so text stays same visual size
-    const isCorner = CORNERS.includes(direction);
-    if (!isCorner && el.style?.fontSize && el.w > 0) {
-      const widthRatio = el.w / newW;
-      updates.style = { ...(el.style || {}), fontSize: Math.max(8, Math.round((el.style.fontSize || 16) * widthRatio)) };
-    }
-
     onUpdate(el.id, updates);
   };
 
   // Font size badge
-  const fontSizeLabel = el.style?.fontSize ? `${el.style.fontSize}px` : null;
+  const fontSizeLabel = el.style?.fontSize ? `${el.style.fontSize}` : null;
 
   return (
     <Rnd
@@ -129,7 +120,7 @@ export default function CanvasElement({
         onBlur={() => { if (editing) setEditing(false); }}
         style={{
           width: '100%', height: '100%',
-          containerType: 'size',
+          containerType: 'inline-size',
           border: isSelected
             ? '1.5px solid rgba(34,211,238,0.85)'
             : '1px solid rgba(255,255,255,0.04)',
