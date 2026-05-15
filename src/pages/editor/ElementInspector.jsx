@@ -86,7 +86,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <InspectorInput label="Tamaño (px)" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="8" max="220" />
+            <InspectorInput label="Tamaño" value={s.fontSize || 28} onChange={v => upd({ fontSize: v })} type="number" min="8" max="220" />
             <div>
               <label className="text-[10px] text-neutral-500">Color</label>
               <input type="color" value={s.color || '#ffffff'}
@@ -372,7 +372,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
 
           <InspectorInput label="Título" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
           <InspectorInput label="Descripción" value={el.desc || ''} onChange={v => onUpdate({ desc: v })} />
-          <InspectorInput label="Tamaño número (px)" value={s.fontSize || 64} onChange={v => upd({ fontSize: v })} type="number" min="24" max="180" />
+          <InspectorInput label="Tamaño número" value={s.fontSize || 64} onChange={v => upd({ fontSize: v })} type="number" min="24" max="180" />
 
           {/* ── Colores ── */}
           <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
@@ -586,7 +586,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           </div>
 
           <InspectorInput label="Etiqueta" value={el.label || ''} onChange={v => onUpdate({ label: v })} placeholder="Ej: Ecuación de Einstein" />
-          <InspectorInput label="Tamaño (px)" value={s.fontSize || 32} onChange={v => upd({ fontSize: v })} type="number" min="16" max="120" />
+          <InspectorInput label="Tamaño" value={s.fontSize || 32} onChange={v => upd({ fontSize: v })} type="number" min="16" max="120" />
 
           {/* ── Colores ── */}
           <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
