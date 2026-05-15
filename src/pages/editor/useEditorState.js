@@ -4,7 +4,7 @@
  * Toda la lógica de estado del editor vive aquí:
  * carga, guardado, secciones, elementos, undo, image search, paneles móviles.
  */
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -126,7 +126,8 @@ export default function useEditorState() {
   const pushHistory = useCallback(() => {
     history.current = [{ sections: JSON.parse(JSON.stringify(sections)), activeSectionId, selectedElId }, ...history.current].slice(0, MAX_HISTORY);
     future.current = []; // clear redo stack when new action is taken
-  }, [sections, activeSectionId, selectedElId]);
+    syncHistoryFlags();
+  }, [sections, activeSectionId, selectedElId, syncHistoryFlags]);
 
   // ── Load ────────────────────────────────────────────────────────────────────
   const hasLoadedId = useRef(null);
@@ -293,8 +294,9 @@ export default function useEditorState() {
     setSelectedElId(last.selectedElId || null);
     markDirty();
     isUndoRedo.current = false;
+    syncHistoryFlags();
     return true;
-  }, [sections, activeSectionId, selectedElId]);
+  }, [sections, activeSectionId, selectedElId, syncHistoryFlags]);
 
   const redo = useCallback(() => {
     if (!future.current.length) return false;
@@ -307,8 +309,9 @@ export default function useEditorState() {
     setSelectedElId(next.selectedElId || null);
     markDirty();
     isUndoRedo.current = false;
+    syncHistoryFlags();
     return true;
-  }, [sections, activeSectionId, selectedElId]);
+  }, [sections, activeSectionId, selectedElId, syncHistoryFlags]);
 
   // Backwards-compatible alias
   const undoAiChange = undo;
@@ -330,9 +333,14 @@ export default function useEditorState() {
     markDirty();
   }, [activeSectionId, pushHistory]);
 
-  // ── Keyboard shortcuts ──────────────────────────────────────────────────────
-  const canUndo = useMemo(() => history.current.length > 0, [sections]);
-  const canRedo = useMemo(() => future.current.length > 0, [sections]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  /** Sync the undo/redo button states after any history mutation */
+  const syncHistoryFlags = useCallback(() => {
+    setCanUndo(history.current.length > 0);
+    setCanRedo(future.current.length > 0);
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {

@@ -16,7 +16,7 @@ export default function ProjectorView() {
   
   const [presentation, setPresentation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [guestViewsCount, setGuestViewsCount] = useState(0);
+
   const [laserActive, setLaserActive] = useState(false); // hidden until phone sends event
   
   // Laser Nivel Dios (GPU directo)
@@ -58,16 +58,7 @@ export default function ProjectorView() {
     loadPresentation();
   }, [identifier, navigate]);
 
-  // Handle local storage for guest view count
-  useEffect(() => {
-    if (loading) return; // wait until presentation is loaded
-    if (!user && presentation) {
-      const currentViews = parseInt(localStorage.getItem('guest_views') || '0', 10);
-      const newCount = currentViews + 1;
-      localStorage.setItem('guest_views', newCount.toString());
-      setGuestViewsCount(newCount);
-    }
-  }, [loading, user, presentation]);
+
 
   // Handle real-time connection logic separated so it uses presentation.id
   useEffect(() => {
@@ -179,7 +170,7 @@ export default function ProjectorView() {
 
       {/* Guest Paywall */}
       {isGuestMode && (
-        <GuestPaywall guestViewsCount={guestViewsCount} onRegister={() => navigate('/login')} />
+        <GuestPaywall onRegister={() => navigate('/login')} />
       )}
     </div>
   );

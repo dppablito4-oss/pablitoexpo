@@ -79,7 +79,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
       style={{
         position: 'fixed', inset: 0, zIndex: 99999,
         background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', p: '20px'
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
       }}
     >
       <div
@@ -220,7 +220,7 @@ export default function ImageSearchModal({ isOpen, onClose, onSelect, initialQue
               display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px'
             }}>
               {photos.map((photo) => (
-                <div key={photo.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', background: '#111', aspect: '16/10' }}>
+                <div key={photo.id} style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', background: '#111', aspectRatio: '16/10' }}>
                   {/* Imagen (Click = Seleccionar) */}
                   <img
                     onClick={async () => { 

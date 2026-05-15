@@ -324,7 +324,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               className="w-full accent-yellow-400" />
           </div>
 
-          {(s.brightness != null && s.brightness !== 100) || s.contrast != null && s.contrast !== 100 || s.blur || s.grayscale || s.sepia ? (
+          {((s.brightness != null && s.brightness !== 100) || (s.contrast != null && s.contrast !== 100) || s.blur || s.grayscale || s.sepia) ? (
             <button onClick={() => upd({ brightness: 100, contrast: 100, blur: 0, grayscale: 0, sepia: 0 })}
               className="text-[10px] text-red-400 hover:text-red-300 py-1">↺ Resetear filtros</button>
           ) : null}

@@ -155,24 +155,18 @@ REGLAS STRICTAS:
     const aiModel = 'deepseek-chat'; // DeepSeek V3 — rápido y barato
     const apiUrl = 'https://api.deepseek.com/v1/chat/completions';
     const apiKey = DEEPSEEK_API_KEY;
-    const vendor = 'DeepSeek';
 
     if (!apiKey) {
-      throw new Error(`Error Fatal Administrativo: No se encontró la API Key de DeepSeek. puede reportar este error poniendote en contacto con el developer al final de página.`);
+      throw new Error(`Error Fatal Administrativo: No se encontró la API Key de DeepSeek. Puede reportar este error poniéndose en contacto con el developer al final de página.`);
     }
 
     const payload: any = {
       model: aiModel,
       response_format: { type: "json_object" },
       messages: messages,
-      temperature: vendor === 'DeepSeek' ? 1.0 : 0.85,
+      temperature: 1.0,
+      max_tokens: 2000,
     };
-
-    if (vendor === 'OpenAI') {
-      payload.max_completion_tokens = 1500;
-    } else {
-      payload.max_tokens = 2000;
-    }
 
     const aiResponse = await fetch(apiUrl, {
       method: 'POST',
@@ -186,8 +180,8 @@ REGLAS STRICTAS:
     const data = await aiResponse.json();
 
     if (!aiResponse.ok) {
-      console.error(`Error from ${vendor}:`, data);
-      throw new Error(data.error?.message || `Error en la API híbrida de ${vendor}`);
+      console.error('Error from DeepSeek:', data);
+      throw new Error(data.error?.message || 'Error en la API de DeepSeek');
     }
 
     let resultJsonText = data.choices[0].message.content;
@@ -211,7 +205,7 @@ REGLAS STRICTAS:
         finalParsed.message = "(Miro hacia otro lado con cara de 🙄 porque la IA se quedó muda). reporta el error al dev, (ERROR 101).";
       }
     } catch (parseError) {
-      console.error("Fallo parseando JSON de", vendor, "Raw:", data.choices[0].message.content);
+      console.error('Fallo parseando JSON de DeepSeek. Raw:', data.choices[0].message.content);
       let fallbackText = data.choices[0].message.content || "Error: el modelo devolvió vacío.";
       if (fallbackText.trim() === '') fallbackText = "(Me quedé en blanco, no sé qué decirte a eso 🙄) reporta el error como (ERROR 101)";
       // Fallback robusto: si no es un JSON válido, metemos su respuesta en texto plano
@@ -230,7 +224,7 @@ REGLAS STRICTAS:
     console.error("Error capturado: ", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
