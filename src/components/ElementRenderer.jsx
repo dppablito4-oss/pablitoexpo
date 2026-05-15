@@ -130,16 +130,28 @@ export function ImageContent({ el }) {
       </div>
     );
   }
+
+  // Build CSS filter string from individual values
+  const filters = [
+    s.brightness != null && s.brightness !== 100 ? `brightness(${s.brightness}%)` : '',
+    s.contrast != null && s.contrast !== 100 ? `contrast(${s.contrast}%)` : '',
+    s.blur ? `blur(${s.blur}px)` : '',
+    s.grayscale ? `grayscale(${s.grayscale}%)` : '',
+    s.sepia ? `sepia(${s.sepia}%)` : '',
+  ].filter(Boolean).join(' ') || 'none';
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <img src={el.src} alt="" draggable={false} style={{
+      <img src={el.src} alt={el.alt || ''} draggable={false} loading="lazy" style={{
         width: '100%', height: '100%',
         objectFit: s.objectFit || 'cover',
         opacity: s.opacity ?? 1,
         borderRadius: `${s.borderRadius || 0}px`,
         boxShadow: s.shadow ? '0 20px 60px rgba(0,0,0,0.7)' : 'none',
+        filter: filters,
         pointerEvents: 'none',
-        display: 'block'
+        display: 'block',
+        transform: `scaleX(${s.flipH ? -1 : 1}) scaleY(${s.flipV ? -1 : 1})`,
       }} />
       <UnsplashBadge credit={el.unsplashCredit} />
     </div>
@@ -149,32 +161,47 @@ export function ImageContent({ el }) {
 // ── Metric ────────────────────────────────────────────────────────────────────
 export function MetricContent({ el }) {
   const s = el.style || {};
+  const valColor1 = s.valColor || '#ffffff';
+  const valColor2 = s.valColor2 || '#888888';
+  const titleColor = s.titleColor || '#22d3ee';
+  const descColor = s.descColor || '#6b7280';
+  const borderColor = s.borderColor || 'rgba(255,255,255,0.15)';
+
   return (
     <div style={{
       color: s.color || '#fff', width: '100%', height: '100%',
       display: 'flex', flexDirection: 'column',
-      paddingTop: '14px', borderTop: '2px solid rgba(255,255,255,0.15)',
+      paddingTop: '14px', borderTop: `2px solid ${borderColor}`,
     }}>
+      {/* Emoji icon */}
+      {el.icon && (
+        <div style={{ fontSize: toCqw(28), marginBottom: '0.25cqw' }}>
+          {el.icon}
+        </div>
+      )}
+      {/* Value with gradient */}
       <div style={{
         fontSize: toCqw(s.fontSize || 64),
         fontWeight: '900', lineHeight: 1, letterSpacing: '-0.02em',
-        background: 'linear-gradient(to bottom, #ffffff, #888888)',
+        background: `linear-gradient(to bottom, ${valColor1}, ${valColor2})`,
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
       }}>
-        {el.val || '?'}
+        {el.prefix || ''}{el.val || '?'}{el.suffix || ''}
       </div>
       <div style={{
-        fontSize: toCqw(13), fontWeight: '700', color: '#22d3ee',
+        fontSize: toCqw(13), fontWeight: '700', color: titleColor,
         marginTop: '0.5cqw', letterSpacing: '0.15em', textTransform: 'uppercase',
       }}>
         {el.title || 'MÉTRICA'}
       </div>
-      <div style={{
-        fontSize: toCqw(11), color: '#6b7280', fontFamily: 'monospace',
-        textTransform: 'uppercase', marginTop: '0.25cqw', letterSpacing: '0.05em',
-      }}>
-        {el.desc || ''}
-      </div>
+      {el.desc && (
+        <div style={{
+          fontSize: toCqw(11), color: descColor, fontFamily: 'monospace',
+          textTransform: 'uppercase', marginTop: '0.25cqw', letterSpacing: '0.05em',
+        }}>
+          {el.desc}
+        </div>
+      )}
     </div>
   );
 }
@@ -183,10 +210,11 @@ export function MetricContent({ el }) {
 export function TimelineContent({ el }) {
   const items = el.items || [];
   const accentColor = el.style?.color || '#22d3ee';
+  const titleColor = el.style?.titleColor || '#ffffff';
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0.5cqw 0', overflow: 'hidden' }}>
       {el.title && (
-        <div style={{ fontSize: toCqw(18), fontWeight: '800', color: '#fff', marginBottom: '1cqw', letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: toCqw(18), fontWeight: '800', color: titleColor, marginBottom: '1cqw', letterSpacing: '-0.02em' }}>
           {el.title}
         </div>
       )}
@@ -202,36 +230,48 @@ export function TimelineContent({ el }) {
             width: '2px', background: `linear-gradient(to bottom, ${accentColor}, transparent)`,
           }}
         />
-        {items.map((item, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.15, duration: 0.5 }}
-            viewport={{ once: false, amount: 0.3 }}
-            style={{ marginBottom: i < items.length - 1 ? '1.25cqw' : 0, position: 'relative' }}
-          >
-            {/* Node dot */}
-            <div style={{
-              position: 'absolute', left: '-1.5cqw', top: '0.25cqw',
-              width: '0.75cqw', height: '0.75cqw', borderRadius: '50%',
-              background: accentColor, boxShadow: `0 0 12px ${accentColor}`,
-              border: '2px solid rgba(0,0,0,0.6)',
-              minWidth: '8px', minHeight: '8px',
-            }} />
-            <div style={{ fontSize: toCqw(11), fontWeight: '800', color: accentColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              {item.year || item.date || ''}
-            </div>
-            <div style={{ fontSize: toCqw(15), fontWeight: '700', color: '#fff', marginTop: '0.1cqw' }}>
-              {item.title || ''}
-            </div>
-            {item.desc && (
-              <div style={{ fontSize: toCqw(12), color: 'rgba(255,255,255,0.5)', marginTop: '0.1cqw', lineHeight: 1.4 }}>
-                {item.desc}
+        {items.map((item, i) => {
+          const nodeColor = item.color || accentColor;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.15, duration: 0.5 }}
+              viewport={{ once: false, amount: 0.3 }}
+              style={{ marginBottom: i < items.length - 1 ? '1.25cqw' : 0, position: 'relative' }}
+            >
+              {/* Node: emoji icon or colored dot */}
+              <div style={{
+                position: 'absolute', left: '-1.5cqw', top: '0.15cqw',
+                minWidth: '8px', minHeight: '8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {item.icon ? (
+                  <span style={{ fontSize: toCqw(14), lineHeight: 1 }}>{item.icon}</span>
+                ) : (
+                  <div style={{
+                    width: '0.75cqw', height: '0.75cqw', borderRadius: '50%',
+                    background: nodeColor, boxShadow: `0 0 12px ${nodeColor}`,
+                    border: '2px solid rgba(0,0,0,0.6)',
+                    minWidth: '8px', minHeight: '8px',
+                  }} />
+                )}
               </div>
-            )}
-          </motion.div>
-        ))}
+              <div style={{ fontSize: toCqw(11), fontWeight: '800', color: nodeColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                {item.year || item.date || ''}
+              </div>
+              <div style={{ fontSize: toCqw(15), fontWeight: '700', color: '#fff', marginTop: '0.1cqw' }}>
+                {item.title || ''}
+              </div>
+              {item.desc && (
+                <div style={{ fontSize: toCqw(12), color: 'rgba(255,255,255,0.5)', marginTop: '0.1cqw', lineHeight: 1.4 }}>
+                  {item.desc}
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -240,42 +280,80 @@ export function TimelineContent({ el }) {
 // ── Comparison ────────────────────────────────────────────────────────────────
 export function ComparisonContent({ el }) {
   const columns = el.columns || [];
+  const ITEM_ICONS = { yes: '✅', no: '❌', neutral: '⚪' };
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', gap: '0.75cqw', alignItems: 'stretch', overflow: 'hidden' }}>
-      {columns.map((col, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.12, duration: 0.6 }}
-          viewport={{ once: false }}
-          style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            background: 'rgba(255,255,255,0.04)',
-            backdropFilter: 'blur(12px)',
-            border: `1px solid ${col.color || 'rgba(255,255,255,0.1)'}33`,
-            borderRadius: '0.875cqw', padding: '1.125cqw', overflow: 'hidden',
-          }}
-        >
-          <div style={{
-            fontSize: toCqw(16), fontWeight: '800', color: col.color || '#fff',
-            marginBottom: '0.75cqw', letterSpacing: '-0.02em',
-            borderBottom: `2px solid ${col.color || 'rgba(255,255,255,0.15)'}`,
-            paddingBottom: '0.5cqw',
-          }}>
-            {col.title || `Opción ${i + 1}`}
-          </div>
-          {(col.items || []).map((item, j) => (
-            <div key={j} style={{
-              fontSize: toCqw(13), color: 'rgba(255,255,255,0.7)',
-              padding: '0.375cqw 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
-              lineHeight: 1.4,
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Global title */}
+      {el.title && (
+        <div style={{
+          fontSize: toCqw(16), fontWeight: '800', color: '#ffffff',
+          marginBottom: '0.625cqw', letterSpacing: '-0.02em',
+          textAlign: 'center',
+        }}>
+          {el.title}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: '0.75cqw', alignItems: 'stretch', flex: 1, overflow: 'hidden' }}>
+        {columns.map((col, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.12, duration: 0.6 }}
+            viewport={{ once: false }}
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              background: col.highlighted
+                ? `linear-gradient(135deg, ${col.color || '#22d3ee'}11, ${col.color || '#22d3ee'}08)`
+                : 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(12px)',
+              border: col.highlighted
+                ? `2px solid ${col.color || '#22d3ee'}66`
+                : `1px solid ${col.color || 'rgba(255,255,255,0.1)'}33`,
+              borderRadius: '0.875cqw', padding: '1.125cqw', overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
+            {/* Recommended badge */}
+            {col.highlighted && (
+              <div style={{
+                position: 'absolute', top: '0.4cqw', right: '0.4cqw',
+                fontSize: toCqw(8), fontWeight: '800', letterSpacing: '0.1em',
+                textTransform: 'uppercase', color: '#000',
+                background: col.color || '#22d3ee', padding: '0.15cqw 0.5cqw',
+                borderRadius: '0.3cqw',
+              }}>
+                ★ Recomendado
+              </div>
+            )}
+            <div style={{
+              fontSize: toCqw(16), fontWeight: '800', color: col.color || '#fff',
+              marginBottom: '0.75cqw', letterSpacing: '-0.02em',
+              borderBottom: `2px solid ${col.color || 'rgba(255,255,255,0.15)'}`,
+              paddingBottom: '0.5cqw',
+              paddingTop: col.highlighted ? '1cqw' : '0',
             }}>
-              {item}
+              {col.title || `Opción ${i + 1}`}
             </div>
-          ))}
-        </motion.div>
-      ))}
+            {(col.items || []).map((item, j) => {
+              // Items can be string or {text, icon} object
+              const isObj = typeof item === 'object' && item !== null;
+              const text = isObj ? item.text : item;
+              const icon = isObj ? item.icon : null;
+              return (
+                <div key={j} style={{
+                  fontSize: toCqw(13), color: 'rgba(255,255,255,0.7)',
+                  padding: '0.375cqw 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  lineHeight: 1.4, display: 'flex', alignItems: 'center', gap: '0.35cqw',
+                }}>
+                  {icon && <span style={{ fontSize: toCqw(12), flexShrink: 0 }}>{ITEM_ICONS[icon] || icon}</span>}
+                  <span>{text}</span>
+                </div>
+              );
+            })}
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -227,7 +227,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
       {el.type === 'image' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
           
-          {/* Nuevo Buscador Directo de Unsplash */}
+          {/* Unsplash Search */}
           <div className="mt-2 flex flex-col items-center bg-neutral-900 border border-neutral-800 rounded-xl p-3">
             <span className="text-[13px] font-bold text-white mb-1">Buscar Imágenes</span>
             <div className="flex flex-col items-center gap-1 mb-3">
@@ -258,13 +258,29 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
 
           <div className="h-px w-full bg-neutral-800 my-2" />
 
-          {/* URL Oculta */}
+          {/* URL */}
           <label className="text-[10px] text-neutral-500">URL Avanzada (Imagen)</label>
           <div className="flex gap-1">
             <input type="text" value={el.src || ''} placeholder="https://..."
               onChange={e => onUpdate({ src: e.target.value })}
               className="flex-1 bg-black border border-neutral-700 rounded p-2 text-neutral-400 text-[10px] focus:outline-none focus:border-cyan-700" />
           </div>
+
+          {/* ── Ajuste ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Ajuste</label>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Modo de ajuste</label>
+            <select value={s.objectFit || 'cover'}
+              onChange={e => upd({ objectFit: e.target.value })}
+              className="w-full bg-black border border-neutral-700 rounded p-1 text-white text-xs focus:outline-none">
+              <option value="cover">Cover (rellena, recorta)</option>
+              <option value="contain">Contain (completa, con espacio)</option>
+              <option value="fill">Fill (estira para llenar)</option>
+              <option value="none">None (tamaño original)</option>
+            </select>
+          </div>
+
           <label className="text-[10px] text-neutral-500">Borde redondeado: {s.borderRadius || 0}px</label>
           <input type="range" min="0" max="50" value={s.borderRadius || 0}
             onChange={e => upd({ borderRadius: +e.target.value })}
@@ -273,48 +289,185 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           <input type="range" min="0.05" max="1" step="0.05" value={s.opacity ?? 1}
             onChange={e => upd({ opacity: +e.target.value })}
             className="w-full accent-cyan-500" />
+
+          {/* ── Filtros CSS ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Filtros</label>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Brillo: {s.brightness ?? 100}%</label>
+            <input type="range" min="0" max="200" value={s.brightness ?? 100}
+              onChange={e => upd({ brightness: +e.target.value })}
+              className="w-full accent-yellow-400" />
+          </div>
+          <div>
+            <label className="text-[10px] text-neutral-500">Contraste: {s.contrast ?? 100}%</label>
+            <input type="range" min="0" max="200" value={s.contrast ?? 100}
+              onChange={e => upd({ contrast: +e.target.value })}
+              className="w-full accent-yellow-400" />
+          </div>
+          <div>
+            <label className="text-[10px] text-neutral-500">Desenfoque: {s.blur || 0}px</label>
+            <input type="range" min="0" max="20" value={s.blur || 0}
+              onChange={e => upd({ blur: +e.target.value })}
+              className="w-full accent-yellow-400" />
+          </div>
+          <div>
+            <label className="text-[10px] text-neutral-500">Blanco y negro: {s.grayscale || 0}%</label>
+            <input type="range" min="0" max="100" value={s.grayscale || 0}
+              onChange={e => upd({ grayscale: +e.target.value })}
+              className="w-full accent-yellow-400" />
+          </div>
+          <div>
+            <label className="text-[10px] text-neutral-500">Sepia: {s.sepia || 0}%</label>
+            <input type="range" min="0" max="100" value={s.sepia || 0}
+              onChange={e => upd({ sepia: +e.target.value })}
+              className="w-full accent-yellow-400" />
+          </div>
+
+          {(s.brightness != null && s.brightness !== 100) || s.contrast != null && s.contrast !== 100 || s.blur || s.grayscale || s.sepia ? (
+            <button onClick={() => upd({ brightness: 100, contrast: 100, blur: 0, grayscale: 0, sepia: 0 })}
+              className="text-[10px] text-red-400 hover:text-red-300 py-1">↺ Resetear filtros</button>
+          ) : null}
+
+          {/* ── Transformación ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Transformar</label>
+
+          <div className="grid grid-cols-2 gap-1">
+            <button type="button" onClick={() => upd({ flipH: !s.flipH })}
+              className={`py-1.5 rounded text-[10px] font-bold border transition-colors ${s.flipH ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+              ↔ Voltear H
+            </button>
+            <button type="button" onClick={() => upd({ flipV: !s.flipV })}
+              className={`py-1.5 rounded text-[10px] font-bold border transition-colors ${s.flipV ? 'bg-cyan-900/40 border-cyan-700/50 text-cyan-300' : 'bg-neutral-900 border-neutral-700 text-neutral-500 hover:text-white'}`}>
+              ↕ Voltear V
+            </button>
+          </div>
+
           <label className="flex items-center gap-2 text-xs text-neutral-400 cursor-pointer">
-            <input type="checkbox" checked={!!s.shadow} onChange={e => upd({ shadow: e.target.checked })} />
+            <input type="checkbox" checked={!!s.shadow} onChange={e => upd({ shadow: e.target.checked })} className="accent-cyan-500" />
             Sombra dramática
           </label>
+
+          {/* Alt text */}
+          <div className="border-t border-neutral-800 pt-2 mt-1">
+            <InspectorInput label="Texto alternativo (accesibilidad)" value={el.alt || ''} onChange={v => onUpdate({ alt: v })} placeholder="Describe la imagen..." />
+          </div>
         </div>
       )}
 
       {/* METRIC controls */}
       {el.type === 'metric' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <InspectorInput label="Valor grande" value={el.val || ''} onChange={v => onUpdate({ val: v })} />
-          <InspectorInput label="Título cyan" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
+
+          {/* ── Contenido ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Contenido</label>
+          
+          <InspectorInput label="Icono / emoji (opcional)" value={el.icon || ''} onChange={v => onUpdate({ icon: v })} placeholder="📊" />
+
+          <div className="grid grid-cols-3 gap-1">
+            <InspectorInput label="Prefijo" value={el.prefix || ''} onChange={v => onUpdate({ prefix: v })} placeholder="$" />
+            <InspectorInput label="Valor" value={el.val || ''} onChange={v => onUpdate({ val: v })} placeholder="100" />
+            <InspectorInput label="Sufijo" value={el.suffix || ''} onChange={v => onUpdate({ suffix: v })} placeholder="%" />
+          </div>
+
+          <InspectorInput label="Título" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
           <InspectorInput label="Descripción" value={el.desc || ''} onChange={v => onUpdate({ desc: v })} />
           <InspectorInput label="Tamaño número (px)" value={s.fontSize || 64} onChange={v => upd({ fontSize: v })} type="number" min="24" max="180" />
+
+          {/* ── Colores ── */}
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Colores</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Gradiente valor (inicio)</label>
+              <input type="color" value={s.valColor || '#ffffff'}
+                onChange={e => upd({ valColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Gradiente valor (fin)</label>
+              <input type="color" value={s.valColor2 || '#888888'}
+                onChange={e => upd({ valColor2: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color título</label>
+              <input type="color" value={s.titleColor || '#22d3ee'}
+                onChange={e => upd({ titleColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color descripción</label>
+              <input type="color" value={s.descColor || '#6b7280'}
+                onChange={e => upd({ descColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Color borde superior</label>
+            <input type="color" value={s.borderColor || '#ffffff'}
+              onChange={e => upd({ borderColor: e.target.value })}
+              className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+          </div>
         </div>
       )}
 
       {/* TIMELINE controls */}
       {el.type === 'timeline' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">General</label>
           <InspectorInput label="Título general" value={el.title || ''} onChange={v => onUpdate({ title: v })} />
-          <div>
-            <label className="text-[10px] text-neutral-500">Color acento</label>
-            <input type="color" value={s.color || '#22d3ee'}
-              onChange={e => upd({ color: e.target.value })}
-              className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color acento</label>
+              <input type="color" value={s.color || '#22d3ee'}
+                onChange={e => upd({ color: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color título</label>
+              <input type="color" value={s.titleColor || '#ffffff'}
+                onChange={e => upd({ titleColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
           </div>
-          <label className="text-[10px] text-neutral-500 mt-1">Eventos ({(el.items||[]).length})</label>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Eventos ({(el.items||[]).length})</label>
+
           {(el.items || []).map((item, i) => (
             <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
-              <div className="flex gap-1">
-                <input value={item.year||''} placeholder="Año" onChange={e => updateItem('items', i, { year: e.target.value })}
+              <div className="flex gap-1 items-center">
+                {/* Move up/down */}
+                <div className="flex flex-col gap-0.5">
+                  <button disabled={i === 0} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i-1], arr[i]] = [arr[i], arr[i-1]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === 0 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▲</button>
+                  <button disabled={i === (el.items||[]).length - 1} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === (el.items||[]).length - 1 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▼</button>
+                </div>
+
+                <input value={item.icon||''} placeholder="🔹" onChange={e => updateItem('items', i, { icon: e.target.value })}
+                  className="w-8 bg-black border border-neutral-700 rounded p-1 text-center text-sm focus:outline-none" title="Icono" />
+                <input value={item.year||item.date||''} placeholder="Fecha" onChange={e => updateItem('items', i, { year: e.target.value })}
                   className="w-16 bg-black border border-neutral-700 rounded p-1 text-cyan-400 text-[10px] font-bold focus:outline-none" />
                 <input value={item.title||''} placeholder="Título" onChange={e => updateItem('items', i, { title: e.target.value })}
                   className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
-                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1">×</button>
+                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1 hover:text-red-300">×</button>
               </div>
-              <input value={item.desc||''} placeholder="Descripción" onChange={e => updateItem('items', i, { desc: e.target.value })}
+              <input value={item.desc||''} placeholder="Descripción (opcional)" onChange={e => updateItem('items', i, { desc: e.target.value })}
                 className="w-full bg-black border border-neutral-700 rounded p-1 text-neutral-400 text-[10px] focus:outline-none" />
             </div>
           ))}
-          <button onClick={() => addItem('items', { year: '', title: 'Nuevo evento', desc: '' })}
+          <button onClick={() => addItem('items', { year: '', title: 'Nuevo evento', desc: '', icon: '' })}
             className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar evento</button>
         </div>
       )}
@@ -322,35 +475,84 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
       {/* COMPARISON controls */}
       {el.type === 'comparison' && (
         <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
-          <label className="text-[10px] text-neutral-500">Columnas ({(el.columns||[]).length})</label>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">General</label>
+          <InspectorInput label="Título del comparativo" value={el.title || ''} onChange={v => onUpdate({ title: v })} placeholder="Ej: Plan gratuito vs Premium" />
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Columnas ({(el.columns||[]).length})</label>
+
           {(el.columns || []).map((col, ci) => (
-            <div key={ci} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+            <div key={ci} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1.5 border border-neutral-800">
               <div className="flex gap-1 items-center">
+                {/* Move up/down */}
+                <div className="flex flex-col gap-0.5">
+                  <button disabled={ci === 0} onClick={() => {
+                    const arr = [...(el.columns || [])]; [arr[ci-1], arr[ci]] = [arr[ci], arr[ci-1]];
+                    onUpdate({ columns: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${ci === 0 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▲</button>
+                  <button disabled={ci === (el.columns||[]).length - 1} onClick={() => {
+                    const arr = [...(el.columns || [])]; [arr[ci], arr[ci+1]] = [arr[ci+1], arr[ci]];
+                    onUpdate({ columns: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${ci === (el.columns||[]).length - 1 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▼</button>
+                </div>
+
                 <input type="color" value={col.color || '#22d3ee'}
                   onChange={e => updateItem('columns', ci, { color: e.target.value })}
-                  className="w-6 h-6 rounded border border-neutral-700 bg-black cursor-pointer" />
+                  className="w-6 h-6 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
                 <input value={col.title||''} placeholder="Título" onChange={e => updateItem('columns', ci, { title: e.target.value })}
                   className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
-                <button onClick={() => removeItem('columns', ci)} className="text-red-400 text-xs px-1">×</button>
+                <button onClick={() => removeItem('columns', ci)} className="text-red-400 text-xs px-1 hover:text-red-300">×</button>
               </div>
-              {(col.items || []).map((item, ii) => (
-                <div key={ii} className="flex gap-1">
-                  <input value={item} onChange={e => {
-                    const newItems = [...col.items]; newItems[ii] = e.target.value;
-                    updateItem('columns', ci, { items: newItems });
-                  }} className="flex-1 bg-black border border-neutral-700 rounded p-1 text-neutral-300 text-[10px] focus:outline-none" />
-                  <button onClick={() => {
-                    const newItems = col.items.filter((_, j) => j !== ii);
-                    updateItem('columns', ci, { items: newItems });
-                  }} className="text-red-400 text-[10px]">×</button>
-                </div>
-              ))}
+
+              {/* Highlighted toggle */}
+              <label className="flex items-center gap-1.5 text-[10px] text-neutral-400 cursor-pointer select-none">
+                <input type="checkbox" checked={!!col.highlighted}
+                  onChange={e => updateItem('columns', ci, { highlighted: e.target.checked })}
+                  className="accent-yellow-400" />
+                ★ Destacar como recomendado
+              </label>
+
+              {/* Items with icon selector */}
+              {(col.items || []).map((item, ii) => {
+                const isObj = typeof item === 'object' && item !== null;
+                const text = isObj ? item.text : item;
+                const icon = isObj ? (item.icon || '') : '';
+                return (
+                  <div key={ii} className="flex gap-1 items-center">
+                    <select value={icon} onChange={e => {
+                      const newIcon = e.target.value;
+                      const newItem = newIcon ? { text, icon: newIcon } : text;
+                      const newItems = [...col.items]; newItems[ii] = newItem;
+                      updateItem('columns', ci, { items: newItems });
+                    }} className="w-9 bg-black border border-neutral-700 rounded p-0.5 text-center text-[10px] focus:outline-none cursor-pointer" title="Ícono">
+                      <option value="">—</option>
+                      <option value="yes">✅</option>
+                      <option value="no">❌</option>
+                      <option value="neutral">⚪</option>
+                    </select>
+                    <input value={text} onChange={e => {
+                      const val = icon ? { text: e.target.value, icon } : e.target.value;
+                      const newItems = [...col.items]; newItems[ii] = val;
+                      updateItem('columns', ci, { items: newItems });
+                    }} className="flex-1 bg-black border border-neutral-700 rounded p-1 text-neutral-300 text-[10px] focus:outline-none" />
+                    <button onClick={() => {
+                      const newItems = col.items.filter((_, j) => j !== ii);
+                      updateItem('columns', ci, { items: newItems });
+                    }} className="text-red-400 text-[10px] hover:text-red-300">×</button>
+                  </div>
+                );
+              })}
               <button onClick={() => updateItem('columns', ci, { items: [...(col.items||[]), 'Nuevo item'] })}
-                className="text-[10px] text-cyan-400">+ Item</button>
+                className="text-[10px] text-cyan-400 hover:text-cyan-300">+ Item</button>
             </div>
           ))}
-          <button onClick={() => addItem('columns', { title: 'Nueva columna', items: ['Item 1'], color: '#22d3ee' })}
-            className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar columna</button>
+          {(el.columns||[]).length < 5 && (
+            <button onClick={() => addItem('columns', { title: 'Nueva columna', items: ['Item 1'], color: '#a78bfa' })}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar columna</button>
+          )}
+          {(el.columns||[]).length >= 5 && (
+            <span className="text-[9px] text-neutral-600 text-center">Máximo 5 columnas</span>
+          )}
         </div>
       )}
 
