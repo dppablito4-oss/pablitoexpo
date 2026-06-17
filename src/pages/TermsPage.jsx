@@ -26,8 +26,8 @@ const SECTIONS = [
         text: 'El asistente P.A.B.L.O. (Planificación Avanzada de Bloques, Layouts y Operaciones) opera mediante una arquitectura de procesamiento distribuido que selecciona el motor de IA según el perfil de personalidad elegido por el usuario:',
         items: [
           { label: 'Perfiles de Entretenimiento (El Brayan / El Renegón)', text: 'Procesados mediante la tecnología DeepSeek V3. Estos modelos están diseñados para emplear un lenguaje informal, altamente sarcástico y coloquial (jerga urbana peruana), con fines de parodia y entretenimiento. Al activar estos modos, el usuario acepta interactuar con una simulación de carácter satírico.' },
-          { label: 'Perfiles Académicos y Asistenciales (Catedrático, Científico)', text: 'Procesados mediante OpenAI GPT-5.4 Mini, enfocados en la precisión técnica, terminología académica y formalidad lingüística.' },
-          { label: 'Perfil de Motivación (Motivador)', text: 'Procesado mediante OpenAI GPT-5.4 Nano, optimizado para respuestas emocionales cortas y positivas.' },
+          { label: 'Perfiles Académicos y Asistenciales (Catedrático, Científico)', text: 'Procesados mediante tecnología DeepSeek V3, enfocados en la precisión técnica, terminología académica y formalidad lingüística.' },
+          { label: 'Perfil de Motivación (Motivador)', text: 'Procesado mediante tecnología DeepSeek V3, optimizado para respuestas emocionales cortas y positivas.' },
         ],
       },
       {
@@ -45,7 +45,7 @@ const SECTIONS = [
       {
         heading: '3.3. Créditos de IA y Sostenibilidad del Proyecto',
         items: [
-          { label: 'Créditos No Ilimitados', text: 'Debido a los costos operativos reales de las APIs de OpenAI y DeepSeek, los créditos de IA no son ilimitados. El consumo dependerá del nivel de verbosidad seleccionado: Corta, Media o Larga.' },
+          { label: 'Créditos No Ilimitados', text: 'Debido a los costos operativos reales de las APIs de DeepSeek, los créditos de IA no son ilimitados. El consumo dependerá del nivel de verbosidad seleccionado: Corta, Media o Larga.' },
           { label: 'Recargas', text: 'Las recargas de créditos se gestionan de forma directa (transferencia bancaria, Yape/Plin o efectivo). Cualquier apoyo económico es recibido como contribución al proyecto y puede otorgar beneficios exclusivos, como una mayor cuota de tokens disponibles.' },
           { label: 'No Reembolsos', text: 'Una vez asignados los créditos, no existen reembolsos, salvo error verificable del sistema (ej: se descontaron créditos pero la IA no generó respuesta por un fallo técnico del servidor).' },
         ],
@@ -95,8 +95,7 @@ const SECTIONS = [
         text: 'Compartimos datos mínimos estrictamente necesarios con los siguientes proveedores. En ningún caso compartimos tu correo, IP real ni datos de cuenta con los motores de IA:',
         items: [
           { label: 'Supabase', text: 'Almacenamiento seguro de la base de datos, autenticación y ejecución de funciones en el servidor (Edge Functions). Actúa como intermediario entre tu navegador y los proveedores de IA.' },
-          { label: 'OpenAI (Catedrático, Científico, Motivador)', text: 'Solo se envía el contenido del mensaje (prompt) y el contexto inmediato de los últimos 10 mensajes. No enviamos tu correo, IP ni datos de cuenta.' },
-          { label: 'DeepSeek (El Brayan, El Renegón)', text: 'Igual que con OpenAI: solo el contenido del mensaje y el contexto. No compartimos ningún dato personal con este proveedor.' },
+          { label: 'DeepSeek (Todas las personalidades)', text: 'Solo se envía el contenido del mensaje (prompt) y el contexto inmediato de los últimos 10 mensajes. No enviamos tu correo, IP ni datos de cuenta. No compartimos ningún dato personal con este proveedor.' },
           { label: 'Unsplash', text: 'Las búsquedas de imágenes son completamente anónimas. No existe ningún vínculo entre tu perfil y tus preferencias de búsqueda en sus servidores.' },
         ],
       },
@@ -137,7 +136,7 @@ const SECTIONS = [
       },
       {
         heading: '3. Limitación de Responsabilidad Técnica',
-        text: 'Pablito Expo no garantiza disponibilidad del 100% y no se hace responsable por pérdidas de información debidas a fallos en proveedores externos (como OpenAI o DeepSeek) o caídas de red.',
+        text: 'Pablito Expo no garantiza disponibilidad del 100% y no se hace responsable por pérdidas de información debidas a fallos en proveedores externos (como DeepSeek) o caídas de red.',
       },
     ],
   },

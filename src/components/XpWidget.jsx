@@ -16,7 +16,7 @@ try {
   rankIcons[3] = new URL('../assets/ranks/rank_3_experto.png', import.meta.url).href;
   rankIcons[4] = new URL('../assets/ranks/rank_4_patron.png', import.meta.url).href;
   rankIcons[5] = new URL('../assets/ranks/rank_5_leyenda.png', import.meta.url).href;
-} catch (_) {
+} catch {
   // Los iconos aún no han sido subidos, se usarán emojis
 }
 

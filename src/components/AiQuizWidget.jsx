@@ -88,7 +88,7 @@ export default function AiQuizWidget({ nasaData = {}, user = null }) {
     } finally {
       setLoading(false);
     }
-  }, [nasaData, questionCount]);
+  }, [nasaData, questionCount, user]);
 
   const handleOpen = () => {
     setIsOpen(true);

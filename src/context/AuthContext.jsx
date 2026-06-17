@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 import { verifyDeviceTrust } from '../lib/deviceTrustService';

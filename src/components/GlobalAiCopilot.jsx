@@ -59,14 +59,14 @@ export default function GlobalAiCopilot() {
     try {
       const raw = localStorage.getItem(getStorageKey(uid));
       if (raw) return JSON.parse(raw);
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
     return null;
   }, [getStorageKey]);
 
   const saveChatsToStorage = useCallback((uid, chatsData) => {
     try {
       localStorage.setItem(getStorageKey(uid), JSON.stringify(chatsData));
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
   }, [getStorageKey]);
 
   // Inicializar cuando cambia el usuario

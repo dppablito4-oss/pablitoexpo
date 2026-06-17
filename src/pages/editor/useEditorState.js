@@ -187,7 +187,6 @@ export default function useEditorState() {
   // ── Debounced save ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isDirty || !canEdit) return;
-    setSaveStatus('dirty');
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       if (!presentation?.id) return;
@@ -200,7 +199,10 @@ export default function useEditorState() {
   }, [sections, isDirty, presentation, canEdit]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const markDirty = () => setIsDirty(true);
+  const markDirty = () => {
+    setIsDirty(true);
+    setSaveStatus('dirty');
+  };
   const activeSection = sections.find(s => s.id === activeSectionId);
   const selectedEl    = activeSection?.elements?.find(e => e.id === selectedElId);
 

@@ -32,7 +32,7 @@ export default function Editor() {
     isLeftPanelOpen, setIsLeftPanelOpen,
     canvasRef,
     updateElement, deleteElement, duplicateElement, addElement, handleSelectEl,
-    copyElement, pasteElement, moveElementLayer,
+    moveElementLayer,
     addSection, deleteSection, updateSection,
     handleAiApply,
     undo, redo, canUndo, canRedo,

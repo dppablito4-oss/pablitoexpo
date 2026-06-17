@@ -1,0 +1,128 @@
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\AdminXpPanel.jsx
+  7:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\AiQuizWidget.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                 no-unused-vars
+  91:6   warning  React Hook useCallback has a missing dependency: 'user.id'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\ElementRenderer.jsx
+   1:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  30:31  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `ref`, but the source dependencies were [content, maxFontPx, enabled]. Inferred different dependency than source.
+
+  28 |   const [fontSize, setFontSize] = useState(toCqw(maxFontPx));
+  29 |
+> 30 |   const compute = useCallback(() => {
+     |                               ^^^^^^^
+> 31 |     if (!enabled || !ref.current) return;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     const el = ref.current;
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     setFontSize(`${fitCqw.toFixed(3)}cqw`);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |   }, [content, maxFontPx, enabled]);
+     | ^^^^ Could not preserve existing manual memoization
+  61 |
+  62 |   useEffect(() => {
+  63 |     if (!enabled || !ref.current) {  react-hooks/preserve-manual-memoization
+  60:6   warning  React Hook useCallback has a missing dependency: 'ref'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+  64:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  62 |   useEffect(() => {
+  63 |     if (!enabled || !ref.current) {
+> 64 |       setFontSize(toCqw(maxFontPx));
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  65 |       return;
+  66 |     }
+  67 |     compute();                                                                                                                                                                                    react-hooks/set-state-in-effect
+  71:6   warning  React Hook useEffect has a missing dependency: 'ref'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\GlobalAiCopilot.jsx
+  62:14  error  '_' is defined but never used  no-unused-vars
+  69:14  error  '_' is defined but never used  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\SettingsPanel.jsx
+  61:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  59 |   useEffect(() => {
+  60 |     if (!user?.id) return;
+> 61 |     setEmail(user.email || '');
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  62 |     
+  63 |     const loadProfile = async () => {
+  64 |       const { data } = await supabase.from('profiles')  react-hooks/set-state-in-effect
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\components\XpWidget.jsx
+  19:10  error  '_' is defined but never used  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\context\AuthContext.jsx
+  66:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\AdminPanel.jsx
+   3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                 no-unused-vars
+  22:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\Dashboard.jsx
+  4:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\Editor.jsx
+  35:5   error  'copyElement' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
+  35:18  error  'pasteElement' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\LandingPage.jsx
+    3:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                no-unused-vars
+  261:77  warning  React Hook useEffect has a missing dependency: 'navigate'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  270:15  error    Empty block statement                                                                                        no-empty
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\Login.jsx
+  4:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\ProjectorView.jsx
+  4:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\TermsPage.jsx
+  1:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\pages\editor\useEditorState.js
+  190:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  188 |   useEffect(() => {
+  189 |     if (!isDirty || !canEdit) return;
+> 190 |     setSaveStatus('dirty');
+      |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  191 |     clearTimeout(saveTimer.current);
+  192 |     saveTimer.current = setTimeout(async () => {
+  193 |       if (!presentation?.id) return;  react-hooks/set-state-in-effect
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\templates\ComparisonSlide.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\templates\FeatureGrid.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Grafiplot\Documents\REPOSITORIO_PABLITO_EXPO\src\templates\HeroSlide.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+✖ 28 problems (23 errors, 5 warnings)
+

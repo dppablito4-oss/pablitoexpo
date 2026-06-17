@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../config/supabase';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -17,11 +17,7 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('xp');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'logs') {
@@ -42,7 +38,11 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
 
   const handleSaveEmailConfig = async () => {

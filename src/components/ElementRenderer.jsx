@@ -57,18 +57,20 @@ function useFitText(ref, content, maxFontPx, enabled) {
     }
     const fitCqw = containerW > 0 ? (lo / containerW) * 100 : lo / 16;
     setFontSize(`${fitCqw.toFixed(3)}cqw`);
-  }, [content, maxFontPx, enabled]);
+  }, [maxFontPx, enabled, ref]);
 
   useEffect(() => {
     if (!enabled || !ref.current) {
-      setFontSize(toCqw(maxFontPx));
       return;
     }
-    compute();
+    const handle = requestAnimationFrame(compute);
     const ro = new ResizeObserver(compute);
     ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, [compute, enabled, maxFontPx]);
+    return () => {
+      cancelAnimationFrame(handle);
+      ro.disconnect();
+    };
+  }, [compute, enabled, ref]);
 
   return fontSize;
 }

@@ -46,7 +46,6 @@ export default function SettingsPanel() {
   
   const [username, setUsername] = useState('');
   const [originalUsername, setOriginalUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [aiPersonality, setAiPersonality] = useState('brayan');
   const [aiVerified, setAiVerified] = useState(false);
   const [createdAt, setCreatedAt] = useState('');
@@ -58,7 +57,6 @@ export default function SettingsPanel() {
   // Load profile data
   useEffect(() => {
     if (!user?.id) return;
-    setEmail(user.email || '');
     
     const loadProfile = async () => {
       const { data } = await supabase.from('profiles')
@@ -174,7 +172,7 @@ export default function SettingsPanel() {
         </SettingRow>
 
         <SettingRow label="Correo electrónico">
-          <input type="text" value={email} disabled style={{ ...inputStyle, opacity: 0.5, cursor: 'not-allowed' }} />
+          <input type="text" value={user?.email || ''} disabled style={{ ...inputStyle, opacity: 0.5, cursor: 'not-allowed' }} />
           <p style={{ fontSize: '0.7rem', color: C.textMuted, margin: '4px 0 0' }}>El correo no se puede cambiar. Es tu identificador único de Supabase Auth.</p>
         </SettingRow>
       </SettingCard>

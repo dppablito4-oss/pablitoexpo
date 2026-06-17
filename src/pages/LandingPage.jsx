@@ -258,7 +258,7 @@ export default function LandingPage() {
   const [publicPresentations, setPublicPresentations] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
 
-  useEffect(() => { if (user) navigate('/dashboard', { replace: true }); }, [user]);
+  useEffect(() => { if (user) navigate('/dashboard', { replace: true }); }, [user, navigate]);
 
   useEffect(() => {
     const fetchPublic = async () => {
@@ -267,8 +267,11 @@ export default function LandingPage() {
         if (data && data.length > 0) {
           setPublicPresentations(data.map((p, i) => ({ id: p.id, title: p.title || 'Sin título', author: 'usuario', rank: '🔰 Novato', tags: ['Expo'], bg: DEMO_CARDS[i % DEMO_CARDS.length].bg, slug: p.slug })));
         }
-      } catch { }
-      finally { setLoadingCards(false); }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingCards(false);
+      }
     };
     fetchPublic();
   }, []);
