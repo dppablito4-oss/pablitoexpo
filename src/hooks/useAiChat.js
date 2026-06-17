@@ -31,7 +31,7 @@ export default function useAiChat({ mode = 'global', initialMessage = '', curren
   const [userCredits, setUserCredits] = useState(0);
 
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: initialMessage || `¡Hola, ${displayName.toUpperCase()}! Soy P.A.B.L.O., tu asistente virtual. Selecciona una personalidad y charlemos.` }
+    { role: 'assistant', text: initialMessage || `¡Hola, ${displayName.toUpperCase()}! Soy PEPE., tu asistente virtual. Selecciona una personalidad y charlemos.` }
   ]);
 
   const endOfMessagesRef = useRef(null);

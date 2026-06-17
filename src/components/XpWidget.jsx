@@ -10,7 +10,7 @@ import { getLevelInfo, getProgressPercent, getXpForNextLevel, DEFAULT_LEVEL_THRE
 // Si no existen aún, el fallback emoji del getLevelInfo se usa automáticamente
 const rankIcons = {};
 try {
-  rankIcons[0] = new URL('../assets/ranks/rank_0_cachumbo.png', import.meta.url).href;
+  rankIcons[0] = new URL('../assets/ranks/rank_0_cachimbo.png', import.meta.url).href;
   rankIcons[1] = new URL('../assets/ranks/rank_1_aprendiz.png', import.meta.url).href;
   rankIcons[2] = new URL('../assets/ranks/rank_2_creador.png', import.meta.url).href;
   rankIcons[3] = new URL('../assets/ranks/rank_3_experto.png', import.meta.url).href;

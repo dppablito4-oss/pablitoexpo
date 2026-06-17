@@ -176,14 +176,14 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Espaciado</label>
 
           <div>
-            <label className="text-[10px] text-neutral-500">Interlineado: {(s.lineHeight || 1.25).toFixed(2)}</label>
+            <label className="text-[10px] text-neutral-500">Interlineado: {(parseFloat(s.lineHeight) || 1.25).toFixed(2)}</label>
             <input type="range" min="0.8" max="3" step="0.05" value={s.lineHeight || 1.25}
               onChange={e => upd({ lineHeight: +e.target.value })}
               className="w-full accent-cyan-500" />
           </div>
 
           <div>
-            <label className="text-[10px] text-neutral-500">Espaciado letras: {(s.letterSpacing || 0).toFixed(2)}em</label>
+            <label className="text-[10px] text-neutral-500">Espaciado letras: {(parseFloat(s.letterSpacing) || 0).toFixed(2)}em</label>
             <input type="range" min="-0.05" max="0.5" step="0.01" value={s.letterSpacing || 0}
               onChange={e => upd({ letterSpacing: +e.target.value })}
               className="w-full accent-cyan-500" />
@@ -208,7 +208,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           </div>
 
           <div>
-            <label className="text-[10px] text-neutral-500">Opacidad: {(s.opacity ?? 1).toFixed(2)}</label>
+            <label className="text-[10px] text-neutral-500">Opacidad: {parseFloat(s.opacity ?? 1).toFixed(2)}</label>
             <input type="range" min="0.05" max="1" step="0.05" value={s.opacity ?? 1}
               onChange={e => upd({ opacity: +e.target.value })}
               className="w-full accent-cyan-500" />
@@ -245,7 +245,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               </div>
             </div>
             <div>
-              <label className="text-[10px] text-neutral-500">Opacidad fondo: {((s.bgOpacity ?? 0.5) * 100).toFixed(0)}%</label>
+              <label className="text-[10px] text-neutral-500">Opacidad fondo: {((parseFloat(s.bgOpacity ?? 0.5)) * 100).toFixed(0)}%</label>
               <input type="range" min="0.05" max="1" step="0.05" value={s.bgOpacity ?? 0.5}
                 onChange={e => upd({ bgOpacity: +e.target.value })}
                 className="w-full accent-purple-500" disabled={!s.bgColor} />
@@ -325,7 +325,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           <input type="range" min="0" max="50" value={s.borderRadius || 0}
             onChange={e => upd({ borderRadius: +e.target.value })}
             className="w-full accent-cyan-500" />
-          <label className="text-[10px] text-neutral-500">Opacidad: {(s.opacity ?? 1).toFixed(2)}</label>
+          <label className="text-[10px] text-neutral-500">Opacidad: {parseFloat(s.opacity ?? 1).toFixed(2)}</label>
           <input type="range" min="0.05" max="1" step="0.05" value={s.opacity ?? 1}
             onChange={e => upd({ opacity: +e.target.value })}
             className="w-full accent-cyan-500" />
@@ -747,7 +747,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
           </div>
 
           <div>
-            <label className="text-[10px] text-neutral-500">Opacidad fondo celdas: {((s.bgOpacity ?? 0.03) * 100).toFixed(0)}%</label>
+            <label className="text-[10px] text-neutral-500">Opacidad fondo celdas: {((parseFloat(s.bgOpacity ?? 0.03)) * 100).toFixed(0)}%</label>
             <input type="range" min="0" max="0.2" step="0.01" value={s.bgOpacity ?? 0.03}
               onChange={e => upd({ bgOpacity: +e.target.value })}
               className="w-full accent-cyan-500" />
@@ -889,7 +889,7 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               </select>
             </div>
             <div>
-              <label className="text-[10px] text-neutral-500">Interlineado: {(s.lineHeight || 1.5).toFixed(2)}</label>
+              <label className="text-[10px] text-neutral-500">Interlineado: {(parseFloat(s.lineHeight) || 1.5).toFixed(2)}</label>
               <input type="range" min="1" max="2.5" step="0.1" value={s.lineHeight || 1.5}
                 onChange={e => upd({ lineHeight: +e.target.value })}
                 className="w-full accent-cyan-500" />
