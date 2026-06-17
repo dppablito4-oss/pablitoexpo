@@ -674,6 +674,104 @@ export function BlockquoteContent({ el }) {
   );
 }
 
+// ── Interactive Tabs ──────────────────────────────────────────────────────────
+export function TabsContent({ el }) {
+  const s = el.style || {};
+  const items = el.items || [
+    { label: 'Características', content: 'Contenido detallado de las funciones principales aquí.', icon: '⚡' },
+    { label: 'Especificaciones', content: 'Detalles técnicos, rendimiento y compatibilidad del sistema.', icon: '⚙️' },
+    { label: 'Soporte', content: 'Información de contacto, garantías y ayuda al usuario final.', icon: '🛡️' }
+  ];
+  
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const accentColor = s.color || '#22d3ee';
+  const textColor = s.textColor || '#ffffff';
+  const tabBgColor = s.bgColor || 'rgba(255, 255, 255, 0.03)';
+
+  return (
+    <div style={{ 
+      ...WIDGET_CONTAINER, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      overflow: 'hidden' 
+    }}>
+      {/* Tabs Header / Selector */}
+      <div style={{ 
+        display: 'flex', 
+        gap: wCqw(0.5), 
+        borderBottom: '1px solid rgba(255,255,255,0.08)', 
+        paddingBottom: wCqw(0.5),
+        overflowX: 'auto',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'auto', // Permite clics dentro de la diapositiva
+      }}>
+        {items.map((item, i) => {
+          const isActive = i === activeIdx;
+          return (
+            <button
+              key={i}
+              onClick={() => setActiveIdx(i)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: isActive ? accentColor : 'rgba(255, 255, 255, 0.4)',
+                fontSize: toWCqw(13),
+                fontWeight: '700',
+                padding: `${wCqw(0.5)} ${wCqw(0.875)}`,
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'color 0.2s ease',
+                textTransform: 'none',
+              }}
+            >
+              {item.icon && <span style={{ marginRight: wCqw(0.25) }}>{item.icon}</span>}
+              {item.label}
+              {isActive && (
+                <motion.div
+                  layoutId={`active-tab-${el.id}`}
+                  style={{
+                    position: 'absolute',
+                    bottom: wCqw(-0.55),
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    background: accentColor,
+                    boxShadow: `0 0 12px ${accentColor}`,
+                  }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tabs Body */}
+      <div style={{ flex: 1, marginTop: wCqw(1), position: 'relative', overflow: 'hidden' }}>
+        <motion.div
+          key={activeIdx}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          style={{
+            fontSize: toWCqw(s.fontSize || 14),
+            color: textColor,
+            lineHeight: 1.5,
+            background: tabBgColor,
+            borderRadius: wCqw(0.5),
+            padding: wCqw(1),
+            height: '100%',
+            overflowY: 'auto',
+            border: '1px solid rgba(255,255,255,0.04)',
+          }}
+        >
+          {items[activeIdx]?.content || 'Sin contenido configurado.'}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
 // ── Projector element (animated, absolute positioned) ─────────────────────────
 export function ProjectorElement({ el }) {
   return (
@@ -701,6 +799,9 @@ export function ProjectorElement({ el }) {
       {el.type === 'bento'      && <BentoContent el={el} />}
       {el.type === 'counter'    && <CounterContent el={el} />}
       {el.type === 'blockquote' && <BlockquoteContent el={el} />}
+      
+      {/* EL NUEVO MODULO DE JUGUETE ──*/}
+      {el.type === 'tabs'       && <TabsContent el={el} />}
     </motion.div>
   );
 }

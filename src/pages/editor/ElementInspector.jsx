@@ -5,6 +5,7 @@ const TYPE_LABELS = {
   text: '📝 Texto', image: '🖼️ Imagen', metric: '📊 Métrica',
   timeline: '📅 Timeline', comparison: '⚖️ Comparación', formula: '🧮 Fórmula',
   code: '💻 Código', bento: '🧩 Bento', counter: '🔢 Contador', blockquote: '💬 Cita',
+  tabs: '🗂️ Pestañas',
 };
 
 // ── Shared input component ───────────────────────────────────────────────────
@@ -954,6 +955,83 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
               onChange={e => upd({ watermarkColor: e.target.value })}
               className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
           </div>
+        </div>
+      )}
+
+      {/* TABS controls */}
+      {el.type === 'tabs' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold">Estilo de Pestañas</label>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Tamaño de texto: {s.fontSize || 14}px</label>
+            <input type="range" min="8" max="24" step="1" value={s.fontSize || 14}
+              onChange={e => upd({ fontSize: +e.target.value })}
+              className="w-full accent-cyan-500" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color activo</label>
+              <input type="color" value={s.color || '#22d3ee'}
+                onChange={e => upd({ color: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Color texto</label>
+              <input type="color" value={s.textColor || '#ffffff'}
+                onChange={e => upd({ textColor: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Fondo contenido</label>
+            <div className="flex gap-1 items-center">
+              <input type="color" value={s.bgColor || '#111111'}
+                onChange={e => upd({ bgColor: e.target.value })}
+                className="w-8 h-7 rounded border border-neutral-700 bg-black cursor-pointer shrink-0" />
+              {s.bgColor && s.bgColor !== 'transparent' && (
+                <button onClick={() => upd({ bgColor: 'transparent' })}
+                  className="text-[9px] text-red-400 hover:text-red-300 px-1">Transparente</button>
+              )}
+            </div>
+          </div>
+
+          <label className="text-[9px] text-cyan-600 uppercase tracking-widest font-bold mt-2">Pestañas ({(el.items || []).length})</label>
+
+          {(el.items || []).map((item, i) => (
+            <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+              <div className="flex gap-1 items-center">
+                {/* Reordenar subir/bajar */}
+                <div className="flex flex-col gap-0.5">
+                  <button disabled={i === 0} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i-1], arr[i]] = [arr[i], arr[i-1]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === 0 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▲</button>
+                  <button disabled={i === (el.items || []).length - 1} onClick={() => {
+                    const arr = [...(el.items || [])]; [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
+                    onUpdate({ items: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === (el.items || []).length - 1 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▼</button>
+                </div>
+
+                <input value={item.icon || ''} placeholder="⚡" onChange={e => updateItem('items', i, { icon: e.target.value })}
+                  className="w-8 bg-black border border-neutral-700 rounded p-1 text-center text-sm focus:outline-none" />
+                <input value={item.label || ''} placeholder="Etiqueta" onChange={e => updateItem('items', i, { label: e.target.value })}
+                  className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
+                <button onClick={() => removeItem('items', i)} className="text-red-400 text-xs px-1 hover:text-red-300">×</button>
+              </div>
+              <textarea rows={2} value={item.content || ''} placeholder="Contenido..." onChange={e => updateItem('items', i, { content: e.target.value })}
+                className="w-full bg-black border border-neutral-700 rounded p-1 text-neutral-300 text-[10px] focus:outline-none resize-none" />
+            </div>
+          ))}
+
+          {(el.items || []).length < 6 ? (
+            <button onClick={() => addItem('items', { label: 'Nueva pestaña', content: 'Contenido de la nueva pestaña.', icon: '⚡' })}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar pestaña</button>
+          ) : (
+            <span className="text-[9px] text-neutral-600 text-center">Máximo 6 pestañas</span>
+          )}
         </div>
       )}
 

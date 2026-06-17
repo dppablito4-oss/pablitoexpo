@@ -10,6 +10,7 @@ const BLOCK_TYPES = [
   { type: 'bento',      label: '🧩' },
   { type: 'counter',    label: '🔢' },
   { type: 'blockquote', label: '💬' },
+  { type: 'tabs',       label: '🗂️' },
 ];
 
 export default function EditorToolbar({ canEdit, addElement, duplicateElement, selectedEl }) {

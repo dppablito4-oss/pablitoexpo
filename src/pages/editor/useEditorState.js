@@ -85,6 +85,15 @@ const ELEMENT_DEFAULTS = {
               ], x: 3, y: 5, w: 60, h: 85, style: {} },
   counter:    { val: '300', suffix: '+', title: 'USUARIOS', desc: 'registrados este año', x: 15, y: 20, w: 30, h: 55, style: { fontSize: 96 } },
   blockquote: { content: 'La única forma de hacer un gran trabajo es amar lo que haces.', author: 'Steve Jobs', x: 10, y: 20, w: 60, h: 50, style: { fontSize: 28, color: '#ffffff' } },
+  tabs:       {
+                items: [
+                  { label: 'Características', content: 'Contenido detallado de las funciones principales aquí.', icon: '⚡' },
+                  { label: 'Especificaciones', content: 'Detalles técnicos, rendimiento y compatibilidad del sistema.', icon: '⚙️' },
+                  { label: 'Soporte', content: 'Información de contacto, garantías y ayuda al usuario final.', icon: '🛡️' },
+                ],
+                x: 10, y: 15, w: 45, h: 55,
+                style: { color: '#22d3ee', textColor: '#ffffff', fontSize: 14 }
+              },
 };
 
 // ── Hook ──────────────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import {
   TextContent, ImageContent, MetricContent,
   TimelineContent, ComparisonContent, FormulaContent,
   CodeContent, BentoContent, CounterContent, BlockquoteContent,
+  TabsContent,
 } from './ElementRenderer';
 
 const HANDLE = {
@@ -68,6 +69,7 @@ export default function CanvasElement({
       case 'bento':      return <BentoContent      el={el} />;
       case 'counter':    return <CounterContent    el={el} />;
       case 'blockquote': return <BlockquoteContent el={el} />;
+      case 'tabs':       return <TabsContent       el={el} />;
       default:           return null;
     }
   }
