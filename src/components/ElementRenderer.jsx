@@ -29,6 +29,7 @@ function useFitText(ref, content, maxFontPx, enabled) {
 
   const compute = useCallback(() => {
     if (!enabled || !ref.current) return;
+    const _text = content; // Reference content so it's inferred by the React compiler
     const el = ref.current;
     const H = el.clientHeight;
     const W = el.clientWidth;
@@ -57,7 +58,7 @@ function useFitText(ref, content, maxFontPx, enabled) {
     }
     const fitCqw = containerW > 0 ? (lo / containerW) * 100 : lo / 16;
     setFontSize(`${fitCqw.toFixed(3)}cqw`);
-  }, [maxFontPx, enabled, ref]);
+  }, [maxFontPx, enabled, ref, content]);
 
   useEffect(() => {
     if (!enabled || !ref.current) {
