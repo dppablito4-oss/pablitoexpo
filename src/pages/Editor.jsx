@@ -4,6 +4,7 @@
  * La lógica de estado vive en useEditorState.
  * Los inspectores, toolbar y demás viven en src/pages/editor/.
  */
+import { useState } from 'react';
 import CanvasElement from '../components/CanvasElement';
 import AiImportPanel from '../components/AiImportPanel';
 import AiCopilotPanel from '../components/AiCopilotPanel';
@@ -18,6 +19,8 @@ import EditorToolbar from './editor/EditorToolbar';
 
 export default function Editor() {
   const state = useEditorState();
+  const [draggedIdx, setDraggedIdx] = useState(null);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
 
   const {
     identifier, navigate,
@@ -33,7 +36,7 @@ export default function Editor() {
     canvasRef,
     updateElement, deleteElement, duplicateElement, addElement, handleSelectEl,
     moveElementLayer,
-    addSection, deleteSection, updateSection,
+    addSection, deleteSection, updateSection, reorderSections,
     handleAiApply,
     undo, redo, canUndo, canRedo,
   } = state;
@@ -123,10 +126,41 @@ export default function Editor() {
               <div
                 key={sec.id}
                 onClick={() => { setActiveSectionId(sec.id); setSelectedElId(null); setRightTab('section'); }}
+                draggable={canEdit}
+                onDragStart={(e) => {
+                  if (!canEdit) return;
+                  setDraggedIdx(idx);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => {
+                  if (!canEdit) return;
+                  e.preventDefault();
+                  if (dragOverIdx !== idx) {
+                    setDragOverIdx(idx);
+                  }
+                }}
+                onDragEnd={() => {
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
+                onDrop={(e) => {
+                  if (!canEdit) return;
+                  e.preventDefault();
+                  if (draggedIdx !== null && draggedIdx !== idx) {
+                    reorderSections(draggedIdx, idx);
+                  }
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
                 className={`rounded-lg overflow-hidden cursor-pointer border transition-all group relative
                   ${activeSectionId === sec.id
                     ? 'border-cyan-500/80 ring-1 ring-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.15)]'
-                    : 'border-neutral-800 hover:border-neutral-700'}`}
+                    : 'border-neutral-800 hover:border-neutral-700'}
+                  ${draggedIdx === idx ? 'opacity-30 scale-95 border-dashed border-cyan-500' : ''}
+                  ${dragOverIdx === idx && draggedIdx !== idx ? 'border-cyan-400 bg-cyan-950/20 translate-y-1 shadow-lg' : ''}`}
+                style={{
+                  transition: 'all 0.2s ease',
+                }}
               >
                 <div
                   className="h-16 relative bg-cover bg-center"

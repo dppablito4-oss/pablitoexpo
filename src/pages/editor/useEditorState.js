@@ -300,6 +300,18 @@ export default function useEditorState() {
     markDirty();
   }, [activeSectionId]);
 
+  const reorderSections = useCallback((startIndex, endIndex) => {
+    if (startIndex === endIndex) return;
+    pushHistory();
+    setSections(prev => {
+      const result = Array.from(prev);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+    markDirty();
+  }, [pushHistory]);
+
   // ── AI import apply ──────────────────────────────────────────────────────────
   const handleAiApply = useCallback((data) => {
     let newSections;
@@ -558,6 +570,7 @@ export default function useEditorState() {
     addSection,
     deleteSection,
     updateSection,
+    reorderSections,
 
     // Actions: AI
     handleAiApply,

@@ -22,7 +22,7 @@ El objetivo es pasar de un diseño rígido de escritorio a uno híbrido adaptati
 
 ## 2. Seguridad & Blindaje de Identidad (Anti-Fraud System)
 
-Para proteger los créditos de GPT-4o mini y evitar el abuso de cuentas.
+Para proteger los créditos de DeepSeek y evitar el abuso de cuentas.
 
 **🛡️ Fingerprinting de Hardware (Simulado)**
 
@@ -42,7 +42,7 @@ Para proteger los créditos de GPT-4o mini y evitar el abuso de cuentas.
 
 ## 3. Motor de Personalidad IA (P.A.B.L.O.)
 
-Configuración de los modos de asistencia para el modelo GPT-4o mini.
+Configuración de los modos de asistencia para el modelo DeepSeek V3.
 
 **🎭 System Prompts Estratégicos**
 
@@ -70,13 +70,13 @@ Uso de plantillas HTML para comunicaciones oficiales.
 **📧 Flujo de Correos**
 
 * **Verificación OTP:** Requerido para desbloquear el uso de la IA (prevención de bots).
-* **Alertas de Seguridad:** Notificación inmediata si el `visitorId` cambia drásticamente en un inicio de sesión.
+* **Alertas de Seguridad:** Alerta inmediata si el `visitorId` cambia drásticamente en un inicio de sesión.
 * **Infraestructura sugerida:** Resend o SendGrid para asegurar entregabilidad en Gmail.
 
 ## 6. Stack Tecnológico de Referencia
 
 * **Frontend:** React + Tailwind CSS.
 * **Backend/DB:** Supabase (Auth, DB, Edge Functions, Realtime).
-* **IA Engine:** OpenAI API (GPT-4o mini).
+* **IA Engine:** DeepSeek API (V3).
 * **Assets:** Unsplash API (Límite 5k req/mes).
 * **Iconografía:** Lucide-React.
