@@ -773,6 +773,194 @@ export function TabsContent({ el }) {
   );
 }
 
+// ── Equations (Sequential Steps) ────────────────────────────────────────────────
+export function EquationsContent({ el }) {
+  const s = el.style || {};
+  const steps = el.steps || [];
+  
+  const [currentStep, setCurrentStep] = useState(-1);
+
+  const accentColor = s.color || '#22d3ee';
+  const fontSize = s.fontSize || 14;
+
+  return (
+    <div style={{ 
+      ...WIDGET_CONTAINER, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      overflow: 'hidden',
+      padding: wCqw(0.8)
+    }}>
+      {/* Problem Title & Description */}
+      {el.title && (
+        <div style={{ 
+          fontSize: toWCqw(16), 
+          fontWeight: '800', 
+          color: accentColor, 
+          marginBottom: wCqw(0.2), 
+          letterSpacing: '-0.02em' 
+        }}>
+          {el.title}
+        </div>
+      )}
+      {el.description && (
+        <div style={{ 
+          fontSize: toWCqw(13), 
+          color: 'rgba(255,255,255,0.6)', 
+          marginBottom: wCqw(0.8),
+          lineHeight: 1.4
+        }}>
+          {el.description}
+        </div>
+      )}
+
+      {/* Steps List */}
+      <div style={{ flex: 1, overflowY: 'auto', marginBottom: wCqw(0.6), pointerEvents: 'auto' }}>
+        <AnimatePresence>
+          {steps.map((step, i) => {
+            if (i > currentStep) return null;
+            return (
+              <EquationStepRow 
+                key={i} 
+                step={step} 
+                index={i} 
+                color={accentColor} 
+                fontSize={fontSize} 
+              />
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
+      {/* Interactive Controls */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        paddingTop: wCqw(0.5),
+        pointerEvents: 'auto'
+      }}>
+        <button
+          onClick={() => setCurrentStep(prev => Math.max(-1, prev - 1))}
+          disabled={currentStep === -1}
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '6px',
+            color: currentStep === -1 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.7)',
+            fontSize: toWCqw(11),
+            fontWeight: '700',
+            padding: `${wCqw(0.4)} ${wCqw(0.8)}`,
+            cursor: currentStep === -1 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+          }}
+        >
+          ◀ Volver
+        </button>
+
+        <span style={{ fontSize: toWCqw(11), color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>
+          {currentStep === -1 ? 'Planteamiento' : `Paso ${currentStep + 1} / ${steps.length}`}
+        </span>
+
+        <div style={{ display: 'flex', gap: wCqw(0.3) }}>
+          {currentStep >= 0 && (
+            <button
+              onClick={() => setCurrentStep(-1)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '6px',
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: toWCqw(11),
+                fontWeight: '700',
+                padding: `${wCqw(0.4)} ${wCqw(0.8)}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              title="Reiniciar"
+            >
+              🔄
+            </button>
+          )}
+          <button
+            onClick={() => setCurrentStep(prev => Math.min(steps.length - 1, prev + 1))}
+            disabled={currentStep === steps.length - 1}
+            style={{
+              background: currentStep === steps.length - 1 ? 'rgba(255,255,255,0.02)' : accentColor,
+              border: 'none',
+              borderRadius: '6px',
+              color: currentStep === steps.length - 1 ? 'rgba(255,255,255,0.2)' : '#000000',
+              fontSize: toWCqw(11),
+              fontWeight: '800',
+              padding: `${wCqw(0.4)} ${wCqw(0.8)}`,
+              cursor: currentStep === steps.length - 1 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            Siguiente ▶
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EquationStepRow({ step, index, color, fontSize }) {
+  const formulaRef = useRef(null);
+
+  useEffect(() => {
+    if (formulaRef.current) {
+      try {
+        katex.render(step.formula || '', formulaRef.current, { displayMode: false, throwOnError: false, output: 'html' });
+      } catch {
+        formulaRef.current.textContent = step.formula || '';
+      }
+    }
+  }, [step.formula]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: `${wCqw(0.5)} ${wCqw(0.7)}`,
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        borderRadius: wCqw(0.5),
+        marginBottom: wCqw(0.4),
+        gap: wCqw(0.6),
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, overflow: 'hidden' }}>
+        <span style={{ 
+          fontSize: toWCqw(fontSize), 
+          fontWeight: '700', 
+          color: 'rgba(255,255,255,0.85)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          {index + 1}. {step.label}
+        </span>
+      </div>
+      <div
+        ref={formulaRef}
+        style={{
+          fontSize: toWCqw(fontSize + 2),
+          fontWeight: '800',
+          color: color,
+        }}
+      />
+    </motion.div>
+  );
+}
+
 // ── Projector element (animated, absolute positioned) ─────────────────────────
 export function ProjectorElement({ el }) {
   return (
@@ -803,6 +991,7 @@ export function ProjectorElement({ el }) {
       
       {/* EL NUEVO MODULO DE JUGUETE ──*/}
       {el.type === 'tabs'       && <TabsContent el={el} />}
+      {el.type === 'equations'  && <EquationsContent el={el} />}
     </motion.div>
   );
 }

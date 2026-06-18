@@ -1035,6 +1035,77 @@ export default function ElementInspector({ el, onUpdate, onDuplicate, onOpenImag
         </div>
       )}
 
+      {/* EQUATIONS controls */}
+      {el.type === 'equations' && (
+        <div className="flex flex-col gap-2 border-t border-neutral-800 pt-3">
+          <label className="text-[9px] text-cyan-400 uppercase tracking-widest font-bold">Configuración de Ecuaciones</label>
+
+          <InspectorInput label="Título del problema" value={el.title || ''} onChange={v => onUpdate({ title: v })} placeholder="Ej: Problema: Hallar el número" />
+
+          <div>
+            <label className="text-[10px] text-neutral-500">Descripción del problema</label>
+            <textarea rows={2} value={el.description || ''}
+              onChange={e => onUpdate({ description: e.target.value })}
+              placeholder="Ej: El triple de un número aumentado..."
+              className="w-full bg-black border border-neutral-700 rounded p-1.5 text-white text-xs focus:outline-none focus:border-cyan-700 resize-none" />
+          </div>
+
+          <label className="text-[9px] text-cyan-400 uppercase tracking-widest font-bold mt-2">Estilos</label>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">Color acento/fórmulas</label>
+              <input type="color" value={s.color || '#22d3ee'}
+                onChange={e => upd({ color: e.target.value })}
+                className="w-full h-7 rounded border border-neutral-700 bg-black cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-[10px] text-neutral-500">Tamaño texto: {s.fontSize || 14}px</label>
+              <input type="range" min="10" max="24" step="1" value={s.fontSize || 14}
+                onChange={e => upd({ fontSize: +e.target.value })}
+                className="w-full accent-cyan-500" />
+            </div>
+          </div>
+
+          <label className="text-[9px] text-cyan-400 uppercase tracking-widest font-bold mt-2">Pasos del Desarrollo ({(el.steps || []).length})</label>
+
+          {(el.steps || []).map((step, i) => (
+            <div key={i} className="bg-neutral-900 rounded-lg p-2 flex flex-col gap-1 border border-neutral-800">
+              <div className="flex gap-1 items-center">
+                {/* Reorder buttons */}
+                <div className="flex flex-col gap-0.5">
+                  <button disabled={i === 0} onClick={() => {
+                    const arr = [...(el.steps || [])]; [arr[i-1], arr[i]] = [arr[i], arr[i-1]];
+                    onUpdate({ steps: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === 0 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▲</button>
+                  <button disabled={i === (el.steps || []).length - 1} onClick={() => {
+                    const arr = [...(el.steps || [])]; [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
+                    onUpdate({ steps: arr });
+                  }} className={`text-[8px] px-0.5 leading-none ${i === (el.steps || []).length - 1 ? 'text-neutral-700' : 'text-neutral-400 hover:text-white'}`}>▼</button>
+                </div>
+
+                <span className="text-[10px] font-bold text-neutral-500 w-5">#{i+1}</span>
+                <input value={step.label || ''} placeholder="Explicación del paso" onChange={e => updateItem('steps', i, { label: e.target.value })}
+                  className="flex-1 bg-black border border-neutral-700 rounded p-1 text-white text-[10px] focus:outline-none" />
+                <button onClick={() => removeItem('steps', i)} className="text-red-400 text-xs px-1 hover:text-red-300">×</button>
+              </div>
+              <div>
+                <label className="text-[9px] text-neutral-500">Fórmula LaTeX</label>
+                <input value={step.formula || ''} placeholder="Ej: 3x + 5 = 26" onChange={e => updateItem('steps', i, { formula: e.target.value })}
+                  className="w-full bg-black border border-neutral-700 rounded p-1 text-green-300 font-mono text-[10px] focus:outline-none" />
+              </div>
+            </div>
+          ))}
+
+          {(el.steps || []).length < 8 ? (
+            <button onClick={() => addItem('steps', { label: 'Nuevo paso', formula: 'x = 0' })}
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 py-1">+ Agregar paso</button>
+          ) : (
+            <span className="text-[9px] text-neutral-600 text-center">Máximo 8 pasos</span>
+          )}
+        </div>
+      )}
+
       {/* Position & size */}
       <div className="border-t border-neutral-800 pt-3">
         <label className="text-[10px] text-neutral-600 uppercase tracking-widest">Posición & tamaño (%)</label>

@@ -94,6 +94,19 @@ const ELEMENT_DEFAULTS = {
                 x: 10, y: 15, w: 45, h: 55,
                 style: { color: '#22d3ee', textColor: '#ffffff', fontSize: 14 }
               },
+  equations:  {
+                title: 'Problema: Hallar el número',
+                description: 'El triple de un número aumentado en 5 es igual a 26.',
+                steps: [
+                  { label: 'Planteamos la ecuación', formula: '3x + 5 = 26' },
+                  { label: 'Restamos 5 a ambos miembros', formula: '3x = 26 - 5' },
+                  { label: 'Simplificamos la resta', formula: '3x = 21' },
+                  { label: 'Dividimos entre 3', formula: 'x = \\frac{21}{3}' },
+                  { label: 'Obtenemos el resultado', formula: 'x = 7' }
+                ],
+                x: 10, y: 15, w: 50, h: 70,
+                style: { color: '#22d3ee', textColor: '#ffffff', fontSize: 14 }
+              },
 };
 
 // ── Hook ──────────────────────────────────────────────────────────────────────

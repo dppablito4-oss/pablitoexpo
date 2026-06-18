@@ -11,6 +11,7 @@ const BLOCK_TYPES = [
   { type: 'counter',    label: '🔢' },
   { type: 'blockquote', label: '💬' },
   { type: 'tabs',       label: '🗂️' },
+  { type: 'equations',  label: '📐' },
 ];
 
 export default function EditorToolbar({ canEdit, addElement, duplicateElement, selectedEl }) {
